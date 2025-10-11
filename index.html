@@ -58,7 +58,23 @@ textarea{min-height:90px;resize:vertical}
 .small{font-size:12px;color:var(--mut)}
 hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
 .hint{font-size:12px;color:#cbd5e1}
-</style>
+</style
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .catch(err => console.error('SW error', err));
+    });
+  }
+</script>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b1220">
+
+<!-- (Opcional iOS) -->
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 </head>
 <body>
 <div class="wrap">
@@ -202,7 +218,7 @@ hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
         </div>
       </div>
 
-      <label>Estado</label>
+      <label>Estado</label>hh
       <select id="a_estado">
         <option>Alta</option><option>Derivación</option><option>Fuga</option><option>Traslado</option><option>Óbito</option>
       </select>
@@ -550,3 +566,4 @@ applyLogo(); boxSet(boxGet()); $('#i_fi').value=nowDate(); $('#i_hi').value=nowT
 </script>
 </body>
 </html>
+
