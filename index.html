@@ -1,86 +1,79 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-<title>HSM v7 • Móvil</title>
-<link rel="manifest" id="mf">
-<meta name="theme-color" content="#0b1220"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>HSM v7 • Móvil</title>
 
-<style>
-:root{
-  --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
-  --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --acc:#60a5fa;
-  --field:#0b1329; --bd:#1f2a44; --chip:#1f2937;
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-.wrap{max-width:880px;margin:0 auto;padding:12px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.35); overflow:hidden}
-.header{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)}
-.header .title{font-weight:800; letter-spacing:.3px}
-.header .sp{flex:1}
-.badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
-.badge.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
-.badge.off{background:rgba(148,163,184,.12);color:#94a3b8}
-.btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--acc);color:#031532}
-.btn.sec{background:#1f2937;color:#d1d5db}
-.btn.warn{background:var(--warn);color:#051019}
-.btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media (max-width:720px){ .row{grid-template-columns:1fr} }
-label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
-input,select,textarea{
-  width:100%; background:var(--field); color:var(--ink);
-  border:1px solid var(--bd); border-radius:12px; padding:11px 12px; outline:none;
-}
-input:focus,select:focus,textarea:focus{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.25)}
-textarea{min-height:90px;resize:vertical}
-.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
-.tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700}
-.tab.act{background:var(--card);color:#fff}
-.view{padding:12px}
-.kv{display:flex; gap:8px; align-items:center}
-.kv input{flex:1}
-.st{margin-top:10px;font-size:13px}
-.ok{color:#86efac}
-.err{color:#fca5a5}
-.mut{color:#94a3b8}
-.logo{height:44px; width:auto; object-fit:contain; border-radius:8px}
-.chips{display:flex; flex-wrap:wrap; gap:8px}
-.chip{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer}
-.grid{display:grid; gap:12px}
-.grid2{grid-template-columns:1fr 1fr}
-.list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
-.item{display:flex;gap:12px; padding:10px 12px; border-bottom:1px solid var(--bd); align-items:center}
-.item:last-child{border-bottom:0}
-.small{font-size:12px;color:var(--mut)}
-hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
-.hint{font-size:12px;color:#cbd5e1}
-</style
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .catch(err => console.error('SW error', err));
-    });
+  <!-- PWA externo -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0b1220"/>
+
+  <!-- iOS (opcional) -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+  :root{
+    --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
+    --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --acc:#60a5fa;
+    --field:#0b1329; --bd:#1f2a44; --chip:#1f2937;
   }
-</script>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0b1220">
-
-<!-- (Opcional iOS) -->
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:920px;margin:0 auto;padding:12px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.35);overflow:hidden}
+  .header{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)}
+  .header .title{font-weight:800; letter-spacing:.3px}
+  .header .sp{flex:1}
+  .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
+  .badge.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
+  .badge.off{background:rgba(148,163,184,.12);color:#94a3b8}
+  .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--acc);color:#031532}
+  .btn.sec{background:#1f2937;color:#d1d5db}
+  .btn.warn{background:var(--warn);color:#051019}
+  .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:720px){ .row{grid-template-columns:1fr} }
+  label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
+  input,select,textarea{
+    width:100%; background:var(--field); color:var(--ink);
+    border:1px solid var(--bd); border-radius:12px; padding:11px 12px; outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.25)}
+  textarea{min-height:90px;resize:vertical}
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
+  .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700}
+  .tab.act{background:var(--card);color:#fff}
+  .view{padding:12px}
+  .kv{display:flex; gap:8px; align-items:center}
+  .kv input{flex:1}
+  .st{margin-top:10px;font-size:13px}
+  .ok{color:#86efac}
+  .err{color:#fca5a5}
+  .mut{color:#94a3b8}
+  .logo{height:44px; width:auto; object-fit:contain; border-radius:8px}
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer}
+  .grid{display:grid; gap:12px}
+  .grid2{grid-template-columns:1fr 1fr}
+  .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
+  .item{display:flex;gap:12px; padding:10px 12px; border-bottom:1px solid var(--bd); align-items:center}
+  .item:last-child{border-bottom:0}
+  .small{font-size:12px;color:var(--mut)}
+  hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
+  .hint{font-size:12px;color:#cbd5e1}
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.35);z-index:9999;display:none}
+  </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
     <div class="header">
-      <img id="logo" class="logo" alt="logo" src="">
+      <img id="logo" class="logo" alt="logo" src="" hidden>
       <div class="title">HSM v7 • Móvil</div>
       <span id="online" class="badge off">Offline</span>
       <span class="sp"></span>
@@ -96,7 +89,7 @@ hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
       <div class="tab" data-v="util">Útiles</div>
     </div>
 
-    <!-- VISTA: INGRESO -->
+    <!-- INGRESO -->
     <div id="v-ing" class="view">
       <div class="row">
         <div>
@@ -176,7 +169,7 @@ hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
       <div class="small">Tip: admite <code>?dni=&amp;sexo=&amp;fi=YYYY-MM-DD</code> para prellenar.</div>
     </div>
 
-    <!-- VISTA: ALTA -->
+    <!-- ALTA -->
     <div id="v-alta" class="view" style="display:none">
       <div class="row">
         <div>
@@ -218,7 +211,7 @@ hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
         </div>
       </div>
 
-      <label>Estado</label>hh
+      <label>Estado</label>
       <select id="a_estado">
         <option>Alta</option><option>Derivación</option><option>Fuga</option><option>Traslado</option><option>Óbito</option>
       </select>
@@ -233,7 +226,7 @@ hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
       </div>
     </div>
 
-    <!-- VISTA: PENDIENTES -->
+    <!-- PENDIENTES -->
     <div id="v-pend" class="view" style="display:none">
       <div class="kv" style="gap:8px; flex-wrap:wrap">
         <button class="btn sec" id="flush">Enviar pendientes</button>
@@ -246,7 +239,7 @@ hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
       <div class="list" id="pendList"></div>
     </div>
 
-    <!-- VISTA: ÚTILES -->
+    <!-- ÚTILES -->
     <div id="v-util" class="view" style="display:none">
       <div class="grid grid2">
         <div class="card" style="padding:12px">
@@ -290,77 +283,59 @@ hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
     <div id="cfgMsg" class="small" style="margin-top:8px"></div>
   </form>
 </dialog>
+
+<div id="toast" class="toast"></div>
+
 <script>
-/* ========= Helpers & Storage ========= */
-const LS={
-  get(k,d=null){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(_){return localStorage.getItem(k)||d}},
-  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){localStorage.setItem(k,v)}},
-  del(k){localStorage.removeItem(k)}
-};
-const API={
-  url(){return LS.get('HSM_WEBAPP_URL','')},
-  key(){return LS.get('HSM_API_KEY','')},
-  async call(action,payload={}){
-    const u=API.url(); if(!u) throw new Error('Sin URL configurada');
-    const body={action,apiKey:API.key(), ...payload};
-    const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.json();
-  }
-};
+/* ===== Utilidades base ===== */
+const LS={get(k,d=null){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(_){return localStorage.getItem(k)||d}},
+          set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){localStorage.setItem(k,v)}},
+          del(k){localStorage.removeItem(k)}};
 const $=s=>document.querySelector(s);
 const fmtDate=ts=>new Date(ts).toLocaleString();
+const vibrate = p=>('vibrate' in navigator)&&navigator.vibrate(p);
 
-/* ========= PWA (manifest + service worker inline) ========= */
-(function pwa(){
-  const icon='data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="18" fill="#0b1220"/><path d="M20 70c12-32 44-32 56 0" fill="none" stroke="#60a5fa" stroke-width="6"/><circle cx="48" cy="50" r="7" fill="#22c55e"/></svg>`);
-  const manifest={name:"HSM v7 • Móvil",short_name:"HSM Móvil",start_url:"./",display:"standalone",background_color:"#0b1220",theme_color:"#0b1220",icons:[{src:icon,sizes:"96x96",type:"image/svg+xml"}]};
-  const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'}); const url=URL.createObjectURL(blob); $('#mf').setAttribute('href',url);
+/* ===== API ===== */
+const API={url(){return LS.get('HSM_WEBAPP_URL','')},
+           key(){return LS.get('HSM_API_KEY','')},
+           async call(action,payload={}){
+             const u=API.url(); if(!u) throw new Error('Sin URL configurada');
+             const body={action,apiKey:API.key(), ...payload};
+             const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+             if(!r.ok) throw new Error('HTTP '+r.status);
+             return r.json();
+           }};
 
-  const swCode=`
-    const CACHE='hsmv7-1';
-    self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['./']))); self.skipWaiting();});
-    self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});
-    self.addEventListener('fetch',e=>{
-      const req=e.request;
-      if(req.method!=='GET') return;
-      e.respondWith(caches.match(req).then(r=>r||fetch(req).then(res=>{
-        const cp=res.clone(); caches.open(CACHE).then(c=>c.put(req,cp)); return res;
-      }).catch(_=>r||new Response('',{status:200,headers:{'Content-Type':'text/plain'}}))));
-    });`;
-  const swURL=URL.createObjectURL(new Blob([swCode],{type:'text/javascript'}));
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register(swURL); }
-})();
+/* ===== Toast ===== */
+function toast(txt,ms=2200){const t=$("#toast");t.textContent=txt;t.style.display='block';setTimeout(()=>t.style.display='none',ms)}
 
-/* ========= Install prompt ========= */
+/* ===== PWA: instalar (botón) & SW ===== */
 let _deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); _deferredPrompt=e; $('#btnInstall').style.display='inline-block';});
-$('#btnInstall').onclick=async()=>{
-  if(!_deferredPrompt) return;
-  _deferredPrompt.prompt(); await _deferredPrompt.userChoice; _deferredPrompt=null; $('#btnInstall').style.display='none';
-};
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').style.display='inline-block';});
+$('#btnInstall').onclick=async()=>{ if(!_deferredPrompt) return; _deferredPrompt.prompt(); await _deferredPrompt.userChoice; _deferredPrompt=null; $('#btnInstall').style.display='none';};
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
 
-/* ========= Online status ========= */
-function setOnline(ok){ const b=$('#online'); b.textContent=ok?'Online':'Offline'; b.className='badge '+(ok?'ok':'off'); }
+/* ===== Estado online ===== */
+function setOnline(ok){const b=$('#online');b.textContent=ok?'Online':'Offline';b.className='badge '+(ok?'ok':'off')}
 window.addEventListener('online',()=>setOnline(true));
 window.addEventListener('offline',()=>setOnline(false));
 setOnline(navigator.onLine);
 
-/* ========= LOGO ========= */
+/* ===== Logo ===== */
 function applyLogo(){
-  const u=LS.get('HSM_LOGO_URL',''); const el=$('#logo');
-  if(u){ el.src=u; el.style.display='block'; } else { el.style.display='none'; }
+  const u=LS.get('HSM_LOGO_URL',''), el=$('#logo');
+  if(u){ el.src=u; el.hidden=false; } else { el.hidden=true; }
 }
 
-/* ========= Tabs ========= */
+/* ===== Tabs ===== */
 document.querySelectorAll('.tab').forEach(t=>{
   t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('act')); t.classList.add('act');
-    const v=t.getAttribute('data-v'); ['ing','alta','pend','util'].forEach(id=>$('#v-'+id).style.display=(id===v?'block':'none'));
+    const v=t.dataset.v; ['ing','alta','pend','util'].forEach(id=>$('#v-'+id).style.display=(id===v?'block':'none'));
     if(v==='pend') renderPend();
   };
 });
 
-/* ========= Quick fill ========= */
+/* ===== Helpers fechas ===== */
 function nowDate(){return new Date().toISOString().slice(0,10)}
 function nowTime(){return new Date().toTimeString().slice(0,5)}
 $('#iFiNow').onclick=()=>$('#i_fi').value=nowDate();
@@ -368,21 +343,17 @@ $('#iHiNow').onclick=()=>$('#i_hi').value=nowTime();
 $('#aFaNow').onclick=()=>$('#a_fa').value=nowDate();
 $('#aHaNow').onclick=()=>$('#a_ha').value=nowTime();
 
-/* ========= Templates Obs ========= */
-$('#tpls').addEventListener('click',e=>{
-  const t=e.target.closest('.chip'); if(!t) return;
-  $('#i_obs').value = ($('#i_obs').value||'') + ' ' + (t.dataset.t||'');
-  $('#i_obs').focus();
-});
+/* ===== Chips (observaciones) ===== */
+$('#tpls').addEventListener('click',e=>{const t=e.target.closest('.chip'); if(!t) return; $('#i_obs').value=(($('#i_obs').value||'')+' '+t.dataset.t).trim(); $('#i_obs').focus();});
 
-/* ========= DNI utils ========= */
+/* ===== Validaciones ===== */
 function validDNI(v){ return /^\d{7,9}$/.test((v||'').trim()); }
 
-/* ========= Outbox ========= */
+/* ===== Outbox ===== */
 function boxGet(){ return LS.get('HSM_OUTBOX',[]); }
-function boxSet(a){ LS.set('HSM_OUTBOX',a); $('#pendInfo').textContent=a.length; $('#pendInfo').className='badge '+(a.length?'ok':'off'); }
+function boxSet(a){ LS.set('HSM_OUTBOX',a); const n=a.length; $('#pendInfo').textContent=n; $('#pendInfo').className='badge '+(n?'ok':'off'); }
 async function boxFlush(){
-  const box=boxGet(); if(!box.length) return;
+  const box=boxGet(); if(!box.length){ toast('No hay pendientes'); return; }
   $('#pendInfo').textContent='…';
   const rest=[];
   for(const it of box){
@@ -392,14 +363,19 @@ async function boxFlush(){
     }catch(_){ rest.push(it); }
   }
   boxSet(rest);
-  $('#ingMsg').textContent = rest.length? `Pendientes restantes: ${rest.length}` : 'Pendientes enviados ✔';
-  $('#altaMsg').textContent = $('#ingMsg').textContent;
+  toast(rest.length?('Quedan '+rest.length+' pendientes'): 'Pendientes enviados ✔');
   renderPend();
 }
-
-/* ========= Render pendientes ========= */
+$('#flush').onclick=boxFlush;
+$('#exp').onclick=()=>{ const a=document.createElement('a'); a.download='hsm_outbox.json'; a.href=URL.createObjectURL(new Blob([JSON.stringify(boxGet())],{type:'application/json'})); a.click(); };
+$('#imp').onclick=()=>$('#impFile').click();
+$('#impFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader(); rd.onload=()=>{ try{ const arr=JSON.parse(rd.result||'[]'); const cur=boxGet(); boxSet(cur.concat(arr)); renderPend(); toast('Importado'); }catch(_){ toast('Archivo inválido',2600) } };
+  rd.readAsText(f);
+};
 function renderPend(){
-  const box=boxGet(); const el=$('#pendList'); el.innerHTML='';
+  const box=boxGet(), el=$('#pendList'); el.innerHTML='';
   if(!box.length){ el.innerHTML='<div class="item"><span class="mut">No hay pendientes.</span></div>'; return; }
   box.forEach((it,ix)=>{
     const d=document.createElement('div'); d.className='item';
@@ -409,29 +385,29 @@ function renderPend(){
       <button class="btn ghost" data-i="${ix}">Borrar</button>`;
     el.appendChild(d);
   });
-  el.onclick=e=>{
-    const b=e.target.closest('button'); if(!b) return;
-    const idx=+b.dataset.i; const box=boxGet(); box.splice(idx,1); boxSet(box); renderPend();
-  };
+  el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const idx=+b.dataset.i; const box=boxGet(); box.splice(idx,1); boxSet(box); renderPend(); };
 }
-$('#flush').onclick=boxFlush;
-$('#exp').onclick=()=>{
-  const a=document.createElement('a'); a.download='hsm_outbox.json';
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(boxGet())],{type:'application/json'}));
-  a.click();
-};
-$('#imp').onclick=()=>$('#impFile').click();
-$('#impFile').onchange=e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const rd=new FileReader(); rd.onload=()=>{ try{ const arr=JSON.parse(rd.result||'[]'); const cur=boxGet(); boxSet(cur.concat(arr)); renderPend(); }catch(_){} };
-  rd.readAsText(f);
-};
 
-/* ========= Ingreso: save & share ========= */
+/* ===== Anti-duplicado simple (misma acción + DNI + 60s) ===== */
+function recentKey(kind,dni){ return `HSM_REC_${kind}_${dni}`; }
+function dedupeSet(kind,dni){ LS.set(recentKey(kind,dni), Date.now()); }
+function dedupeHit(kind,dni,ms=60000){ const t=LS.get(recentKey(kind,dni),0); return (Date.now()-t)<ms; }
+
+/* ===== Autosave (borradores locales) ===== */
+const DRAFT_ING='HSM_DRAFT_ING', DRAFT_ALTA='HSM_DRAFT_ALTA';
+function saveDraft(id,fields){ const o={}; fields.forEach(f=>o[f]=$('#'+f).value); LS.set(id,o); }
+function loadDraft(id,fields){ const o=LS.get(id,null); if(!o) return; fields.forEach(f=>{ if(o[f]!=null) $('#'+f).value=o[f]; }); }
+['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs'].forEach(id=>$('#'+id).addEventListener('input',()=>saveDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs'])));
+['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs'].forEach(id=>$('#'+id).addEventListener('input',()=>saveDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs'])));
+
+/* ===== Ingreso ===== */
+let lastReceipt=null;
 $('#ingSave').onclick=async ()=>{
   try{
     const dni=$('#i_dni').value.trim();
-    if(!validDNI(dni)) { $('#ingMsg').textContent='DNI inválido'; $('#ingMsg').className='st err'; return; }
+    if(!validDNI(dni)){ $('#ingMsg').textContent='DNI inválido'; $('#ingMsg').className='st err'; vibrate(200); return; }
+    if(dedupeHit('ing',dni)){ toast('Ingreso enviado hace instantes'); return; }
+
     const payload={
       DNI:dni, Sexo:$('#i_sexo').value,
       FechaIngresoManual:$('#i_fi').value, HoraIngresoManual:$('#i_hi').value,
@@ -440,11 +416,13 @@ $('#ingSave').onclick=async ()=>{
       DxProvisorio_CIE10:$('#i_cie').value, Observaciones:$('#i_obs').value
     };
     $('#ingMsg').textContent='Guardando…'; $('#ingMsg').className='st mut';
-    const j=await API.call('save',{payload}).catch(e=>{throw e});
-    if(j&&j.ok){ $('#ingMsg').textContent='Guardado ✔'; $('#ingMsg').className='st ok'; lastReceipt={kind:'Ingreso',dni,ts:Date.now()}; }
-    else throw new Error(j&&j.message||'desconocido');
+    const j=await API.call('save',{payload});
+    if(j&&j.ok){
+      $('#ingMsg').textContent='Guardado ✔'; $('#ingMsg').className='st ok';
+      lastReceipt={kind:'Ingreso',dni,ts:Date.now()};
+      dedupeSet('ing',dni); LS.del(DRAFT_ING); vibrate([60,40,60]);
+    } else throw new Error(j&&j.message||'desconocido');
   }catch(e){
-    // offline → outbox
     const it={kind:'ingreso',payload:{
       DNI:$('#i_dni').value.trim(), Sexo:$('#i_sexo').value,
       FechaIngresoManual:$('#i_fi').value, HoraIngresoManual:$('#i_hi').value,
@@ -453,45 +431,39 @@ $('#ingSave').onclick=async ()=>{
       DxProvisorio_CIE10:$('#i_cie').value, Observaciones:$('#i_obs').value
     }, ts:Date.now()};
     const box=boxGet(); box.push(it); boxSet(box);
-    $('#ingMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#ingMsg').className='st err';
+    $('#ingMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#ingMsg').className='st err'; vibrate(150);
   }
 };
-let lastReceipt=null;
-$('#ingShare').onclick=()=>{
-  const txt = lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Ingreso registrado';
-  if(navigator.share) navigator.share({text:txt}).catch(()=>{});
-  else navigator.clipboard.writeText(txt);
-};
+$('#ingShare').onclick=()=>{ const txt = lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Ingreso registrado'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado')); };
 
-/* ========= Alta: búsqueda y save ========= */
+/* ===== Alta ===== */
 $('#aSearch').onclick=async ()=>{
   try{
-    const dni=$('#a_dni').value.trim();
-    if(!validDNI(dni)) { $('#aFound').textContent=' DNI inválido'; return; }
+    const dni=$('#a_dni').value.trim(); if(!validDNI(dni)){ $('#aFound').textContent=' DNI inválido'; return; }
     $('#aFound').textContent=' Buscando…';
-    // endpoint simple: buscá en últimos 90 días
-    const j=await API.call('find',{dni, days:90}).catch(()=>null);
-    if(j && j.ok && j.row){
-      $('#aFound').textContent=' Encontrado fila '+j.row;
-      // opcional: precarga sexo si vuelve
-      if(j.sexo) $('#a_sexo').value=(j.sexo||'').toUpperCase();
-    }else $('#aFound').textContent=' No hallado (continuar manual)';
+    const j=await API.call('find',{dni, days:120}).catch(()=>null);
+    if(j && j.ok && j.row){ $('#aFound').textContent=' Encontrado (fila '+j.row+')'; if(j.sexo) $('#a_sexo').value=(j.sexo||'').toUpperCase(); }
+    else { $('#aFound').textContent=' No hallado (continuar manual)'; }
   }catch(_){ $('#aFound').textContent=' Offline (buscará al enviar)'; }
 };
-
 $('#altaSave').onclick=async ()=>{
   try{
     const dni=$('#a_dni').value.trim();
-    if(!validDNI(dni)) { $('#altaMsg').textContent='DNI inválido'; $('#altaMsg').className='st err'; return; }
+    if(!validDNI(dni)){ $('#altaMsg').textContent='DNI inválido'; $('#altaMsg').className='st err'; vibrate(200); return; }
+    if(dedupeHit('alta',dni)){ toast('Alta enviada hace instantes'); return; }
+
     const payload={
       DNI:dni, Sexo:$('#a_sexo').value,
       FechaAltaManual:$('#a_fa').value, HoraAltaManual:$('#a_ha').value,
       EstadoEgreso:$('#a_estado').value, Observaciones:$('#a_obs').value
     };
     $('#altaMsg').textContent='Guardando…'; $('#altaMsg').className='st mut';
-    const j=await API.call('alta',{payload}).catch(e=>{throw e});
-    if(j&&j.ok){ $('#altaMsg').textContent='Alta guardada ✔'; $('#altaMsg').className='st ok'; lastReceipt={kind:'Alta',dni,ts:Date.now()}; }
-    else throw new Error(j&&j.message||'desconocido');
+    const j=await API.call('alta',{payload});
+    if(j&&j.ok){
+      $('#altaMsg').textContent='Alta guardada ✔'; $('#altaMsg').className='st ok';
+      lastReceipt={kind:'Alta',dni,ts:Date.now()};
+      dedupeSet('alta',dni); LS.del(DRAFT_ALTA); vibrate([60,40,60]);
+    } else throw new Error(j&&j.message||'desconocido');
   }catch(e){
     const it={kind:'alta',payload:{
       DNI:$('#a_dni').value.trim(), Sexo:$('#a_sexo').value,
@@ -499,43 +471,21 @@ $('#altaSave').onclick=async ()=>{
       EstadoEgreso:$('#a_estado').value, Observaciones:$('#a_obs').value
     }, ts:Date.now()};
     const box=boxGet(); box.push(it); boxSet(box);
-    $('#altaMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#altaMsg').className='st err';
+    $('#altaMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#altaMsg').className='st err'; vibrate(150);
   }
 };
-$('#altaShare').onclick=()=>{
-  const txt = lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Alta registrada';
-  if(navigator.share) navigator.share({text:txt}).catch(()=>{});
-  else navigator.clipboard.writeText(txt);
-};
+$('#altaShare').onclick=()=>{ const txt = lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Alta registrada'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado')); };
 
-/* ========= Config ========= */
-$('#btnCfg').onclick=()=>{
-  $('#cfg_url').value=API.url()||'';
-  $('#cfg_key').value=API.key()||'';
-  $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||'';
-  $('#cfg').showModal();
-};
-$('#cfg').addEventListener('close',()=>{
-  const u=$('#cfg_url').value.trim(), k=$('#cfg_key').value.trim(), l=$('#cfg_logo').value.trim();
-  if(u) LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL');
-  if(k) LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY');
-  if(l) LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL');
-  applyLogo();
-});
-$('#cfgTest').onclick=async ()=>{
-  try{ const r=await API.call('ping'); $('#cfgMsg').textContent='OK '+(r.version||''); }
-  catch(e){ $('#cfgMsg').textContent='Error: '+(e.message||e); }
-};
+/* ===== Config ===== */
+$('#btnCfg').onclick=()=>{ $('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal(); };
+$('#cfg').addEventListener('close',()=>{ const u=$('#cfg_url').value.trim(), k=$('#cfg_key').value.trim(), l=$('#cfg_logo').value.trim(); if(u) LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k) LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l) LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada'); });
+$('#cfgTest').onclick=async ()=>{ try{ const r=await API.call('ping'); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK'); } catch(e){ $('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600) } };
 
-/* ========= Útiles ========= */
-$('#uVal').onclick=()=>{
-  const v=$('#u_dni').value.trim();
-  $('#u_res').textContent = validDNI(v)? 'Formato válido ✔' : 'Formato inválido';
-  $('#u_res').className = 'st ' + (validDNI(v)?'ok':'err');
-};
+/* ===== Útiles ===== */
+$('#uVal').onclick=()=>{ const v=$('#u_dni').value.trim(); const ok=validDNI(v); $('#u_res').textContent = ok? 'Formato válido ✔' : 'Formato inválido'; $('#u_res').className = 'st ' + (ok?'ok':'err'); };
 document.querySelectorAll('.chip[data-go]').forEach(c=>c.onclick=()=>document.querySelector(`.tab[data-v="${c.dataset.go}"]`).click());
 
-/* ========= CIE10 cache (10 min) ========= */
+/* ===== CIE10 cache (10 min) ===== */
 (async function loadCIE(){
   try{
     const ck='CIE_CACHE', ts='CIE_TS', now=Date.now();
@@ -549,7 +499,7 @@ document.querySelectorAll('.chip[data-go]').forEach(c=>c.onclick=()=>document.qu
   }catch(_){ /* silencioso */ }
 })();
 
-/* ========= Prefill por query ========= */
+/* ===== Prefill por query ===== */
 (function prefill(){
   const q=new URLSearchParams(location.search);
   if(q.get('dni')) $('#i_dni').value=q.get('dni');
@@ -557,13 +507,11 @@ document.querySelectorAll('.chip[data-go]').forEach(c=>c.onclick=()=>document.qu
   if(q.get('fi')) $('#i_fi').value=q.get('fi');
 })();
 
-/* ========= Boot ========= */
-applyLogo(); boxSet(boxGet()); $('#i_fi').value=nowDate(); $('#i_hi').value=nowTime();
+/* ===== Boot ===== */
+applyLogo(); boxSet(boxGet()); loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']); loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']); if(!$('#i_fi').value) $('#i_fi').value=nowDate(); if(!$('#i_hi').value) $('#i_hi').value=nowTime();
 
-/* ========= QR helpers (generador simple desde Sheets) ========= */
-// Si en Sheets ponés: =IMAGE("https://api.qrserver.com/v1/create-qr-code/?size=140x140&data="&ENCODEURL(A2))
-// reemplazá A2 por la celda con tu /exec
+/* ===== QR helper (nota) ===== */
+// En Sheets: =IMAGE("https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="&ENCODEURL(A2))
 </script>
 </body>
 </html>
-
