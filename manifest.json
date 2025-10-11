@@ -1,0 +1,14 @@
+{
+  "name": "HSM v7 • Móvil",
+  "short_name": "HSM Móvil",
+  "description": "Ingreso y alta rápida con soporte offline.",
+  "start_url": "/panel-html-msm/",
+  "scope": "/panel-html-msm/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
