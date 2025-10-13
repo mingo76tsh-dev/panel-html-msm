@@ -1,5 +1,5 @@
 // sw.js — HSM v7 Móvil (pro)
-const VERSION = 'v1.3.0';
+const VERSION = 'v1.3.1';
 const PREFIX = 'hsm-cache';
 const STATIC_CACHE = `${PREFIX}-static-${VERSION}`;
 const RUNTIME_CACHE = `${PREFIX}-runtime-${VERSION}`;
