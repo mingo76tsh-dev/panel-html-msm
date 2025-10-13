@@ -545,9 +545,21 @@ document.querySelectorAll('.chip[data-go]').forEach(c=>c.onclick=()=>document.qu
 applyLogo(); boxSet(boxGet());
 loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);
 loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);
-if(!$('#i_fi').value) $('#i_fi').value=nowDate();
-if(!$('#i_hi').value) $('#i_hi').value=nowTime();
-</script>
-</body>
-</html>
+if (!$('#i_fi').value) $('#i_fi').value = nowDate();
+if (!$('#i_hi').value) $('#i_hi').value = nowTime();
+
+// Aviso de nueva versión desde el SW
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (ev) => {
+    if (ev?.data?.type === 'SW_ACTIVATED') {
+      toast('Nueva versión disponible. Recargando…', 1800);
+      setTimeout(() => location.reload(), 1500);
+    }
+  });
+}
+
+// Auto-flush al recuperar conectividad
+window.addEventListener('online', () => {
+  try { boxFlush(); } catch {}
+});
 
