@@ -295,14 +295,22 @@ const fmtDate=ts=>new Date(ts).toLocaleString();
 const vibrate = p=>('vibrate' in navigator)&&navigator.vibrate(p);
 
 /* ===== API ===== */
-const API={url(){return LS.get('HSM_WEBAPP_URL','')},
-           key(){return LS.get('HSM_API_KEY','')},
-           async call(action,payload={}){ const u=API.url(); if(!u) throw new Error('Sin URL configurada');
-             const body={action,apiKey:API.key(), ...payload};
-             const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-             if(!r.ok) throw new Error('HTTP '+r.status);
-             return r.json();
-           }};
+const API={
+  url(){return LS.get('HSM_WEBAPP_URL','')},
+  key(){return LS.get('HSM_API_KEY','')},
+  async call(action,payload={}){
+    const u=API.url(); if(!u) throw new Error('Sin URL configurada');
+    // 👇 CAMBIO CLAVE: simple request (sin preflight)
+    const r = await fetch(u,{
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain' },
+      body: JSON.stringify({ action, apiKey: API.key(), ...payload })
+    });
+    const t = await r.text();
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+t);
+    try { return JSON.parse(t); } catch { return { ok:false, raw:t }; }
+  }
+};
 
 /* ===== Toast ===== */
 function toast(txt,ms=2200){const t=$("#toast");t.textContent=txt;t.style.display='block';setTimeout(()=>t.style.display='none',ms)}
