@@ -697,6 +697,23 @@ window.addEventListener('load', async ()=>{
   cargarCIE10();
 });
 </script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/panel-html-msm/sw.js', {
+      scope: '/panel-html-msm/'
+    }).catch(console.error);
+
+    // (tu listener existente puede quedar igual)
+    navigator.serviceWorker.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'SW_ACTIVATED') {
+        toast('Nueva versión disponible. Recargando…', 1800);
+        setTimeout(() => location.reload(), 1500);
+      }
+    });
+  }
+</script>
+
 </body>
 </html>
+
 
