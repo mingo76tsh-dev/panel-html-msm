@@ -548,6 +548,155 @@ window.addEventListener('DOMContentLoaded', () => {
     toast('Error inicializando la app', 3000);
   }
 });
+  <script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbzPlCb70mBDtlZYq-8FFzf8kXXwqRIMusEYpd4fo0gdyEItPY8CLLfPzdlcqIKFZxY6DQ/exec';        // /exec del deployment
+const API_KEY = 'HSM2025KEY';              // la misma de Script Properties
+
+// ---------- Helpers ----------
+const $ = (s,root=document) => root.querySelector(s);
+const $$= (s,root=document) => [...root.querySelectorAll(s)];
+const normStr  = v => (v==null?'':String(v).trim());
+const onlyDigits = v => normStr(v).replace(/\D/g,'');
+const normDate = v => {                    // espera yyyy-mm-dd (input date)
+  v = normStr(v);
+  // acepta también dd/mm/yyyy del teclado
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
+    const [d,m,y] = v.split('/'); return `${y}-${m}-${d}`;
+  }
+  return v; // ya viene yyyy-mm-dd
+};
+const normTime = v => {                    // hh:mm ó hh:mm:ss
+  v = normStr(v);
+  if (!v) return '';
+  const m = v.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!m) return '';
+  const hh = String(Math.min(23,parseInt(m[1],10))).padStart(2,'0');
+  const mm = String(Math.min(59,parseInt(m[2],10))).padStart(2,'0');
+  const ss = String(Math.min(59,parseInt(m[3]||'0',10))).padStart(2,'0');
+  return `${hh}:${mm}`;                    // la hoja usa hh:mm
+};
+function disable(el, on){ if (!el) return; on? el.setAttribute('disabled',''): el.removeAttribute('disabled'); }
+function toast(msg){ console.log('[HSM]', msg); } // reemplazá por snackbar visual
+
+// Llamada genérica SIN preflight
+async function api(action, payload={}) {
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },  // <- clave para evitar preflight
+    body: JSON.stringify({ action, apiKey: API_KEY, payload })
+  });
+  const txt = await res.text();
+  try { return JSON.parse(txt); } catch { return { ok:false, code:'E_PARSE', message:txt }; }
+}
+
+// ---------- Lectores de formulario ----------
+function leerFormularioIngreso(){
+  const f = $('#frmIngreso');
+  // mapeo 1:1 con headers RAW (los que usa el core)
+  const out = {
+    DNI:                 onlyDigits($('[name="DNI"]',f)?.value),
+    FechaIngresoManual:  normDate($('[name="FechaIngresoManual"]',f)?.value),
+    HoraIngresoManual:   normTime($('[name="HoraIngresoManual"]',f)?.value),
+    Sexo:                normStr($('[name="Sexo"]',f)?.value).toUpperCase(),
+    IdeacionIntento:     normStr($('[name="IdeacionIntento"]',f)?.value),
+    MetodoLetalidad:     normStr($('[name="MetodoLetalidad"]',f)?.value),
+    Consumo:             normStr($('[name="Consumo"]',f)?.value),
+    TipoSustancia:       normStr($('[name="TipoSustancia"]',f)?.value),
+    Frecuencia:          normStr($('[name="Frecuencia"]',f)?.value),
+    DxProvisorio_CIE10:  normStr($('[name="DxProvisorio_CIE10"]',f)?.value).toUpperCase(),
+    Observaciones:       normStr($('[name="Observaciones"]',f)?.value),
+    RedApoyo:            normStr($('[name="RedApoyo"]',f)?.value),
+    PacienteUID:         normStr($('[name="PacienteUID"]',f)?.value),
+    IngresoID:           normStr($('[name="IngresoID"]',f)?.value),
+    // adicionales opcionales (geo/firma/cliente)
+    Geo_Lat:      normStr($('[name="Geo_Lat"]',f)?.value),
+    Geo_Lon:      normStr($('[name="Geo_Lon"]',f)?.value),
+    Geo_Acc:      normStr($('[name="Geo_Acc"]',f)?.value),
+    Geo_Ts:       normStr($('[name="Geo_Ts"]',f)?.value),
+    FirmaURL:     normStr($('[name="FirmaURL"]',f)?.value),
+    ClientGUID:   normStr(localStorage.getItem('hsm.client') || ''),
+    ForceDuplicate: false
+  };
+  // validaciones mínimas
+  if(!out.DNI) throw new Error('Ingresá un DNI válido.');
+  if(!out.FechaIngresoManual) throw new Error('Falta fecha de ingreso.');
+  if(!out.HoraIngresoManual) throw new Error('Falta hora de ingreso.');
+  return out;
+}
+
+function leerFormularioAlta(){
+  const f = $('#frmAlta');
+  const out = {
+    DNI:               onlyDigits($('[name="DNI"]',f)?.value),
+    Sexo:              normStr($('#sexo')?.value || '' ).toUpperCase(), // si querés cargar el mismo select
+    FechaAltaManual:   normDate($('[name="FechaAltaManual"]',f)?.value),
+    HoraAltaManual:    normTime($('[name="HoraAltaManual"]',f)?.value),
+    EstadoEgreso:      normStr($('[name="EstadoEgreso"]',f)?.value) || 'Alta',
+    Observaciones:     normStr($('[name="Observaciones"]',f)?.value),
+    ForceDuplicate:    false
+  };
+  if(!out.DNI) throw new Error('DNI requerido para el alta.');
+  if(!out.FechaAltaManual) throw new Error('Falta fecha de alta.');
+  if(!out.HoraAltaManual) throw new Error('Falta hora de alta.');
+  return out;
+}
+
+// ---------- Acciones ----------
+async function guardarIngreso(){
+  const btn = $('#btnGuardar'); disable(btn,true);
+  try{
+    const payload = leerFormularioIngreso();
+    const r = await api('save', payload);
+    if (!r.ok) throw new Error(r.message || r.code || 'Error al guardar');
+    toast('Ingreso guardado ✔');
+    // opcional: limpiar campos o marcar éxito visual
+  }catch(e){ toast(e.message || e); }
+  finally{ disable(btn,false); }
+}
+
+async function guardarAlta(){
+  const btn = $('#btnAlta'); disable(btn,true);
+  try{
+    const payload = leerFormularioAlta();
+    const r = await api('alta', payload);
+    if (!r.ok) throw new Error(r.message || r.code || 'Error al registrar alta');
+    toast('Alta registrada ✔');
+  }catch(e){ toast(e.message || e); }
+  finally{ disable(btn,false); }
+}
+
+// ---------- Extras útiles ----------
+async function buscarPorDNI(dni){
+  dni = onlyDigits(dni);
+  if (dni.length < 7) return;
+  const r = await api('findbydni', { dni, days: 120 });
+  if (r?.ok && r.found) {
+    if (r.sexo) $('#sexo').value = r.sexo;
+    // acá podrías autocompletar más cosas si quisieras
+  }
+}
+$('#dni')?.addEventListener('blur', e => buscarPorDNI(e.target.value));
+
+// Autocomplete Dx (si querés)
+async function cargarCIE10(){
+  const r = await api('cie10');
+  if (!r?.ok) return;
+  const list = r.list || [];
+  // ejemplo ultra simple: al perder foco normaliza código
+  $('#dx')?.addEventListener('blur', ()=>{
+    const v = $('#dx').value.toUpperCase();
+    const hit = list.find(x => x.code === v);
+    if (!hit && /^[A-Z]\d{2}/.test(v)) $('#dx').value = v; // deja el código igual
+  });
+}
+
+// Arranque: ping + config + CIE10
+window.addEventListener('load', async ()=>{
+  console.log('PING', await api('ping'));
+  console.log('CONFIG', await api('config'));
+  cargarCIE10();
+});
 </script>
 </body>
 </html>
+
