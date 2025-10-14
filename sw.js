@@ -1,18 +1,22 @@
-// sw.js — HSM v7 Móvil (pro)
-const VERSION = 'v1.3.1';
+// sw.js — HSM v7 Móvil (pro) — v1.3.2
+const VERSION = 'v1.3.2';
 const PREFIX = 'hsm-cache';
-const STATIC_CACHE = `${PREFIX}-static-${VERSION}`;
+const STATIC_CACHE  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME_CACHE = `${PREFIX}-runtime-${VERSION}`;
-const IMG_CACHE = `${PREFIX}-img-${VERSION}`;
+const IMG_CACHE     = `${PREFIX}-img-${VERSION}`;
+
+// ===== Helpers de rutas (soporta GitHub Pages con subcarpeta)
+const SCOPE = self.registration.scope; // ej: https://usuario.github.io/panel-html-msm/
+const P = (rel) => new URL(rel, SCOPE).toString();
 
 // Archivos mínimos para arrancar offline
 const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  // agrega aquí tus CSS/JS empacados si los separás del index
+  P('./'),              // página inicial dentro del scope real
+  P('index.html'),
+  P('manifest.json'),
+  P('icons/icon-192.png'),
+  P('icons/icon-512.png'),
+  // si más adelante separás CSS/JS, agrégalos aquí con P('app.css')/P('app.js')
 ];
 
 // --- Utils
@@ -30,8 +34,7 @@ async function putInCache(cacheName, request, response, maxEntries) {
   if (maxEntries) {
     const keys = await cache.keys();
     if (keys.length > maxEntries) {
-      // FIFO: elimina los más antiguos
-      await cache.delete(keys[0]);
+      await cache.delete(keys[0]); // FIFO
     }
   }
 }
@@ -74,26 +77,23 @@ self.addEventListener('activate', (event) => {
 
 // --- Mensajes: permitir skipWaiting desde la UI (opcional)
 self.addEventListener('message', (event) => {
-  if (event.data === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // --- Fetch strategies
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // Evita cachear POST o non-GET (ej. /exec de Apps Script)
+  // No cachear POST (ej. Apps Script /exec) ni non-GET
   if (req.method !== 'GET') {
     event.respondWith(fetch(req).catch(() => new Response(null, { status: 503 })));
     return;
   }
 
-  // Navegaciones/HTML: network-first + preload + fallback a index
+  // Navegaciones/HTML: network-first + preload + fallback al index de STATIC
   if (isHTML(req, event)) {
     event.respondWith((async () => {
       try {
-        // Usa navigation preload si está disponible
         const preload = await event.preloadResponse;
         if (preload) {
           putInCache(RUNTIME_CACHE, req, preload.clone());
@@ -106,8 +106,8 @@ self.addEventListener('fetch', (event) => {
         }
         throw new Error('net-fail');
       } catch {
-        // Fallback offline
-        const cached = await caches.match('./index.html');
+        // Fallback offline: usa el index del cache estático
+        const cached = await caches.match(P('index.html'));
         return cached || new Response('<h1>Offline</h1>', {
           headers: { 'Content-Type': 'text/html; charset=utf-8' }
         });
@@ -118,25 +118,21 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Recursos de otro origen: deja pasar (no cachea) salvo imágenes CORS simples
+  // Recursos de otro origen: deja pasar (no cachea) salvo imágenes simples
   if (!sameOrigin(url)) {
-    // Para imágenes externas sencillas aplica cache-first con límite
     if (req.destination === 'image') {
       event.respondWith((async () => {
         const cached = await caches.match(req);
         if (cached) return cached;
         try {
           const net = await fetch(req, { mode: 'no-cors' });
-          // Respuestas opaques no pueden re-usarse siempre; aun así guardamos para hits futuros
           putInCache(IMG_CACHE, req, net.clone(), 60);
           return net;
         } catch {
           return new Response('', { status: 504 });
         }
       })());
-      return;
     }
-    // El resto pasa directo
     return;
   }
 
@@ -147,10 +143,7 @@ self.addEventListener('fetch', (event) => {
       const cache = await caches.open(RUNTIME_CACHE);
       const cached = await cache.match(req);
       const fetchAndUpdate = fetch(req)
-        .then((res) => {
-          if (res && res.ok) cache.put(req, res.clone());
-          return res;
-        })
+        .then((res) => { if (res && res.ok) cache.put(req, res.clone()); return res; })
         .catch(() => null);
       return cached || (await fetchAndUpdate) || new Response('', { status: 504 });
     })());
@@ -158,7 +151,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // 2) Imágenes / íconos -> cache-first con límite
-  if (req.destination === 'image' || url.pathname.startsWith('/icons/')) {
+  if (req.destination === 'image' || url.pathname.includes('/icons/')) {
     event.respondWith((async () => {
       const cached = await caches.match(req);
       if (cached) return cached;
@@ -193,12 +186,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith((async () => {
     const cached = await caches.match(req);
     const netPromise = fetch(req)
-      .then((res) => {
-        if (res && res.ok) putInCache(RUNTIME_CACHE, req, res.clone(), 100);
-        return res;
-      })
+      .then((res) => { if (res && res.ok) putInCache(RUNTIME_CACHE, req, res.clone(), 100); return res; })
       .catch(() => null);
-
     return cached || (await netPromise) || new Response('', { status: 504 });
   })());
 });
