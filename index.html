@@ -10,24 +10,24 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>HSM v7 • Móvil</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="/panel-html-msm/manifest.json" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/panel-html-msm/icons/favicon.png" />
-  <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" />
+  <!-- Manifest & Icons (rutas absolutas por subpath de GitHub Pages) -->
+  <link rel="manifest" href="/panel-html-msm/manifest.json">
+  <link rel="apple-touch-icon" href="/panel-html-msm/icons/maskable-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/panel-html-msm/icons/maskable-192.png">
 
   <style>
     :root{
-      --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
-      --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --acc:#60a5fa;
+      --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --acc:#60a5fa;
       --field:#0b1329; --bd:#1f2a44; --chip:#1f2937; --shadow:0 8px 28px rgba(0,0,0,.35);
+      --focus: 0 0 0 3px rgba(96,165,250,.35);
     }
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:920px;margin:0 auto;padding:12px}
+    .wrap{max-width:980px;margin:0 auto;padding:12px}
     .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
     .header{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)}
-    .header .title{font-weight:800; letter-spacing:.3px}
-    .header .sp{flex:1}
+    .title{font-weight:800;letter-spacing:.3px}
+    .sp{flex:1}
     .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
     .badge.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
     .badge.off{background:rgba(148,163,184,.12);color:#94a3b8}
@@ -35,91 +35,91 @@
     .btn.sec{background:#1f2937;color:#d1d5db}
     .btn.warn{background:var(--warn);color:#051019}
     .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:720px){ .row{grid-template-columns:1fr} }
     label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
     input,select,textarea{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--bd);border-radius:12px;padding:11px 12px;outline:none}
-    input:focus,select:focus,textarea:focus{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.25)}
-    textarea{min-height:90px;resize:vertical}
+    input:focus,select:focus,textarea:focus{box-shadow:var(--focus);border-color:#3b82f6}
+    textarea{min-height:96px;resize:vertical}
     .tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
     .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700}
     .tab.act{background:var(--card);color:#fff}
     .view{padding:12px}
-    .kv{display:flex; gap:8px; align-items:center}
+    .kv{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .kv input{flex:1}
     .st{margin-top:10px;font-size:13px}
-    .ok{color:#86efac}.err{color:#fca5a5}.mut{color:#94a3b8}
+    .ok{color:#86efac} .err{color:#fca5a5} .mut{color:#94a3b8}
     .logo{height:44px;width:auto;object-fit:contain;border-radius:8px}
     .chips{display:flex;flex-wrap:wrap;gap:8px}
     .chip{background:var(--chip);border:1px solid var(--bd);color:#d1d5db;padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer}
     .list{border:1px solid var(--bd);border-radius:12px;overflow:hidden}
     .item{display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:center}
     .item:last-child{border-bottom:0}
-    .small{font-size:12px;color:var(--mut)} hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
+    .small{font-size:12px;color:var(--mut)}
+    hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
   </style>
 </head>
 <body>
-
 <div class="wrap">
-  <div class="card">
+  <div class="card" role="application" aria-label="HSM móvil">
     <div class="header">
       <img id="logo" class="logo" alt="logo" src="" hidden>
       <div class="title">HSM v7 • Móvil</div>
-      <span id="online" class="badge off">Offline</span>
+      <span id="online" class="badge off" aria-live="polite">Offline</span>
       <span class="sp"></span>
       <button id="btnInstall" class="btn sec" style="display:none">Instalar</button>
-      <button id="btnCfg" class="btn sec">⚙️</button>
+      <button id="btnCfg" class="btn sec" aria-haspopup="dialog">⚙️</button>
     </div>
 
-    <!-- NAV TABS -->
-    <div class="tabs">
-      <div class="tab act" data-v="ing">Ingreso</div>
-      <div class="tab" data-v="alta">Alta</div>
-      <div class="tab" data-v="pend">Pendientes</div>
-      <div class="tab" data-v="util">Útiles</div>
-    </div>
+    <nav class="tabs" aria-label="Secciones">
+      <button class="tab act" data-v="ing">Ingreso</button>
+      <button class="tab" data-v="alta">Alta</button>
+      <button class="tab" data-v="pend">Pendientes</button>
+      <button class="tab" data-v="util">Útiles</button>
+    </nav>
 
     <!-- INGRESO -->
-    <div id="v-ing" class="view">
+    <section id="v-ing" class="view" aria-labelledby="tab-ing">
       <div class="row">
         <div>
-          <label>DNI</label>
+          <label for="i_dni">DNI</label>
           <div class="kv">
-            <input id="i_dni" type="tel" inputmode="numeric" placeholder="7–9 dígitos">
-            <button class="btn sec" id="dniCam">Cargar</button>
+            <input id="i_dni" type="tel" inputmode="numeric" autocomplete="off" placeholder="7–9 dígitos" aria-required="true">
+            <button class="btn sec" id="dniCam" type="button">Cargar</button>
           </div>
         </div>
         <div>
-          <label>Sexo</label>
+          <label for="i_sexo">Sexo</label>
           <select id="i_sexo"><option value="">—</option><option>M</option><option>F</option><option>X</option></select>
         </div>
       </div>
 
       <div class="row">
         <div>
-          <label>Fecha ingreso</label>
+          <label for="i_fi">Fecha ingreso</label>
           <div class="kv">
-            <input id="i_fi" type="date"><button class="btn sec" id="iFiNow">Ahora</button>
+            <input id="i_fi" type="date" aria-required="true">
+            <button class="btn sec" id="iFiNow" type="button">Ahora</button>
           </div>
         </div>
         <div>
-          <label>Hora ingreso</label>
+          <label for="i_hi">Hora ingreso</label>
           <div class="kv">
-            <input id="i_hi" type="time"><button class="btn sec" id="iHiNow">Ahora</button>
+            <input id="i_hi" type="time" aria-required="true">
+            <button class="btn sec" id="iHiNow" type="button">Ahora</button>
           </div>
         </div>
       </div>
 
       <div class="row">
         <div>
-          <label>Ideación / Intento</label>
-          <select id="i_ii">
-            <option value="">—</option><option>Ideación</option><option>Intento</option>
-          </select>
+          <label for="i_ii">Ideación / Intento</label>
+          <select id="i_ii"><option value="">—</option><option>Ideación</option><option>Intento</option></select>
         </div>
         <div>
-          <label>Método / Letalidad</label>
+          <label for="i_met">Método / Letalidad</label>
           <select id="i_met">
             <option value="">—</option>
             <option>Intoxicación</option><option>Corte</option><option>Colgamiento</option>
@@ -130,235 +130,239 @@
 
       <div class="row">
         <div>
-          <label>Consumo</label>
+          <label for="i_con">Consumo</label>
           <select id="i_con"><option value="">—</option><option>Sí</option><option>No</option></select>
         </div>
         <div>
-          <label>Tipo Sustancia</label>
+          <label for="i_sus">Tipo Sustancia</label>
           <select id="i_sus"><option value=""></option><option>Alcohol</option><option>BZD</option><option>Opioides</option><option>Cocaína</option><option>THC</option><option>Mixto</option></select>
         </div>
       </div>
 
-      <label>Dx CIE-10 (código)</label>
-      <input id="i_cie" list="cie-list" placeholder="Ej: F32.1">
+      <label for="i_cie">Dx CIE-10 (código)</label>
+      <input id="i_cie" list="cie-list" placeholder="Ej: F32.1" autocomplete="off">
       <datalist id="cie-list"></datalist>
 
-      <label>Observaciones</label>
+      <label for="i_obs">Observaciones</label>
       <textarea id="i_obs" placeholder="Notas breves (opcional)"></textarea>
       <div class="chips" id="tpls">
-        <div class="chip" data-t="+Observación breve sin particularidades.">Obs. SP</div>
-        <div class="chip" data-t="+Se informa red de apoyo presente.">Red apoyo ✓</div>
-        <div class="chip" data-t="+Niega consumo reciente.">Niega consumo</div>
-        <div class="chip" data-t="+Acompañante en guardia.">Acompañante</div>
+        <button class="chip" data-t="+Observación breve sin particularidades.">Obs. SP</button>
+        <button class="chip" data-t="+Se informa red de apoyo presente.">Red apoyo ✓</button>
+        <button class="chip" data-t="+Niega consumo reciente.">Niega consumo</button>
+        <button class="chip" data-t="+Acompañante en guardia.">Acompañante</button>
       </div>
 
-      <div class="st mut" id="ingMsg"></div>
-      <div class="kv" style="margin-top:12px; gap:10px; flex-wrap:wrap">
+      <div class="st mut" id="ingMsg" aria-live="polite"></div>
+      <div class="kv" style="margin-top:12px">
         <button class="btn" id="ingSave">Guardar ingreso</button>
-        <button class="btn ghost" id="ingShare">Compartir comprobante</button>
+        <button class="btn ghost" id="ingShare" type="button">Compartir comprobante</button>
       </div>
       <div class="small">Tip: admite <code>?dni=&amp;sexo=&amp;fi=YYYY-MM-DD</code> para prellenar.</div>
-    </div>
+    </section>
 
     <!-- ALTA -->
-    <div id="v-alta" class="view" style="display:none">
+    <section id="v-alta" class="view" style="display:none">
       <div class="row">
         <div>
-          <label>DNI</label>
-          <input id="a_dni" type="tel" inputmode="numeric" placeholder="7–9 dígitos">
+          <label for="a_dni">DNI</label>
+          <input id="a_dni" type="tel" inputmode="numeric" placeholder="7–9 dígitos" aria-required="true">
         </div>
         <div>
-          <label>Fecha Nac. (opcional)</label>
+          <label for="a_fn">Fecha Nac. (opcional)</label>
           <input id="a_fn" type="date">
         </div>
       </div>
 
       <div class="row">
         <div>
-          <label>Sexo</label>
+          <label for="a_sexo">Sexo</label>
           <select id="a_sexo"><option value="">—</option><option>M</option><option>F</option><option>X</option></select>
         </div>
         <div>
           <label>Buscar ingreso</label>
           <div class="kv">
-            <button class="btn sec" id="aSearch">Buscar por DNI</button>
-            <span id="aFound" class="hint"></span>
+            <button class="btn sec" id="aSearch" type="button">Buscar por DNI</button>
+            <span id="aFound" class="small" aria-live="polite"></span>
           </div>
         </div>
       </div>
 
       <div class="row">
         <div>
-          <label>Fecha alta</label>
+          <label for="a_fa">Fecha alta</label>
           <div class="kv">
-            <input id="a_fa" type="date"><button class="btn sec" id="aFaNow">Ahora</button>
+            <input id="a_fa" type="date" aria-required="true"><button class="btn sec" id="aFaNow" type="button">Ahora</button>
           </div>
         </div>
         <div>
-          <label>Hora alta</label>
+          <label for="a_ha">Hora alta</label>
           <div class="kv">
-            <input id="a_ha" type="time"><button class="btn sec" id="aHaNow">Ahora</button>
+            <input id="a_ha" type="time" aria-required="true"><button class="btn sec" id="aHaNow" type="button">Ahora</button>
           </div>
         </div>
       </div>
 
-      <label>Estado</label>
-      <select id="a_estado">
-        <option>Alta</option><option>Derivación</option><option>Fuga</option><option>Traslado</option><option>Óbito</option>
-      </select>
+      <label for="a_estado">Estado</label>
+      <select id="a_estado"><option>Alta</option><option>Derivación</option><option>Fuga</option><option>Traslado</option><option>Óbito</option></select>
 
-      <label>Observaciones</label>
+      <label for="a_obs">Observaciones</label>
       <textarea id="a_obs" placeholder="Breve detalle (opcional)"></textarea>
 
-      <div class="st mut" id="altaMsg"></div>
-      <div class="kv" style="margin-top:12px; gap:10px; flex-wrap:wrap">
+      <div class="st mut" id="altaMsg" aria-live="polite"></div>
+      <div class="kv" style="margin-top:12px">
         <button class="btn" id="altaSave">Guardar alta</button>
-        <button class="btn ghost" id="altaShare">Compartir comprobante</button>
+        <button class="btn ghost" id="altaShare" type="button">Compartir comprobante</button>
       </div>
-    </div>
+    </section>
 
     <!-- PENDIENTES -->
-    <div id="v-pend" class="view" style="display:none">
-      <div class="kv" style="gap:8px; flex-wrap:wrap">
-        <button class="btn sec" id="flush">Enviar pendientes</button>
-        <button class="btn ghost" id="exp">Exportar JSON</button>
-        <input id="impFile" type="file" accept="application/json" style="display:none">
-        <button class="btn ghost" id="imp">Importar JSON</button>
+    <section id="v-pend" class="view" style="display:none">
+      <div class="kv">
+        <button class="btn sec" id="flush" type="button">Enviar pendientes</button>
+        <button class="btn ghost" id="exp" type="button">Exportar JSON</button>
+        <input id="impFile" type="file" accept="application/json" hidden>
+        <button class="btn ghost" id="imp" type="button">Importar JSON</button>
         <span id="pendInfo" class="badge off">0</span>
       </div>
       <hr/>
-      <div class="list" id="pendList"></div>
-    </div>
+      <div class="list" id="pendList" aria-live="polite"></div>
+    </section>
 
     <!-- ÚTILES -->
-    <div id="v-util" class="view" style="display:none">
+    <section id="v-util" class="view" style="display:none">
       <div class="row">
         <div class="card" style="padding:12px">
           <b>Escáner rápido (DNI)</b><br>
-          <div class="small">Usá la cámara/teclado del celular para pegar/teclear DNI y validar.</div>
+          <div class="small">Pegá/tecleá el DNI y validá.</div>
           <div class="kv" style="margin-top:8px">
             <input id="u_dni" type="tel" inputmode="numeric" placeholder="DNI">
-            <button class="btn sec" id="uVal">Validar</button>
+            <button class="btn sec" id="uVal" type="button">Validar</button>
           </div>
-          <div id="u_res" class="st mut"></div>
+          <div id="u_res" class="st mut" aria-live="polite"></div>
         </div>
         <div class="card" style="padding:12px">
           <b>Atajos</b>
           <div class="chips" style="margin-top:8px">
-            <div class="chip" data-go="ing">Ir a Ingreso</div>
-            <div class="chip" data-go="alta">Ir a Alta</div>
-            <div class="chip" data-go="pend">Ver Pendientes</div>
+            <button class="chip" data-go="ing">Ir a Ingreso</button>
+            <button class="chip" data-go="alta">Ir a Alta</button>
+            <button class="chip" data-go="pend">Ver Pendientes</button>
           </div>
           <hr>
-          <div class="small">Versión app: <span id="vver">v1.3.3</span></div>
+          <div class="small">Versión app: <span id="vver">v1.4.0</span></div>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </div>
 
 <!-- CONFIG -->
-<dialog id="cfg" style="border:1px solid var(--bd); border-radius:16px; background:#0f172a; color:#e5e7eb; max-width:560px; width:92%">
+<dialog id="cfg" style="border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%">
   <form method="dialog" style="padding:14px">
     <h3 style="margin:0 0 10px">Configuración</h3>
-    <label>WebApp URL (/exec)</label>
-    <input id="cfg_url" placeholder="https://script.google.com/macros/s/.../exec">
-    <label>API Key</label>
-    <input id="cfg_key" placeholder="Si está activa">
-    <label>Logo URL (png/jpg/svg)</label>
-    <input id="cfg_logo" placeholder="https://.../logo.png">
-    <div class="kv" style="margin-top:10px; gap:8px">
+    <label for="cfg_url">WebApp URL (/exec)</label>
+    <input id="cfg_url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" />
+    <label for="cfg_key">API Key</label>
+    <input id="cfg_key" placeholder="Si está activa" autocomplete="off" />
+    <label for="cfg_logo">Logo URL (png/jpg/svg)</label>
+    <input id="cfg_logo" placeholder="https://.../logo.png" autocomplete="off" />
+    <div class="kv" style="margin-top:10px">
       <button class="btn sec" id="cfgTest" type="button">Probar</button>
       <button class="btn">Guardar</button>
     </div>
-    <div id="cfgMsg" class="small" style="margin-top:8px"></div>
+    <div id="cfgMsg" class="small" style="margin-top:8px" aria-live="polite"></div>
   </form>
 </dialog>
 
-<div id="toast" class="toast"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* ===== Helpers mínimos ===== */
-const LS={get(k,d=null){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(_){return localStorage.getItem(k)||d}},
+/* ====== CONSTANTES ====== */
+const APP_VER = 'v1.4.0';              // bump para cache bust
+const BASE_PATH = '/panel-html-msm/';  // subpath GitHub Pages (scope)
+
+/* ====== STORAGE UTILS ====== */
+const LS={get(k,d=null){try{return JSON.parse(localStorage.getItem(k))??d}catch(_){return localStorage.getItem(k)||d}},
           set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(_){localStorage.setItem(k,v)}},
           del(k){localStorage.removeItem(k)}};
 const $=s=>document.querySelector(s);
+
+/* ====== UI / TOAST ====== */
+function toast(txt,ms=2200){const t=$("#toast");t.textContent=txt;t.style.display='block';setTimeout(()=>t.style.display='none',ms)}
 const fmtDate=ts=>new Date(ts).toLocaleString();
 const vibrate=p=>('vibrate' in navigator)&&navigator.vibrate(p);
-function toast(txt,ms=2200){const t=$("#toast");t.textContent=txt;t.style.display='block';setTimeout(()=>t.style.display='none',ms)}
 
-/* ===== API (configurable desde ⚙️) ===== */
-const API={
-  url(){return LS.get('HSM_WEBAPP_URL','')},
-  key(){return LS.get('HSM_API_KEY','')},
-  async call(action,payload={}){
-    const u=API.url(); if(!u) throw new Error('Sin URL configurada');
-    const r=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action,apiKey:API.key(),...payload})});
-    const t=await r.text(); if(!r.ok) throw new Error('HTTP '+r.status+' '+t);
-    try{ return JSON.parse(t); }catch{ return { ok:false, raw:t }; }
-  }
-};
-
-/* ===== PWA: Install + SW ===== */
+/* ====== PWA / SW ====== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker
+    .register(`${BASE_PATH}sw.js`, { scope: BASE_PATH })
+    .catch(console.error)
+  );
+  navigator.serviceWorker.addEventListener('message',(ev)=>{
+    if(ev.data?.type==='SW_ACTIVATED'){ toast('Nueva versión. Recargando…',1600); setTimeout(()=>location.reload(),1300); }
+  });
+}
 let _deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').style.display='inline-block';});
-$('#btnInstall').onclick=async()=>{ if(!_deferredPrompt) return; _deferredPrompt.prompt(); await _deferredPrompt.userChoice; _deferredPrompt=null; $('#btnInstall').style.display='none';};
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('/panel-html-msm/sw.js',{ scope:'/panel-html-msm/' }).catch(()=>{});
-  });
-  navigator.serviceWorker.addEventListener('message',(ev)=>{
-    if(ev.data?.type==='SW_ACTIVATED'){ toast('Nueva versión disponible. Recargando…',1800); setTimeout(()=>location.reload(),1500); }
-  });
-}
+$('#btnInstall').onclick=async()=>{ if(!_deferredPrompt) return; _deferredPrompt.prompt(); await _deferredPrompt.userChoice; _deferredPrompt=null; $('#btnInstall').style.display='none'; };
 
-/* ===== Estado online ===== */
+/* ====== ONLINE STATUS ====== */
 function setOnline(ok){const b=$('#online');b.textContent=ok?'Online':'Offline';b.className='badge '+(ok?'ok':'off')}
-window.addEventListener('online',()=>setOnline(true)); window.addEventListener('offline',()=>setOnline(false)); setOnline(navigator.onLine);
+window.addEventListener('online',()=>setOnline(true));
+window.addEventListener('offline',()=>setOnline(false));
+setOnline(navigator.onLine);
 
-/* ===== Logo ===== */
-function applyLogo(){ const u=LS.get('HSM_LOGO_URL',''), el=$('#logo'); if(u){el.src=u; el.hidden=false;} else {el.hidden=true;} }
+/* ====== CONFIG / LOGO ====== */
+function applyLogo(){ const u=LS.get('HSM_LOGO_URL',''), el=$('#logo'); if(u){ el.src=u; el.hidden=false; } else { el.hidden=true; }}
 
-/* ===== Tabs ===== */
-function wireTabs(){
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.onclick=()=>{
-      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('act'));
-      t.classList.add('act'); const v=t.dataset.v;
-      ['ing','alta','pend','util'].forEach(id=>{$('#v-'+id).style.display=(id===v?'block':'none');});
-      if(v==='pend') renderPend();
-    };
-  });
-  (document.querySelector('.tab.act')||document.querySelector('.tab[data-v="ing"]'))?.click();
-}
+/* ====== TABS ====== */
+function showTab(v){ ['ing','alta','pend','util'].forEach(id=>{$('#v-'+id).style.display=(id===v?'block':'none');}); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('act',t.dataset.v===v)); if(v==='pend') renderPend();}
+function wireTabs(){ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.v)); showTab('ing'); }
 
-/* ===== Helpers fechas ===== */
-function nowDate(){return new Date().toISOString().slice(0,10)}
-function nowTime(){return new Date().toTimeString().slice(0,5)}
+/* ====== DATES ====== */
+const nowDate=()=>new Date().toISOString().slice(0,10);
+const nowTime=()=>new Date().toTimeString().slice(0,5);
 $('#iFiNow').onclick=()=>$('#i_fi').value=nowDate();
 $('#iHiNow').onclick=()=>$('#i_hi').value=nowTime();
 $('#aFaNow').onclick=()=>$('#a_fa').value=nowDate();
 $('#aHaNow').onclick=()=>$('#a_ha').value=nowTime();
 
-/* ===== Chips ===== */
+/* ====== CHIPS ====== */
 $('#tpls').addEventListener('click',e=>{const t=e.target.closest('.chip'); if(!t) return; $('#i_obs').value=(($('#i_obs').value||'')+' '+t.dataset.t).trim(); $('#i_obs').focus();});
 
-/* ===== Validaciones ===== */
-function validDNI(v){ return /^\d{7,9}$/.test((v||'').trim()); }
+/* ====== VALID ====== */
+const validDNI = v => /^\d{7,9}$/.test(String(v||'').trim());
 
-/* ===== OUTBOX (pendientes) ===== */
-function boxGet(){ return LS.get('HSM_OUTBOX',[]); }
-function boxSet(a){ LS.set('HSM_OUTBOX',a); const n=a.length; $('#pendInfo').textContent=n; $('#pendInfo').className='badge '+(n?'ok':'off'); }
+/* ====== API ====== */
+const API={
+  url(){return LS.get('HSM_WEBAPP_URL','')},
+  key(){return LS.get('HSM_API_KEY','')},
+  async call(action,payload={}){
+    const u=this.url(); if(!u) throw new Error('Configurar WebApp URL');
+    const body={ action, apiKey:this.key(), ...payload };
+    const r = await fetch(u,{ method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(body) });
+    const t = await r.text();
+    if(!r.ok) throw new Error('HTTP '+r.status+' '+t);
+    try{ return JSON.parse(t) }catch{ return { ok:false, raw:t } }
+  }
+};
+
+/* ====== OUTBOX (cola offline) ====== */
+const boxKey='HSM_OUTBOX';
+const boxGet=()=>LS.get(boxKey,[]);
+const boxSet=(arr)=>{LS.set(boxKey,arr); const n=arr.length; const b=$('#pendInfo'); b.textContent=n; b.className='badge '+(n?'ok':'off');}
 async function boxFlush(){
   const box=boxGet(); if(!box.length){ toast('No hay pendientes'); return; }
-  $('#pendInfo').textContent='…'; const rest=[];
+  $('#pendInfo').textContent='…';
+  const rest=[];
   for(const it of box){
     try{
       if(it.kind==='ingreso') await API.call('save',{payload:it.payload});
       if(it.kind==='alta')    await API.call('alta',{payload:it.payload});
     }catch(_){ rest.push(it); }
   }
-  boxSet(rest); toast(rest.length?('Quedan '+rest.length+' pendientes'): 'Pendientes enviados ✔'); renderPend();
+  boxSet(rest);
+  toast(rest.length?`Quedan ${rest.length} pendientes`:'Pendientes enviados ✔');
+  renderPend();
 }
 $('#flush').onclick=boxFlush;
 $('#exp').onclick=()=>{ const a=document.createElement('a'); a.download='hsm_outbox.json'; a.href=URL.createObjectURL(new Blob([JSON.stringify(boxGet())],{type:'application/json'})); a.click(); };
@@ -376,25 +380,25 @@ function renderPend(){
     d.innerHTML=`<div class="small">${it.kind.toUpperCase()}</div>
       <div>DNI <b>${it.payload.DNI||'?'}</b> • ${fmtDate(it.ts)}</div>
       <span class="sp"></span>
-      <button class="btn ghost" data-i="${ix}">Borrar</button>`;
+      <button class="btn ghost" data-i="${ix}" type="button">Borrar</button>`;
     el.appendChild(d);
   });
   el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const idx=+b.dataset.i; const box=boxGet(); box.splice(idx,1); boxSet(box); renderPend(); };
 }
 
-/* ===== Anti-duplicado simple (cliente) ===== */
-function recentKey(kind,dni){ return `HSM_REC_${kind}_${dni}`; }
-function dedupeSet(kind,dni){ LS.set(recentKey(kind,dni), Date.now()); }
-function dedupeHit(kind,dni,ms=60000){ const t=LS.get(recentKey(kind,dni),0); return (Date.now()-t)<ms; }
+/* ====== DEDUPE ====== */
+const recentKey=(k,d)=>`HSM_REC_${k}_${d}`;
+const dedupeSet=(k,d)=>LS.set(recentKey(k,d),Date.now());
+const dedupeHit=(k,d,ms=60000)=> (Date.now()-(LS.get(recentKey(k,d),0)||0))<ms;
 
-/* ===== Autosave ===== */
+/* ====== AUTOSAVE ====== */
 const DRAFT_ING='HSM_DRAFT_ING', DRAFT_ALTA='HSM_DRAFT_ALTA';
 function saveDraft(id,fields){ const o={}; fields.forEach(f=>o[f]=$('#'+f)?.value??''); LS.set(id,o); }
 function loadDraft(id,fields){ const o=LS.get(id,null); if(!o) return; fields.forEach(f=>{ if(o[f]!=null && $('#'+f)) $('#'+f).value=o[f]; }); }
 ['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs'].forEach(id=>$('#'+id).addEventListener('input',()=>saveDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs'])));
 ['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs'].forEach(id=>$('#'+id).addEventListener('input',()=>saveDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs'])));
 
-/* ===== Ingreso ===== */
+/* ====== INGRESO ====== */
 let lastReceipt=null;
 $('#ingSave').onclick=async ()=>{
   try{
@@ -410,11 +414,10 @@ $('#ingSave').onclick=async ()=>{
     };
     $('#ingMsg').textContent='Guardando…'; $('#ingMsg').className='st mut';
     const j=await API.call('save',{payload});
-    if(j&&j.ok){
+    if(j?.ok){
       $('#ingMsg').textContent='Guardado ✔'; $('#ingMsg').className='st ok';
-      lastReceipt={kind:'Ingreso',dni,ts:Date.now()};
-      dedupeSet('ing',dni); LS.del(DRAFT_ING); vibrate([60,40,60]);
-    } else throw new Error(j&&j.message||'desconocido');
+      lastReceipt={kind:'Ingreso',dni,ts:Date.now()}; dedupeSet('ing',dni); LS.del(DRAFT_ING); vibrate([60,40,60]);
+    } else throw new Error(j?.message||'desconocido');
   }catch(e){
     const it={kind:'ingreso',payload:{
       DNI:$('#i_dni').value.trim(), Sexo:$('#i_sexo').value,
@@ -424,18 +427,18 @@ $('#ingSave').onclick=async ()=>{
       DxProvisorio_CIE10:$('#i_cie').value, Observaciones:$('#i_obs').value
     }, ts:Date.now()};
     const box=boxGet(); box.push(it); boxSet(box);
-    $('#ingMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#ingMsg').className='st err'; vibrate(150);
+    $('#ingMsg').textContent=`Sin red. Guardado en pendientes (${box.length})`; $('#ingMsg').className='st err'; vibrate(150);
   }
 };
-$('#ingShare').onclick=()=>{ const txt = lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Ingreso registrado'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado')); };
+$('#ingShare').onclick=()=>{ const txt= lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Ingreso registrado'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado')); };
 
-/* ===== Alta ===== */
+/* ====== ALTA ====== */
 $('#aSearch').onclick=async ()=>{
   try{
     const dni=$('#a_dni').value.trim(); if(!validDNI(dni)){ $('#aFound').textContent=' DNI inválido'; return; }
     $('#aFound').textContent=' Buscando…';
     const j=await API.call('find',{dni, days:120}).catch(()=>null);
-    if(j && j.ok && j.row){ $('#aFound').textContent=' Encontrado (fila '+j.row+')'; if(j.sexo) $('#a_sexo').value=(j.sexo||'').toUpperCase(); }
+    if(j?.ok && j.row){ $('#aFound').textContent=' Encontrado (fila '+j.row+')'; if(j.sexo) $('#a_sexo').value=(j.sexo||'').toUpperCase(); }
     else { $('#aFound').textContent=' No hallado (continuar manual)'; }
   }catch(_){ $('#aFound').textContent=' Offline (buscará al enviar)'; }
 };
@@ -444,50 +447,45 @@ $('#altaSave').onclick=async ()=>{
     const dni=$('#a_dni').value.trim();
     if(!validDNI(dni)){ $('#altaMsg').textContent='DNI inválido'; $('#altaMsg').className='st err'; vibrate(200); return; }
     if(dedupeHit('alta',dni)){ toast('Alta enviada hace instantes'); return; }
-    const payload={
-      DNI:dni, Sexo:$('#a_sexo').value,
-      FechaAltaManual:$('#a_fa').value, HoraAltaManual:$('#a_ha').value,
-      EstadoEgreso:$('#a_estado').value, Observaciones:$('#a_obs').value
-    };
+    const payload={ DNI:dni, Sexo:$('#a_sexo').value, FechaAltaManual:$('#a_fa').value, HoraAltaManual:$('#a_ha').value, EstadoEgreso:$('#a_estado').value, Observaciones:$('#a_obs').value };
     $('#altaMsg').textContent='Guardando…'; $('#altaMsg').className='st mut';
     const j=await API.call('alta',{payload});
-    if(j&&j.ok){
-      $('#altaMsg').textContent='Alta guardada ✔'; $('#altaMsg').className='st ok';
-      lastReceipt={kind:'Alta',dni,ts:Date.now()};
-      dedupeSet('alta',dni); LS.del(DRAFT_ALTA); vibrate([60,40,60]);
-    } else throw new Error(j&&j.message||'desconocido');
+    if(j?.ok){ $('#altaMsg').textContent='Alta guardada ✔'; $('#altaMsg').className='st ok'; lastReceipt={kind:'Alta',dni,ts:Date.now()}; dedupeSet('alta',dni); LS.del(DRAFT_ALTA); vibrate([60,40,60]); }
+    else throw new Error(j?.message||'desconocido');
   }catch(e){
     const it={kind:'alta',payload:{
-      DNI:$('#a_dni').value.trim(), Sexo:$('#a_sexo').value,
-      FechaAltaManual:$('#a_fa').value, HoraAltaManual:$('#a_ha').value,
-      EstadoEgreso:$('#a_estado').value, Observaciones:$('#a_obs').value
+      DNI:$('#a_dni').value.trim(), Sexo:$('#a_sexo').value, FechaAltaManual:$('#a_fa').value, HoraAltaManual:$('#a_ha').value, EstadoEgreso:$('#a_estado').value, Observaciones:$('#a_obs').value
     }, ts:Date.now()};
     const box=boxGet(); box.push(it); boxSet(box);
-    $('#altaMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#altaMsg').className='st err'; vibrate(150);
+    $('#altaMsg').textContent=`Sin red. Guardado en pendientes (${box.length})`; $('#altaMsg').className='st err'; vibrate(150);
   }
 };
-$('#altaShare').onclick=()=>{ const txt = lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Alta registrada'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado')); };
+$('#altaShare').onclick=()=>{ const txt= lastReceipt? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${fmtDate(lastReceipt.ts)}` : 'HSM • Alta registrada'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado')); };
 
-/* ===== Config ===== */
+/* ====== CONFIG ====== */
 $('#btnCfg').onclick=()=>{ $('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal(); };
 $('#cfg').addEventListener('close',()=>{ const u=$('#cfg_url').value.trim(), k=$('#cfg_key').value.trim(), l=$('#cfg_logo').value.trim(); if(u) LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k) LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l) LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada'); });
 $('#cfgTest').onclick=async ()=>{ try{ const r=await API.call('ping'); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK'); } catch(e){ $('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600) } };
 
-/* ===== CIE10 cache (10 min) ===== */
+/* ====== ÚTILES ====== */
+$('#uVal').onclick=()=>{ const v=$('#u_dni').value.trim(); const ok=validDNI(v); $('#u_res').textContent = ok? 'Formato válido ✔' : 'Formato inválido'; $('#u_res').className = 'st ' + (ok?'ok':'err'); };
+document.querySelectorAll('.chip[data-go]').forEach(c=>c.onclick=()=>showTab(c.dataset.go));
+
+/* ====== CIE10 cache (10 min) ====== */
 (async function loadCIE(){
   try{
     const ck='CIE_CACHE', ts='CIE_TS', now=Date.now();
     let list=LS.get(ck,null), t=LS.get(ts,0);
     if(!list || (now-t)>600000){
-      const j=await API.call('cie10_list'); list=(j&&j.ok&&j.list)||[];
+      const j=await API.call('cie10_list'); list=(j?.ok && j.list)||[];
       LS.set(ck,list); LS.set(ts,now);
     }
     const dl=$('#cie-list'); dl.innerHTML='';
     list.slice(0,2000).forEach(x=>{ const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o); });
-  }catch(_){ /* silencioso */ }
+  }catch(_){}
 })();
 
-/* ===== Prefill por query ===== */
+/* ====== PREFILL ====== */
 (function prefill(){
   const q=new URLSearchParams(location.search);
   if(q.get('dni') && $('#i_dni')) $('#i_dni').value=q.get('dni');
@@ -495,21 +493,18 @@ $('#cfgTest').onclick=async ()=>{ try{ const r=await API.call('ping'); $('#cfgMs
   if(q.get('fi') && $('#i_fi')) $('#i_fi').value=q.get('fi');
 })();
 
-/* ===== Boot ===== */
-window.addEventListener('DOMContentLoaded', () => {
-  try{
-    applyLogo(); boxSet(boxGet()); wireTabs();
-    const safe=(fn)=>{try{fn();}catch(e){console.warn(e)}};
-    safe(()=>loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']));
-    safe(()=>loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']));
-    if($('#i_fi') && !$('#i_fi').value) $('#i_fi').value=nowDate();
-    if($('#i_hi') && !$('#i_hi').value) $('#i_hi').value=nowTime();
-  }catch(e){ console.error('Boot error',e); toast('Error inicializando la app',3000); }
+/* ====== BOOT ====== */
+window.addEventListener('DOMContentLoaded',()=>{
+  applyLogo(); boxSet(boxGet()); wireTabs();
+  try{ loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']); }catch(_){}
+  try{ loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']); }catch(_){}
+  if(!$('#i_fi').value) $('#i_fi').value=nowDate();
+  if(!$('#i_hi').value) $('#i_hi').value=nowTime();
 });
 </script>
-
 </body>
 </html>
+
 
 
 
