@@ -712,8 +712,31 @@ window.addEventListener('load', async ()=>{
     });
   }
 </script>
+<!-- Manifest y color del tema -->
+<link rel="manifest" href="/panel-html-msm/manifest.json">
+<meta name="theme-color" content="#0b1220">
+
+<script>
+  // Registrar el service worker con scope del subpath
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/panel-html-msm/sw.js', {
+      scope: '/panel-html-msm/'
+    }).catch(console.error);
+  }
+
+  // (opcional) escuchar mensaje de versión nueva
+  if (navigator.serviceWorker) {
+    navigator.serviceWorker.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'SW_ACTIVATED') {
+        // tu toast + recarga suave
+        setTimeout(() => location.reload(), 1500);
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
+
 
 
