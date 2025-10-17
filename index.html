@@ -9,18 +9,16 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline." />
-
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest + iconos (rutas absolutas para GitHub Pages /panel-html-msm/) -->
+  <!-- Manifest + iconos (rutas absolutas para /panel-html-msm/) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="/panel-html-msm/icons/maskable-192.png">
-  <link rel="apple-touch-icon" href="/panel-html-msm/icons/maskable-192.png">
+  <link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
+  <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
 
-  <!-- Prefetch básico para acelerar primera interacción -->
+  <!-- Preconexión (Apps Script) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
-  <link rel="dns-prefetch" href="https://script.google.com">
-  <link rel="preload" as="image" href="/panel-html-msm/icons/maskable-192.png" imagesizes="48x48">
+  <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
   <style>
     :root{
@@ -74,52 +72,19 @@
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
     dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
     dialog::backdrop{background:rgba(2,6,23,.55)}
-    /* accesibilidad visible al tab */
     :focus-visible{outline:2px solid #60a5fa; outline-offset: 2px}
-/* ====== HSM: micro-mejoras A11y/UX (pegar al final del <style>) ====== */
-:root {
-  --ring: 0 0 0 3px rgba(56, 189, 248, .45);
-}
-*:focus-visible { outline: none !important; box-shadow: var(--ring); border-radius: 8px; }
-
-@media (prefers-reduced-motion: reduce) {
-  * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
-}
-
-/* Badges Online/Offline coherentes */
-.badge.ok   { background: #0ea5e9; color: #031a2b; }
-.badge.off  { background: #475569; color: #dce7f3; }
-
-/* Toast compacto y accesible */
-#toast {
-  position: fixed; inset-inline: 16px; bottom: 16px;
-  background: rgba(20,26,36,.96); color: #e6f1ff; padding: 10px 12px;
-  border: 1px solid rgba(255,255,255,.08); border-radius: 10px;
-  box-shadow: 0 6px 30px rgba(0,0,0,.35); display: none; z-index: 1000;
-}
-/* ==================================================================== */
-</style>
-<!-- ====== HSM: ICONOS OFICIALES (pegar en <head>) =================== -->
-<link rel="manifest" href="/panel-html-msm/manifest.json">
-
-<!-- Favicon genérico -->
-<link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
-
-<!-- iOS / iPadOS -->
-<link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
-
-<!-- PWA colores y UA -->
-<meta name="theme-color" content="#0b1220">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="format-detection" content="telephone=no">
-
-<!-- Preconexión (mejora latencia con Apps Script) -->
-<link rel="preconnect" href="https://script.google.com">
-<link rel="preconnect" href="https://script.googleapis.com">
-<!-- ================================================================ -->
-
+    /* micro-mejoras */
+    :root { --ring: 0 0 0 3px rgba(56,189,248,.45); }
+    *:focus-visible{ outline:none!important; box-shadow:var(--ring); border-radius:8px; }
+    @media (prefers-reduced-motion: reduce){
+      *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    }
+    /* badges */
+    .badge.ok{ background:#0ea5e9; color:#031a2b; }
+    .badge.off{ background:#475569; color:#dce7f3; }
+  </style>
 </head>
+
 <script>
 /* ====== HSM: Service Worker robusto + Sync + Warmup (pegar antes de </body>) === */
 if ('serviceWorker' in navigator) {
@@ -161,6 +126,23 @@ if ('serviceWorker' in navigator) {
       .then(() => boxFlush())     // reutiliza tu lógica actual de reenvío
       .finally(() => { _flushLock = false; });
   }
+<script>
+  // —— FLUSH automático cuando el SW avise ——
+  let _flushLock = false;
+  function safeFlushPend(){
+    if (_flushLock || !navigator.onLine) return;
+    _flushLock = true;
+    Promise.resolve().then(() => boxFlush()).finally(() => _flushLock = false);
+  }
+  navigator.serviceWorker?.addEventListener('message', (e) => {
+    if (e.data?.type === 'TRY_FLUSH_PEND') {
+      if (document.visibilityState === 'visible') safeFlushPend();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') safeFlushPend();
+  }, { passive: true });
+</script>
 
   // Mensaje del SW → intentar flush si estamos visibles/online
   navigator.serviceWorker?.addEventListener('message', (e) => {
@@ -821,6 +803,7 @@ addEventListener('DOMContentLoaded', ()=>{
 });
 </script>
 <!-- ================== /Fin Parte 2 ================== -->
+
 
 
 
