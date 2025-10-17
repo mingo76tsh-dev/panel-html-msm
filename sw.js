@@ -1,8 +1,28 @@
+/* ====== HSM SW: declarar APP_SHELL e ICONOS (pegar cerca del top) =============== */
+const CACHE = 'hsm-v1.5.0';
+const APP_SHELL = [
+  '/panel-html-msm/',
+  '/panel-html-msm/index.html',
+  '/panel-html-msm/manifest.json',
+  '/panel-html-msm/sw.js'
+];
+const ICONS = [
+  '/panel-html-msm/icons/favicon.png',
+  '/panel-html-msm/icons/apple-touch-icon.png',
+  '/panel-html-msm/icons/icon-192.png',
+  '/panel-html-msm/icons/icon-512.png',
+  '/panel-html-msm/icons/maskable-192.png',
+  '/panel-html-msm/icons/maskable-512.png'
+];
+/* ============================================================================= */
+
+
 /* sw.js — HSM v7 Móvil (pro+) — v1.5.0 */
 /// 𝙉𝙤𝙩𝙖: el scope real lo determina el registro desde /panel-html-msm/
 const VERSION = 'v1.5.0';
 const PREFIX  = 'hsm-cache';
-const STATIC  = `${PREFIX}-static-${VERSION}`;
+const STATIC
+  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
 const IMAGES  = `${PREFIX}-img-${VERSION}`;
 
