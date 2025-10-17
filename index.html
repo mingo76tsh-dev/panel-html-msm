@@ -120,7 +120,39 @@
 <!-- ================================================================ -->
 
 </head>
-<body>
+<script>
+/* ====== HSM: Service Worker robusto + Sync + Warmup (pegar antes de </body>) === */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/panel-html-msm/sw.js', { scope: '/panel-html-msm/' })
+      .then(async reg => {
+        // 🧊 Warmup de caché: iconos y shell
+        try {
+          const sw = await navigator.serviceWorker.ready;
+          sw.active?.postMessage({ type: 'WARMUP' });
+        } catch {}
+
+        // 🔁 Background Sync para pendientes (si está disponible)
+        if ('sync' in reg) {
+          try { await reg.sync.register('flush-pend'); } catch {}
+        }
+      })
+      .catch(() => {/* silencioso */});
+  }, { once: true, passive: true });
+
+  // Si el SW avisa de nueva versión → recargamos de forma amable
+  navigator.serviceWorker.addEventListener('message', (ev) => {
+    if (ev.data?.type === 'SW_ACTIVATED') {
+      const t = document.getElementById('toast');
+      if (t) { t.textContent = 'Nueva versión disponible. Actualizando…'; t.style.display = 'block'; }
+      setTimeout(() => location.reload(), 900);
+    }
+  });
+}
+/* ============================================================================== */
+</script>
+
+  <body>
   <a class="visually-hidden" href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
     Saltar al contenido
   </a>
@@ -764,6 +796,7 @@ addEventListener('DOMContentLoaded', ()=>{
 });
 </script>
 <!-- ================== /Fin Parte 2 ================== -->
+
 
 
 
