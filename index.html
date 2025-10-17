@@ -150,6 +150,31 @@ if ('serviceWorker' in navigator) {
   });
 }
 /* ============================================================================== */
+  <script>
+  // Debe existir boxFlush() en el mismo scope.
+  let _flushLock = false;
+
+  function safeFlushPend() {
+    if (_flushLock || !navigator.onLine) return;
+    _flushLock = true;
+    Promise.resolve()
+      .then(() => boxFlush())     // reutiliza tu lógica actual de reenvío
+      .finally(() => { _flushLock = false; });
+  }
+
+  // Mensaje del SW → intentar flush si estamos visibles/online
+  navigator.serviceWorker?.addEventListener('message', (e) => {
+    if (e.data?.type === 'TRY_FLUSH_PEND') {
+      if (document.visibilityState === 'visible') safeFlushPend();
+    }
+  });
+
+  // Si el usuario vuelve a la app y hay red, intentamos otra vez
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') safeFlushPend();
+  }, { passive: true });
+</script>
+
 </script>
 
   <body>
@@ -796,6 +821,7 @@ addEventListener('DOMContentLoaded', ()=>{
 });
 </script>
 <!-- ================== /Fin Parte 2 ================== -->
+
 
 
 
