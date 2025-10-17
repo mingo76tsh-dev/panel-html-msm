@@ -20,12 +20,13 @@
 
   "launch_handler": { "client_mode": "navigate-existing" },
 
-  "icons": [
-    { "src": "icons/icon-192.png",     "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png",     "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ],
+ "icons": [
+  { "src": "/panel-html-msm/icons/icon-192.png",      "sizes": "192x192", "type": "image/png", "purpose": "any" },
+  { "src": "/panel-html-msm/icons/icon-512.png",      "sizes": "512x512", "type": "image/png", "purpose": "any" },
+  { "src": "/panel-html-msm/icons/maskable-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+  { "src": "/panel-html-msm/icons/maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+]
+
 
   "shortcuts": [
     {
