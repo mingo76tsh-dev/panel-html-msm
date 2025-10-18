@@ -1,4 +1,4 @@
-/* sw.js — HSM v7 Móvil (pro+) — v1.5.0 */
+/* sw.js — HSM v7 Móvil (pro+) — v1.5.1 */
 /* ========================================================================== */
 /* Rutas pensadas para GitHub Pages en /panel-html-msm/                       */
 /* ========================================================================== */
@@ -20,7 +20,7 @@ const ICONS = [
 ];
 
 /* ===== Versionado de caches ===== */
-const VERSION = 'v1.5.0';
+const VERSION = 'v1.5.1';
 const PREFIX  = 'hsm-cache';
 const STATIC  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
@@ -40,7 +40,6 @@ const CORE_ASSETS = [
 ];
 
 /* ===== Utils ===== */
-const sameOrigin = (req) => new URL(req.url).origin === location.origin;
 const isHTML = (req, evt) =>
   req.mode === 'navigate' ||
   (req.method === 'GET' && req.headers.get('accept')?.includes('text/html')) ||
@@ -88,9 +87,29 @@ function htmlOfflineResponse() {
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 }
 
+function svgOfflineImg() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="240">
+    <rect width="100%" height="100%" fill="#0f172a"/><text x="50%" y="50%" dy=".35em"
+    fill="#cbd5e1" font-family="system-ui,Segoe UI,Roboto,Helvetica,Arial" font-size="16" text-anchor="middle">
+    Offline</text></svg>`;
+  return new Response(svg, { headers: { 'Content-Type':'image/svg+xml' } });
+}
+
+async function broadcast(msg){
+  const clis = await self.clients.matchAll({ includeUncontrolled:true, type:'window' });
+  for (const c of clis) c.postMessage(msg);
+}
+
 /* ===== Install (precache core) ===== */
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(STATIC).then((c) => c.addAll(CORE_ASSETS)));
+  event.waitUntil((async ()=>{
+    try {
+      const c = await caches.open(STATIC);
+      await c.addAll(CORE_ASSETS);
+    } catch(_) {
+      // No abortamos toda la instalación por un fallo puntual
+    }
+  })());
   self.skipWaiting();
 });
 
@@ -102,8 +121,7 @@ self.addEventListener('activate', (event) => {
       try { await self.registration.navigationPreload.enable(); } catch {}
     }
     await self.clients.claim();
-    const clients = await self.clients.matchAll({ includeUncontrolled: true });
-    clients.forEach((c) => c.postMessage({ type: 'SW_ACTIVATED', version: VERSION }));
+    await broadcast({ type: 'SW_ACTIVATED', version: VERSION });
   })());
 });
 
@@ -114,12 +132,11 @@ self.addEventListener('message', (event) => {
 
   if (data === 'SKIP_WAITING') self.skipWaiting();
 
-  // Warmup manual de caché (APP_SHELL + ICONS)
+  // Warmup manual de caché (APP_SHELL → STATIC, ICONS → IMAGES)
   if (data.type === 'WARMUP') {
     event.waitUntil((async () => {
-      const c = await caches.open(STATIC);
-      try { await c.addAll(APP_SHELL); } catch {}
-      try { await c.addAll(ICONS); } catch {}
+      try { const c = await caches.open(STATIC); await c.addAll(APP_SHELL); } catch {}
+      try { const ic = await caches.open(IMAGES); await ic.addAll(ICONS); } catch {}
     })());
   }
 
@@ -132,10 +149,7 @@ self.addEventListener('message', (event) => {
 /* ===== Background Sync: pedir a los clientes que envíen pendientes ===== */
 self.addEventListener('sync', (event) => {
   if (event.tag === 'flush-pend') {
-    event.waitUntil((async () => {
-      const clis = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
-      for (const c of clis) c.postMessage({ type: 'TRY_FLUSH_PEND' });
-    })());
+    event.waitUntil(broadcast({ type: 'TRY_FLUSH_PEND' }));
   }
 });
 
@@ -149,7 +163,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegaciones/HTML: network-first + navigationPreload + fallback
+  // Navegaciones/HTML: network-first + navigationPreload + SPA fallback robusto
   if (isHTML(req, event)) {
     event.respondWith((async () => {
       try {
@@ -159,6 +173,10 @@ self.addEventListener('fetch', (event) => {
         if (net && net.ok) { put(RUNTIME, req, net.clone(), 40); return net; }
         throw new Error('net-fail');
       } catch {
+        // 1) Intentar la misma URL del request ignorando query
+        const same = await caches.match(req, { ignoreSearch:true });
+        if (same) return same;
+        // 2) Fallback a index.html
         const cached = await caches.match(P('index.html'));
         return cached || htmlOfflineResponse();
       }
@@ -177,10 +195,11 @@ self.addEventListener('fetch', (event) => {
         if (hit) return hit;
         try {
           const net = await fetch(req, { mode: 'no-cors' });
+          // Opaque ok para CDNs
           put(IMAGES, req, net.clone(), 80);
           return net;
         } catch {
-          return new Response('', { status: 504 });
+          return svgOfflineImg();
         }
       })());
     }
@@ -213,7 +232,7 @@ self.addEventListener('fetch', (event) => {
         if (net && net.ok) await put(IMAGES, req, net.clone(), 100);
         return net;
       } catch {
-        return new Response('', { status: 504 });
+        return svgOfflineImg();
       }
     })());
     return;
