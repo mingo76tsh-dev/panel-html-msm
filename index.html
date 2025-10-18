@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="es" dir="ltr">
 <head>
@@ -11,7 +12,7 @@
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest + iconos (rutas absolutas para /panel-html-msm/) -->
+  <!-- Manifest + iconos (rutas absolutas para GitHub Pages /panel-html-msm/) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
@@ -19,6 +20,9 @@
   <!-- Preconexión (Apps Script) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
+
+  <!-- Pequeño empujón a LCP: -->
+  <link rel="preload" as="image" href="/panel-html-msm/icons/maskable-192.png" fetchpriority="high">
 
   <style>
     :root{
@@ -40,7 +44,6 @@
     .badge.off{background:rgba(148,163,184,.12);color:#94a3b8}
     .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--acc);color:#04121f}
     .btn.sec{background:#1f2937;color:#d1d5db}
-    .btn.warn{background:var(--warn);color:#051019}
     .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:740px){ .row{grid-template-columns:1fr} }
@@ -54,7 +57,7 @@
     nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
     .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700}
     .tab[aria-selected="true"]{background:var(--card);color:#fff}
-    section.view{padding:12px}
+    section.view{padding:12px; content-visibility:auto; contain-intrinsic-size: 800px 1200px;}
     .kv{display:flex; gap:8px; align-items:center}
     .kv input{flex:1}
     .st{margin-top:10px;font-size:13px}
@@ -73,93 +76,13 @@
     dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
     dialog::backdrop{background:rgba(2,6,23,.55)}
     :focus-visible{outline:2px solid #60a5fa; outline-offset: 2px}
-    /* micro-mejoras */
-    :root { --ring: 0 0 0 3px rgba(56,189,248,.45); }
-    *:focus-visible{ outline:none!important; box-shadow:var(--ring); border-radius:8px; }
     @media (prefers-reduced-motion: reduce){
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
-    /* badges */
-    .badge.ok{ background:#0ea5e9; color:#031a2b; }
-    .badge.off{ background:#475569; color:#dce7f3; }
   </style>
 </head>
 
-<script>
-/* ====== HSM: Service Worker robusto + Sync + Warmup (pegar antes de </body>) === */
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/panel-html-msm/sw.js', { scope: '/panel-html-msm/' })
-      .then(async reg => {
-        // 🧊 Warmup de caché: iconos y shell
-        try {
-          const sw = await navigator.serviceWorker.ready;
-          sw.active?.postMessage({ type: 'WARMUP' });
-        } catch {}
-
-        // 🔁 Background Sync para pendientes (si está disponible)
-        if ('sync' in reg) {
-          try { await reg.sync.register('flush-pend'); } catch {}
-        }
-      })
-      .catch(() => {/* silencioso */});
-  }, { once: true, passive: true });
-
-  // Si el SW avisa de nueva versión → recargamos de forma amable
-  navigator.serviceWorker.addEventListener('message', (ev) => {
-    if (ev.data?.type === 'SW_ACTIVATED') {
-      const t = document.getElementById('toast');
-      if (t) { t.textContent = 'Nueva versión disponible. Actualizando…'; t.style.display = 'block'; }
-      setTimeout(() => location.reload(), 900);
-    }
-  });
-}
-/* ============================================================================== */
-  <script>
-  // Debe existir boxFlush() en el mismo scope.
-  let _flushLock = false;
-
-  function safeFlushPend() {
-    if (_flushLock || !navigator.onLine) return;
-    _flushLock = true;
-    Promise.resolve()
-      .then(() => boxFlush())     // reutiliza tu lógica actual de reenvío
-      .finally(() => { _flushLock = false; });
-  }
-<script>
-  // —— FLUSH automático cuando el SW avise ——
-  let _flushLock = false;
-  function safeFlushPend(){
-    if (_flushLock || !navigator.onLine) return;
-    _flushLock = true;
-    Promise.resolve().then(() => boxFlush()).finally(() => _flushLock = false);
-  }
-  navigator.serviceWorker?.addEventListener('message', (e) => {
-    if (e.data?.type === 'TRY_FLUSH_PEND') {
-      if (document.visibilityState === 'visible') safeFlushPend();
-    }
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') safeFlushPend();
-  }, { passive: true });
-</script>
-
-  // Mensaje del SW → intentar flush si estamos visibles/online
-  navigator.serviceWorker?.addEventListener('message', (e) => {
-    if (e.data?.type === 'TRY_FLUSH_PEND') {
-      if (document.visibilityState === 'visible') safeFlushPend();
-    }
-  });
-
-  // Si el usuario vuelve a la app y hay red, intentamos otra vez
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') safeFlushPend();
-  }, { passive: true });
-</script>
-
-</script>
-
-  <body>
+<body>
   <a class="visually-hidden" href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">
     Saltar al contenido
   </a>
@@ -177,7 +100,7 @@ if ('serviceWorker' in navigator) {
 
       <!-- NAV TABS -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
-        <button class="tab" role="tab" aria-controls="v-ing"   aria-selected="true" data-v="ing">Ingreso</button>
+        <button class="tab" role="tab" aria-controls="v-ing"   aria-selected="true"  data-v="ing">Ingreso</button>
         <button class="tab" role="tab" aria-controls="v-alta"  aria-selected="false" data-v="alta">Alta</button>
         <button class="tab" role="tab" aria-controls="v-pend"  aria-selected="false" data-v="pend">Pendientes</button>
         <button class="tab" role="tab" aria-controls="v-util"  aria-selected="false" data-v="util">Útiles</button>
@@ -388,9 +311,7 @@ if ('serviceWorker' in navigator) {
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<!-- ============================
-  Parte 2 / 2 — lógica (JS), PWA y cierre
-============================= -->
+<!-- ========= LÓGICA / PWA / CIERRE ========= -->
 <script>
 /* ================== Utils base ================== */
 const LS = {
@@ -424,33 +345,24 @@ const S = Object.freeze({
   }
 });
 
-/* ================== API ================== */
-// (editable desde el diálogo Configuración; defaults para arrancar)
-const DEFAULTS = {
-  WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec',
-  API_KEY:    ''
-};
+/* ================== API (alineado a H8) ================== */
+const DEFAULTS = { WEBAPP_URL:'', API_KEY:'' };
 const API = {
   url(){ return LS.get('HSM_WEBAPP_URL', DEFAULTS.WEBAPP_URL) },
   key(){ return LS.get('HSM_API_KEY',     DEFAULTS.API_KEY) },
   async call(action, payload={}){
-    const u = this.url(); if(!u) throw new Error('Sin URL configurada');
-    // text/plain evita preflight y acelera Apps Script WebApp
-    const r = await fetch(u, {
-      method: 'POST',
-      headers: { 'Content-Type':'text/plain' },
-      body: JSON.stringify({ action, apiKey: this.key(), payload })
-    });
-    const t = await r.text();
-    if (!r.ok) throw new Error(`HTTP ${r.status} ${t}`);
-    try { return JSON.parse(t) } catch { return { ok:false, code:'E_PARSE', message:t } }
+    const u=this.url(); if(!u) throw new Error('Sin URL configurada');
+    const r=await fetch(u,{ method:'POST', headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({action, apiKey:this.key(), payload}) });
+    const t=await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status} ${t}`);
+    try { return JSON.parse(t) } catch { return {ok:false, code:'E_PARSE', message:t} }
   },
-  ping(){         return this.call('ping') },
-  config(){       return this.call('config') },
-  cie10(){        return this.call('cie10_list') },
-  findByDni(d,days=120){ return this.call('find', { dni:d, days }) },
-  saveIngreso(p){ return this.call('save', p) },
-  saveAlta(p){    return this.call('alta', p) }
+  ping(){               return this.call('ping') },
+  config(){             return this.call('config') },
+  cie10(){              return this.call('cie10') },
+  findByDni(d,days=120){return this.call('findbydni',{dni:d, days})},
+  saveIngreso(p){       return this.call('save', p) },
+  saveAlta(p){          return this.call('alta', p) }
 };
 
 /* ================== Estado online ================== */
@@ -463,27 +375,27 @@ addEventListener('online',  ()=>{ setOnline(true);  toast('Conectado'); tryAutoF
 addEventListener('offline', ()=>{ setOnline(false); toast('Sin conexión'); },               {passive:true});
 setOnline(navigator.onLine);
 
-/* ================== Instalación (PWA) ================== */
-let _deferredPrompt = null;
-addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); _deferredPrompt = e;
-  const btn=$('#btnInstall'); if(btn) btn.style.display='inline-block';
-}, {passive:true});
-$('#btnInstall')?.addEventListener('click', async ()=>{
-  if(!_deferredPrompt) return;
-  _deferredPrompt.prompt();
-  try{ await _deferredPrompt.userChoice }catch(_){}
-  _deferredPrompt = null; $('#btnInstall').style.display='none';
-}, {passive:true});
+/* ================== PWA: instalación + SW (warmup + sync) ================== */
+let _deferredPrompt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').style.display='inline-block';},{passive:true});
+$('#btnInstall')?.addEventListener('click',async()=>{ if(!_deferredPrompt) return; _deferredPrompt.prompt(); try{await _deferredPrompt.userChoice}catch(_){} _deferredPrompt=null; $('#btnInstall').style.display='none'; },{passive:true});
 
-/* ================== Logo remoto ================== */
-function applyLogo(){
-  const url = LS.get('HSM_LOGO_URL','');
-  const el = $('#logo'); if(!el) return;
-  if(url){ el.loading='lazy'; el.decoding='async'; el.src = url; el.hidden=false; } else { el.hidden=true; }
+if('serviceWorker' in navigator){
+  addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/panel-html-msm/sw.js',{scope:'/panel-html-msm/'})
+      .then(async reg=>{
+        try{ const sw=await navigator.serviceWorker.ready; sw.active?.postMessage({type:'WARMUP'}); }catch(_){}
+        if('sync' in reg){ try{ await reg.sync.register('flush-pend'); }catch(_){ } }
+      }).catch(()=>{});
+  },{once:true, passive:true});
+
+  navigator.serviceWorker.addEventListener('message',ev=>{
+    if(ev.data?.type==='SW_ACTIVATED'){ toast('Nueva versión disponible. Recargando…',1800); setTimeout(()=>location.reload(),1500); }
+    if(ev.data?.type==='TRY_FLUSH_PEND' && document.visibilityState==='visible'){ safeFlushPend(); }
+  },{passive:true});
 }
 
-/* ================== Tabs con ARIA + ruteo por hash ================== */
+/* ================== Tabs con ARIA + hash routing ================== */
 function switchTab(id){
   $$('.tab').forEach(btn=>{
     btn.setAttribute('aria-selected', String(btn.dataset.v===id));
@@ -494,44 +406,35 @@ function switchTab(id){
     if(el) el.style.display = (v===id?'block':'none');
   });
   if(id==='pend') renderPend();
-  // sincroniza URL hash (mejora de navegabilidad)
   if(location.hash !== '#'+id) history.replaceState(null,'','#'+id);
 }
 function wireTabs(){
   $$('.tab').forEach(btn=>{
-    btn.setAttribute('role','tab');
     btn.addEventListener('click', ()=>switchTab(btn.dataset.v), {passive:true});
     btn.addEventListener('keydown', (e)=>{
       if(e.key!=='ArrowRight' && e.key!=='ArrowLeft') return;
-      const tabs = $$('.tab'); const i=tabs.indexOf(btn);
-      const j = (e.key==='ArrowRight') ? (i+1)%tabs.length : (i-1+tabs.length)%tabs.length;
+      const tabs=$$('.tab'); const i=tabs.indexOf(btn); const j=(e.key==='ArrowRight')? (i+1)%tabs.length : (i-1+tabs.length)%tabs.length;
       tabs[j].focus(); switchTab(tabs[j].dataset.v);
     });
   });
-  // hash routing: #ing | #alta | #pend | #util
-  const wanted = ['ing','alta','pend','util'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'ing';
+  const wanted=['ing','alta','pend','util'].includes(location.hash.slice(1))?location.hash.slice(1):'ing';
   switchTab(wanted);
 }
-addEventListener('hashchange', ()=>{
-  const v=location.hash.slice(1);
-  if(['ing','alta','pend','util'].includes(v)) switchTab(v);
-}, {passive:true});
+addEventListener('hashchange', ()=>{ const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v); }, {passive:true});
 
 /* ================== Helpers fechas ================== */
 const nowDate = () => new Date().toISOString().slice(0,10);
 const nowTime = () => new Date().toTimeString().slice(0,5);
-$('#iFiNow')?.addEventListener('click', ()=> $('#i_fi').value = nowDate(), {passive:true});
-$('#iHiNow')?.addEventListener('click', ()=> $('#i_hi').value = nowTime(), {passive:true});
-$('#aFaNow')?.addEventListener('click', ()=> $('#a_fa').value = nowDate(), {passive:true});
-$('#aHaNow')?.addEventListener('click', ()=> $('#a_ha').value = nowTime(), {passive:true});
+$('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate(),{passive:true});
+$('#iHiNow')?.addEventListener('click',()=>$('#i_hi').value=nowTime(),{passive:true});
+$('#aFaNow')?.addEventListener('click',()=>$('#a_fa').value=nowDate(),{passive:true});
+$('#aHaNow')?.addEventListener('click',()=>$('#a_ha').value=nowTime(),{passive:true});
 
-/* ================== Chips rápidas ================== */
-$('#tpls')?.addEventListener('click', e=>{
-  const t = e.target.closest('.chip'); if(!t) return;
-  const el = $('#i_obs'); if(!el) return;
-  el.value = ((el.value||'')+' '+t.dataset.t).trim();
-  el.focus();
-}, {passive:true});
+/* ================== Plantillas rápidas ================== */
+$('#tpls')?.addEventListener('click',e=>{
+  const t=e.target.closest('.chip'); if(!t) return;
+  const el=$('#i_obs'); el.value=((el.value||'')+' '+t.dataset.t).trim(); el.focus();
+},{passive:true});
 
 /* ================== Validaciones mínimas ================== */
 const validDNI = v => /^\d{7,9}$/.test(S.onlyDigits(v||''));
@@ -540,77 +443,60 @@ const validDNI = v => /^\d{7,9}$/.test(S.onlyDigits(v||''));
 function boxGet(){ return LS.get('HSM_OUTBOX', []) }
 function boxSet(a){
   LS.set('HSM_OUTBOX', a);
-  const n=a.length; const el=$('#pendInfo');
-  if(el){ el.textContent=n; el.className='badge '+(n?'ok':'off'); }
+  const el=$('#pendInfo'); if(el){ el.textContent=a.length; el.className='badge '+(a.length?'ok':'off'); }
 }
 async function boxFlush(){
-  const box = boxGet(); if(!box.length){ toast('No hay pendientes'); return; }
-  const pi=$('#pendInfo'); if(pi) pi.textContent='…';
+  const box=boxGet(); if(!box.length){ toast('No hay pendientes'); return; }
   const rest=[];
   for(const it of box){
     try{
       if(it.kind==='ingreso') await API.saveIngreso(it.payload);
       if(it.kind==='alta')    await API.saveAlta(it.payload);
-    }catch(_){ rest.push(it) }
+    }catch(_){ rest.push(it); }
   }
   boxSet(rest);
-  toast(rest.length? ('Quedan '+rest.length+' pendientes') : 'Pendientes enviados ✔');
+  toast(rest.length?('Quedan '+rest.length+' pendientes'):'Pendientes enviados ✔');
   renderPend();
 }
-function tryAutoFlush(){
-  if (!navigator.onLine) return;
-  if (!boxGet().length) return;
-  // breve delay para permitir registrar SW/conexión
-  setTimeout(boxFlush, 500);
-}
+function tryAutoFlush(){ if(navigator.onLine && boxGet().length) setTimeout(boxFlush, 400); }
 $('#flush')?.addEventListener('click', boxFlush, {passive:true});
 $('#exp')?.addEventListener('click', ()=>{
   const a=document.createElement('a');
   a.download='hsm_outbox.json';
   a.href=URL.createObjectURL(new Blob([JSON.stringify(boxGet(),null,2)],{type:'application/json'}));
   a.click();
-}, {passive:true});
-$('#imp')?.addEventListener('click', ()=> $('#impFile').click(), {passive:true});
+},{passive:true});
+$('#imp')?.addEventListener('click', ()=>$('#impFile').click(), {passive:true});
 $('#impFile')?.addEventListener('change', e=>{
   const f=e.target.files?.[0]; if(!f) return;
   const rd=new FileReader();
   rd.onload=()=>{
-    try{
-      const arr=JSON.parse(rd.result||'[]'); const cur=boxGet();
-      if(!Array.isArray(arr)) throw new Error('Formato inválido');
-      boxSet(cur.concat(arr)); renderPend(); toast('Importado');
-    }catch(_){ toast('Archivo inválido',2600) }
+    try{ const arr=JSON.parse(rd.result||'[]'); if(!Array.isArray(arr)) throw 0; boxSet(boxGet().concat(arr)); renderPend(); toast('Importado'); }
+    catch(_){ toast('Archivo inválido',2600); }
   };
   rd.readAsText(f);
 });
 function renderPend(){
   const box=boxGet(), el=$('#pendList'); if(!el) return; el.innerHTML='';
   if(!box.length){ el.innerHTML='<div class="item"><span class="small">No hay pendientes.</span></div>'; return; }
-  el.setAttribute('role','list');
   box.forEach((it,ix)=>{
-    const d=document.createElement('div'); d.className='item'; d.setAttribute('role','listitem');
-    d.innerHTML = `
-      <div class="small">${it.kind.toUpperCase()}</div>
+    const d=document.createElement('div'); d.className='item';
+    d.innerHTML=`<div class="small">${it.kind.toUpperCase()}</div>
       <div>DNI <b>${it.payload.DNI||'?'}</b> • ${new Date(it.ts).toLocaleString()}</div>
-      <span class="sp"></span>
-      <button class="btn ghost" data-i="${ix}" type="button" aria-label="Borrar pendiente ${ix+1}">Borrar</button>`;
+      <span class="sp"></span><button class="btn ghost" data-i="${ix}" type="button">Borrar</button>`;
     el.appendChild(d);
   });
-  el.onclick = e=>{
-    const b=e.target.closest('button'); if(!b) return;
-    const idx=+b.dataset.i; const box=boxGet(); box.splice(idx,1); boxSet(box); renderPend();
-  };
+  el.onclick=e=>{ const b=e.target.closest('button'); if(!b) return; const i=+b.dataset.i; const box=boxGet(); box.splice(i,1); boxSet(box); renderPend(); };
 }
 
-/* ================== Anti-duplicado local (1 min) ================== */
-function recentKey(kind,dni){ return `HSM_REC_${kind}_${dni}` }
-function dedupeSet(kind,dni){ LS.set(recentKey(kind,dni), Date.now()) }
-function dedupeHit(kind,dni,ms=60000){ const t=+LS.get(recentKey(kind,dni),0); return (Date.now()-t)<ms }
+/* ================== Dedup local (1 min) + Drafts ================== */
+const recentKey=(k,d)=>`HSM_REC_${k}_${d}`;
+const dedupeSet=(k,d)=>LS.set(recentKey(k,d),Date.now());
+const dedupeHit=(k,d,ms=60000)=> (Date.now()-(+LS.get(recentKey(k,d),0)))<ms;
 
-/* ================== Autosave (borradores) ================== */
 const DRAFT_ING='HSM_DRAFT_ING', DRAFT_ALTA='HSM_DRAFT_ALTA';
-function saveDraft(id,fields){ const o={}; fields.forEach(f=>o[f]=$('#'+f)?.value??''); LS.set(id,o); }
-function loadDraft(id,fields){ const o=LS.get(id,null); if(!o) return; fields.forEach(f=>{ if(o[f]!=null && $('#'+f)) $('#'+f).value=o[f]; }); }
+function saveDraft(id,fs){ const o={}; fs.forEach(f=>o[f]=$('#'+f)?.value??''); LS.set(id,o); }
+function loadDraft(id,fs){ const o=LS.get(id,null); if(!o) return; fs.forEach(f=>{ if(o[f]!=null && $('#'+f)) $('#'+f).value=o[f]; }); }
 ;['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']
   .forEach(id=>$('#'+id)?.addEventListener('input',()=>saveDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']),{passive:true}));
 ;['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']
@@ -620,27 +506,26 @@ function loadDraft(id,fields){ const o=LS.get(id,null); if(!o) return; fields.fo
 let lastReceipt=null;
 $('#ingSave')?.addEventListener('click', async ()=>{
   try{
-    const dni = S.onlyDigits($('#i_dni').value);
+    const dni=S.onlyDigits($('#i_dni').value);
     if(!validDNI(dni)){ $('#ingMsg').textContent='DNI inválido'; $('#ingMsg').className='st err'; vibrate(200); return; }
     if(dedupeHit('ing',dni)){ toast('Ingreso enviado hace instantes'); return; }
-    const payload = {
-      DNI: dni,
-      Sexo: ($('#i_sexo').value||'').toUpperCase(),
-      FechaIngresoManual: S.normDate($('#i_fi').value),
-      HoraIngresoManual:  S.normTime($('#i_hi').value),
-      IdeacionIntento:    S.normStr($('#i_ii').value),
-      MetodoLetalidad:    S.normStr($('#i_met').value),
-      Consumo:            S.normStr($('#i_con').value),
-      TipoSustancia:      S.normStr($('#i_sus').value),
-      DxProvisorio_CIE10: S.normStr($('#i_cie').value).toUpperCase(),
-      Observaciones:      S.normStr($('#i_obs').value)
+    const payload={
+      DNI:dni,
+      Sexo:($('#i_sexo').value||'').toUpperCase(),
+      FechaIngresoManual:S.normDate($('#i_fi').value),
+      HoraIngresoManual:S.normTime($('#i_hi').value),
+      IdeacionIntento:S.normStr($('#i_ii').value),
+      MetodoLetalidad:S.normStr($('#i_met').value),
+      Consumo:S.normStr($('#i_con').value),
+      TipoSustancia:S.normStr($('#i_sus').value),
+      DxProvisorio_CIE10:S.normStr($('#i_cie').value).toUpperCase(),
+      Observaciones:S.normStr($('#i_obs').value)
     };
     $('#ingMsg').textContent='Guardando…'; $('#ingMsg').className='st mut';
-    const j = await API.saveIngreso(payload);
+    const j=await API.saveIngreso(payload);
     if(j?.ok){
       $('#ingMsg').textContent='Guardado ✔'; $('#ingMsg').className='st ok';
-      lastReceipt={kind:'Ingreso', dni, ts:Date.now()};
-      dedupeSet('ing',dni); LS.del(DRAFT_ING); vibrate([60,40,60]);
+      lastReceipt={kind:'Ingreso', dni, ts:Date.now()}; dedupeSet('ing',dni); LS.del(DRAFT_ING); vibrate([60,40,60]);
     }else throw new Error(j?.message||j?.code||'Error');
   }catch(e){
     const it={kind:'ingreso', payload:{
@@ -653,44 +538,41 @@ $('#ingSave')?.addEventListener('click', async ()=>{
     const box=boxGet(); box.push(it); boxSet(box);
     $('#ingMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#ingMsg').className='st err'; vibrate(150);
   }
-}, {passive:true});
+},{passive:true});
 $('#ingShare')?.addEventListener('click', ()=>{
-  const txt = lastReceipt
-    ? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`
-    : 'HSM • Ingreso registrado';
+  const txt = lastReceipt?`HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HSM • Ingreso registrado';
   if(navigator.share) navigator.share({text:txt}).catch(()=>{});
   else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));
-}, {passive:true});
+},{passive:true});
 
 /* ================== Alta ================== */
 $('#aSearch')?.addEventListener('click', async ()=>{
   try{
     const dni=S.onlyDigits($('#a_dni').value); if(!validDNI(dni)){ $('#aFound').textContent=' DNI inválido'; return; }
     $('#aFound').textContent=' Buscando…';
-    const j = await API.findByDni(dni, 120).catch(()=>null);
-    if(j?.ok && j.row){ $('#aFound').textContent=' Encontrado (fila '+j.row+')'; if(j.sexo) $('#a_sexo').value=(j.sexo||'').toUpperCase(); }
+    const j=await API.findByDni(dni,120).catch(()=>null);
+    if(j?.ok && j.found){ $('#aFound').textContent=' Encontrado'+(j.row?` (fila ${j.row})`:'' ); if(j.sexo) $('#a_sexo').value=(j.sexo||'').toUpperCase(); }
     else { $('#aFound').textContent=' No hallado (continuar manual)'; }
   }catch(_){ $('#aFound').textContent=' Offline (buscará al enviar)'; }
-}, {passive:true});
+},{passive:true});
 
 $('#altaSave')?.addEventListener('click', async ()=>{
   try{
-    const dni = S.onlyDigits($('#a_dni').value);
+    const dni=S.onlyDigits($('#a_dni').value);
     if(!validDNI(dni)){ $('#altaMsg').textContent='DNI inválido'; $('#altaMsg').className='st err'; vibrate(200); return; }
     if(dedupeHit('alta',dni)){ toast('Alta enviada hace instantes'); return; }
-    const payload = {
-      DNI: dni, Sexo:($('#a_sexo').value||'').toUpperCase(),
-      FechaAltaManual: S.normDate($('#a_fa').value),
-      HoraAltaManual:  S.normTime($('#a_ha').value),
-      EstadoEgreso:    S.normStr($('#a_estado').value)||'Alta',
-      Observaciones:   S.normStr($('#a_obs').value)
+    const payload={
+      DNI:dni, Sexo:($('#a_sexo').value||'').toUpperCase(),
+      FechaAltaManual:S.normDate($('#a_fa').value),
+      HoraAltaManual:S.normTime($('#a_ha').value),
+      EstadoEgreso:S.normStr($('#a_estado').value)||'Alta',
+      Observaciones:S.normStr($('#a_obs').value)
     };
     $('#altaMsg').textContent='Guardando…'; $('#altaMsg').className='st mut';
     const j=await API.saveAlta(payload);
     if(j?.ok){
       $('#altaMsg').textContent='Alta guardada ✔'; $('#altaMsg').className='st ok';
-      lastReceipt={kind:'Alta', dni, ts:Date.now()};
-      dedupeSet('alta',dni); LS.del(DRAFT_ALTA); vibrate([60,40,60]);
+      lastReceipt={kind:'Alta', dni, ts:Date.now()}; dedupeSet('alta',dni); LS.del(DRAFT_ALTA); vibrate([60,40,60]);
     }else throw new Error(j?.message||j?.code||'Error');
   }catch(e){
     const it={kind:'alta', payload:{
@@ -701,54 +583,56 @@ $('#altaSave')?.addEventListener('click', async ()=>{
     const box=boxGet(); box.push(it); boxSet(box);
     $('#altaMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#altaMsg').className='st err'; vibrate(150);
   }
-}, {passive:true});
+},{passive:true});
 
 $('#altaShare')?.addEventListener('click', ()=>{
-  const txt = lastReceipt
-    ? `HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`
-    : 'HSM • Alta registrada';
+  const txt = lastReceipt?`HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HSM • Alta registrada';
   if(navigator.share) navigator.share({text:txt}).catch(()=>{});
   else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));
-}, {passive:true});
+},{passive:true});
 
 /* ================== Útiles ================== */
 $('#uVal')?.addEventListener('click', ()=>{
-  const v = S.onlyDigits($('#u_dni').value);
-  const ok = validDNI(v);
+  const v=S.onlyDigits($('#u_dni').value); const ok=validDNI(v);
   $('#u_res').textContent = ok? 'Formato válido ✔' : 'Formato inválido';
   $('#u_res').className   = 'st ' + (ok?'ok':'err');
-}, {passive:true});
+},{passive:true});
 $$('[data-go]').forEach(c=>c.addEventListener('click', ()=>switchTab(c.dataset.go), {passive:true}));
 
-/* ================== CIE10 cache (10 min) ================== */
-(async function loadCIE(){
-  try{
-    const CK='CIE_CACHE', TS='CIE_TS', now=Date.now();
-    let list = LS.get(CK,null), t=+LS.get(TS,0);
-    if(!list || (now-t)>600000){
-      const j=await API.cie10(); list=(j&&j.ok&&j.list)||[];
-      LS.set(CK,list); LS.set(TS,now);
-    }
+/* ================== CIE10 cache (idle 10 min) ================== */
+(function(){
+  function seed(list){
     const dl=$('#cie-list'); if(!dl) return; dl.innerHTML='';
     list.slice(0,2000).forEach(x=>{ const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o); });
-  }catch(_){ /* silencioso */ }
+  }
+  const CK='CIE_CACHE', TS='CIE_TS';
+  const run=async()=>{
+    try{
+      const now=Date.now(); let list=LS.get(CK,null), t=+LS.get(TS,0);
+      if(!list || (now-t)>600000){ const j=await API.cie10(); list=(j&&j.ok&&j.list)||[]; LS.set(CK,list); LS.set(TS,now); }
+      seed(LS.get(CK,[]));
+    }catch(_){}
+  };
+  if('requestIdleCallback' in window) requestIdleCallback(run,{timeout:3000}); else setTimeout(run,1000);
 })();
 
-/* ================== Prefill por query ================== */
-(function prefill(){
+/* ================== Prefill query ================== */
+(function(){
   const q=new URLSearchParams(location.search);
-  if(q.get('dni')  && $('#i_dni'))  $('#i_dni').value = q.get('dni');
-  if(q.get('sexo') && $('#i_sexo')) $('#i_sexo').value = q.get('sexo').toUpperCase();
-  if(q.get('fi')   && $('#i_fi'))   $('#i_fi').value   = q.get('fi');
+  if(q.get('dni'))  $('#i_dni').value = q.get('dni');
+  if(q.get('sexo')) $('#i_sexo').value= (q.get('sexo')||'').toUpperCase();
+  if(q.get('fi'))   $('#i_fi').value  = q.get('fi');
 })();
 
 /* ================== Settings ================== */
+function applyLogo(){
+  const url=LS.get('HSM_LOGO_URL',''); const el=$('#logo');
+  if(!el) return; if(url){ el.loading='lazy'; el.decoding='async'; el.src=url; el.hidden=false; } else { el.hidden=true; }
+}
 $('#btnCfg')?.addEventListener('click', ()=>{
-  $('#cfg_url').value = API.url()||'';
-  $('#cfg_key').value = API.key()||'';
-  $('#cfg_logo').value= LS.get('HSM_LOGO_URL','')||'';
+  $('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||'';
   $('#cfg').showModal();
-}, {passive:true});
+},{passive:true});
 $('#cfg')?.addEventListener('close', ()=>{
   const u=$('#cfg_url').value.trim(), k=$('#cfg_key').value.trim(), l=$('#cfg_logo').value.trim();
   if(u) LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL');
@@ -759,55 +643,26 @@ $('#cfg')?.addEventListener('close', ()=>{
 $('#cfgTest')?.addEventListener('click', async ()=>{
   try{ const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK'); }
   catch(e){ $('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600) }
-}, {passive:true});
-
-/* ================== Service Worker ================== */
-// Coherente con GitHub Pages en /panel-html-msm/
-if ('serviceWorker' in navigator) {
-  addEventListener('load', ()=>{
-    navigator.serviceWorker.register('/panel-html-msm/sw.js', { scope:'/panel-html-msm/' })
-      .catch(()=>{ /* silencioso */ });
-  }, {once:true, passive:true});
-
-  navigator.serviceWorker.addEventListener('message', (ev) => {
-    if (ev.data?.type === 'SW_ACTIVATED') {
-      toast('Nueva versión disponible. Recargando…', 1800);
-      setTimeout(()=>location.reload(), 1500);
-    }
-  }, {passive:true});
-}
+},{passive:true});
 
 /* ================== Boot ================== */
-addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') tryAutoFlush(); }, {passive:true});
-
+addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') tryAutoFlush(); },{passive:true});
 addEventListener('DOMContentLoaded', ()=>{
-  try{
-    applyLogo();
-    boxSet(boxGet());           // refresca badge de pendientes
-    wireTabs();
-
-    // Drafts + valores por defecto
-    const safe = (fn)=>{ try{ fn(); }catch(e){ console.warn(e);} };
-    safe(()=>loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']));
-    safe(()=>loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']));
-    if ($('#i_fi') && !$('#i_fi').value) $('#i_fi').value=nowDate();
-    if ($('#i_hi') && !$('#i_hi').value) $('#i_hi').value=nowTime();
-
-    // Primer flush si ya hay conectividad
-    tryAutoFlush();
-
-  } catch (e) {
-    console.error('Boot error', e);
-    toast('Error inicializando la app', 3000);
-  }
+  applyLogo();
+  boxSet(boxGet());
+  wireTabs();
+  try{ loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']); }catch(_){}
+  try{ loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']); }catch(_){}
+  if($('#i_fi') && !$('#i_fi').value) $('#i_fi').value=nowDate();
+  if($('#i_hi') && !$('#i_hi').value) $('#i_hi').value=nowTime();
+  // primer flush si hay conectividad
+  tryAutoFlush();
 });
+function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
 </script>
-<!-- ================== /Fin Parte 2 ================== -->
-
-
-
-
-
+<!-- ========= /FIN LÓGICA ========= -->
+</body>
+</html>
 
 
 
