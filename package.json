@@ -1,0 +1,15 @@
+{
+  "name": "hsm-v7-movil",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "clean": "rimraf dist",
+    "start": "npx serve dist -l 4173"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "html-minifier-terser": "^7.2.0",
+    "rimraf": "^5.0.7"
+  }
+}
