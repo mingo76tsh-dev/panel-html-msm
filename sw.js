@@ -1,4 +1,4 @@
-/* sw.js — HSM v7 Móvil (pro+) — v1.5.1 */
+/* sw.js — HSM v7 Móvil (pro+) — v1.5.2 */
 /* ========================================================================== */
 /* Rutas pensadas para GitHub Pages en /panel-html-msm/                       */
 /* ========================================================================== */
@@ -20,7 +20,7 @@ const ICONS = [
 ];
 
 /* ===== Versionado de caches ===== */
-const VERSION = 'v1.5.1';
+const VERSION = 'v1.5.2';
 const PREFIX  = 'hsm-cache';
 const STATIC  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
@@ -103,12 +103,7 @@ async function broadcast(msg){
 /* ===== Install (precache core) ===== */
 self.addEventListener('install', (event) => {
   event.waitUntil((async ()=>{
-    try {
-      const c = await caches.open(STATIC);
-      await c.addAll(CORE_ASSETS);
-    } catch(_) {
-      // No abortamos toda la instalación por un fallo puntual
-    }
+    try { const c = await caches.open(STATIC); await c.addAll(CORE_ASSETS); } catch(_){}
   })());
   self.skipWaiting();
 });
@@ -132,21 +127,19 @@ self.addEventListener('message', (event) => {
 
   if (data === 'SKIP_WAITING') self.skipWaiting();
 
-  // Warmup manual de caché (APP_SHELL → STATIC, ICONS → IMAGES)
   if (data.type === 'WARMUP') {
     event.waitUntil((async () => {
-      try { const c = await caches.open(STATIC); await c.addAll(APP_SHELL); } catch {}
+      try { const c  = await caches.open(STATIC); await c.addAll(APP_SHELL); } catch {}
       try { const ic = await caches.open(IMAGES); await ic.addAll(ICONS); } catch {}
     })());
   }
 
-  // Solicitud opcional para registrar un sync de pendientes
   if (data === 'REQUEST_SYNC' && 'sync' in self.registration) {
     self.registration.sync.register('flush-pend').catch(() => {});
   }
 });
 
-/* ===== Background Sync: pedir a los clientes que envíen pendientes ===== */
+/* ===== Background Sync ===== */
 self.addEventListener('sync', (event) => {
   if (event.tag === 'flush-pend') {
     event.waitUntil(broadcast({ type: 'TRY_FLUSH_PEND' }));
@@ -157,13 +150,12 @@ self.addEventListener('sync', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // No tocar métodos no-GET (Apps Script /exec, etc.)
   if (req.method !== 'GET') {
     event.respondWith(fetch(req).catch(() => new Response(null, { status: 503 })));
     return;
   }
 
-  // Navegaciones/HTML: network-first + navigationPreload + SPA fallback robusto
+  // Navegaciones/HTML: network-first + navigationPreload + SPA fallback
   if (isHTML(req, event)) {
     event.respondWith((async () => {
       try {
@@ -173,10 +165,8 @@ self.addEventListener('fetch', (event) => {
         if (net && net.ok) { put(RUNTIME, req, net.clone(), 40); return net; }
         throw new Error('net-fail');
       } catch {
-        // 1) Intentar la misma URL del request ignorando query
         const same = await caches.match(req, { ignoreSearch:true });
         if (same) return same;
-        // 2) Fallback a index.html
         const cached = await caches.match(P('index.html'));
         return cached || htmlOfflineResponse();
       }
@@ -186,7 +176,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Otros orígenes: solo imágenes → cache-first light
+  // Otros orígenes: solo imágenes → cache-first light (sin guardar fallos opacos)
   if (url.origin !== location.origin) {
     if (req.destination === 'image') {
       event.respondWith((async () => {
@@ -195,8 +185,7 @@ self.addEventListener('fetch', (event) => {
         if (hit) return hit;
         try {
           const net = await fetch(req, { mode: 'no-cors' });
-          // Opaque ok para CDNs
-          put(IMAGES, req, net.clone(), 80);
+          if (net) await put(IMAGES, req, net.clone(), 80);
           return net;
         } catch {
           return svgOfflineImg();
@@ -238,7 +227,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // JSON / manifest → cache-first, con actualización oportunista
+  // JSON / manifest → cache-first + actualización oportunista
   if (req.destination === 'manifest' || url.pathname.endsWith('.json')) {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME);
@@ -254,7 +243,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Fuentes → cache-first (para evitar FOUT offline)
+  // Fuentes → cache-first (evita FOUT offline)
   if (req.destination === 'font') {
     event.respondWith((async () => {
       const cached = await caches.match(req);
@@ -266,7 +255,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Resto (misma-origen) → cache-first con revalidación en segundo plano
+  // Resto (misma-origen) → cache-first con revalidación en 2º plano
   event.respondWith((async () => {
     const cached = await caches.match(req);
     const net = fetch(req).then((res) => {
