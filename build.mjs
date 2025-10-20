@@ -1,55 +1,110 @@
-import { minify as minifyHTML } from 'html-minifier-terser';
-import { build } from 'esbuild';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+// build.mjs
+import { readFile, writeFile, mkdir, cp } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { minify as minifyHTML } from "html-minifier-terser";
+import terser from "terser";
 
-const SRC = '.';
-const OUT = 'dist';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SRC = __dirname;
+const OUT = join(__dirname, "dist");
 
-async function ensureDir(p){ await fs.mkdir(p, { recursive: true }); }
-async function copyFile(src, dst){
-  await ensureDir(path.dirname(dst));
-  await fs.copyFile(src, dst);
+async function ensureOut() {
+  if (!existsSync(OUT)) await mkdir(OUT, { recursive: true });
 }
 
-/* 1) Limpia dist */
-await fs.rm(OUT, { recursive: true, force: true });
-await ensureDir(OUT);
-
-/* 2) Minifica/optimiza JS suelto (ej: sw.js) */
-await build({
-  entryPoints: ['sw.js'],
-  outdir: OUT,
-  minify: true,
-  sourcemap: false,
-  format: 'esm',
-  target: 'es2020'
-}).catch(() => process.exit(1));
-
-/* 3) Minifica HTML (incluye CSS/JS inline) */
-const html = await fs.readFile(path.join(SRC, 'index.html'), 'utf8');
-const htmlMin = await minifyHTML(html, {
-  collapseWhitespace: true,
-  removeComments: true,
-  minifyCSS: true,
-  minifyJS: true,
-  removeRedundantAttributes: true,
-  keepClosingSlash: true
-});
-await fs.writeFile(path.join(OUT, 'index.html'), htmlMin);
-
-/* 4) Copia estáticos tal cual */
-for (const file of ['manifest.json']) {
-  try { await copyFile(file, path.join(OUT, file)); } catch {}
+function stamp() {
+  const d = new Date();
+  const z = (n) => String(n).padStart(2, "0");
+  return (
+    d.getFullYear() +
+    z(d.getMonth() + 1) +
+    z(d.getDate()) +
+    z(d.getHours()) +
+    z(d.getMinutes())
+  );
 }
-const ICONS_DIR = 'icons';
-try {
-  const items = await fs.readdir(ICONS_DIR);
-  for (const it of items) {
-    await copyFile(path.join(ICONS_DIR, it), path.join(OUT, ICONS_DIR, it));
+
+async function buildHTML() {
+  const src = await readFile(join(SRC, "index.html"), "utf8");
+  const html = await minifyHTML(src, {
+    collapseWhitespace: true,
+    removeComments: true,
+    removeRedundantAttributes: true,
+    removeEmptyAttributes: true,
+    removeOptionalTags: false,
+    sortAttributes: true,
+    sortClassName: true,
+    minifyCSS: true,
+    minifyJS: true,
+    keepClosingSlash: true,
+    // Mantener comillas para compat de atributos ARIA
+    quoteCharacter: '"'
+  });
+  await writeFile(join(OUT, "index.html"), html);
+  console.log("✓ index.html minificado");
+}
+
+async function build404() {
+  // Si tenés 404.html, lo minificamos; si no, generamos uno estándar para Project Pages
+  let html;
+  try {
+    const raw = await readFile(join(SRC, "404.html"), "utf8");
+    html = await minifyHTML(raw, {
+      collapseWhitespace: true,
+      removeComments: true,
+      minifyCSS: true,
+      minifyJS: true
+    });
+  } catch {
+    html =
+      '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/panel-html-msm/"><title>HSM • Redireccionando…</title>';
   }
-} catch {}
+  await writeFile(join(OUT, "404.html"), html);
+  console.log("✓ 404.html listo");
+}
 
-/* 5) Nota de build */
-await fs.writeFile(path.join(OUT, 'BUILD.txt'), `Build: ${new Date().toISOString()}\n`);
-console.log('OK: build listo en /dist');
+async function buildSW() {
+  const src = await readFile(join(SRC, "sw.js"), "utf8");
+  // Bumpeamos VERSION si existe la constante en el archivo
+  const tag = "v1.5.1-" + stamp();
+  const stamped = src.replace(
+    /const\s+VERSION\s*=\s*['"`]([^'"`]+)['"`]\s*;/,
+    `const VERSION = '${tag}';`
+  );
+  const min = await terser.minify(stamped, {
+    compress: { passes: 2, drop_console: false },
+    mangle: true
+  });
+  if (min.error) throw min.error;
+  await writeFile(join(OUT, "sw.js"), min.code);
+  console.log("✓ sw.js minificado y versionado →", tag);
+}
+
+async function copyManifest() {
+  const raw = await readFile(join(SRC, "manifest.json"), "utf8");
+  // Minificado simple (preserva rutas absolutas /panel-html-msm/*)
+  const min = JSON.stringify(JSON.parse(raw));
+  await writeFile(join(OUT, "manifest.json"), min);
+  console.log("✓ manifest.json");
+}
+
+async function copyIcons() {
+  const srcIcons = join(SRC, "icons");
+  if (existsSync(srcIcons)) {
+    await cp(srcIcons, join(OUT, "icons"), { recursive: true });
+    console.log("✓ icons/");
+  }
+}
+
+async function run() {
+  await ensureOut();
+  await Promise.all([buildHTML(), build404(), buildSW(), copyManifest(), copyIcons()]);
+  console.log("\nBuild OK → dist/");
+}
+
+run().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
