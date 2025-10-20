@@ -20,9 +20,11 @@
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
-  <!-- Pequeño empujón a LCP -->
-  <link rel="preload" as="image" href="/panel-html-msm/icons/maskable-192.png" fetchpriority="high">
+  <!-- Si el LOGO se muestra como parte visible del header (LCP), lo priorizaremos desde JS con fetchPriority.
+       Si usas un logo por defecto, descomenta el preload: -->
+  <!-- <link rel="preload" as="image" href="/panel-html-msm/icons/maskable-192.png" fetchpriority="high"> -->
 
+  <!-- CSS CRÍTICO (lo mínimo para pintar header + vista Ingreso) -->
   <style>
     :root{
       --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
@@ -79,12 +81,9 @@
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
 
-    /* Fallback CSS-only por hash: si alguna vez falla JS, las vistas igual cambian */
+    /* Estado por defecto: Ingreso visible sin depender de JS ni :has() */
     .view{ display:none }
-    :root:has(:target#ing)  #v-ing,
-    :root:has(:target#alta) #v-alta,
-    :root:has(:target#pend) #v-pend,
-    :root:has(:target#util) #v-util { display:block }
+    #v-ing { display:block }
   </style>
 </head>
 
@@ -102,7 +101,7 @@
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg">⚙️</button>
       </header>
 
-      <!-- NAV TABS: anchors con hash (#ing/#alta/#pend/#util) -->
+      <!-- NAV TABS -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
         <a class="tab" id="tab-ing"  role="tab" href="#ing"  data-v="ing"  aria-selected="true">Ingreso</a>
         <a class="tab" id="tab-alta" role="tab" href="#alta" data-v="alta" aria-selected="false">Alta</a>
@@ -325,6 +324,7 @@
   const toast=(t,ms=2200)=>{const el=$("#toast"); if(!el)return; el.textContent=t; el.style.display='block'; setTimeout(()=>el.style.display='none',ms)};
 
   const S=Object.freeze({normStr:v=>(v==null?'':String(v).trim()),onlyDigits:v=>String(v==null?'':v).replace(/\D/g,''),normDate(v){v=this.normStr(v);if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){const[d,m,y]=v.split('/');return `${y}-${m}-${d}`}return v},normTime(v){v=this.normStr(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(!m)return'';const hh=String(Math.max(0,Math.min(23,parseInt(m[1],10)||0))).padStart(2,'0');const mm=String(Math.max(0,Math.min(59,parseInt(m[2],10)||0))).padStart(2,'0');return `${hh}:${mm}`}});
+
   const DEFAULTS={WEBAPP_URL:'',API_KEY:''};
   const API={url(){return LS.get('HSM_WEBAPP_URL',DEFAULTS.WEBAPP_URL)},key(){return LS.get('HSM_API_KEY',DEFAULTS.API_KEY)},async call(action,payload={}){const u=this.url(); if(!u) throw new Error('Sin URL configurada'); const r=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action,apiKey:this.key(),payload})});const t=await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status} ${t}`); try{return JSON.parse(t)}catch{return{ok:false,code:'E_PARSE',message:t}}},ping(){return this.call('ping')},cie10(){return this.call('cie10_list')},findByDni(d,days=120){return this.call('find',{dni:d,days})},saveIngreso(p){return this.call('save',p)},saveAlta(p){return this.call('alta',p)}};
 
@@ -375,7 +375,7 @@
   }
   addEventListener('hashchange',()=>{const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v);});
 
-  /* ===== Utilidad varias (recicladas de tu versión) ===== */
+  /* ===== Utilidad varias ===== */
   const nowDate=()=>new Date().toISOString().slice(0,10);
   const nowTime=()=>new Date().toTimeString().slice(0,5);
   $('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate());
@@ -385,7 +385,7 @@
   $('#tpls')?.addEventListener('click',e=>{const t=e.target.closest('.chip'); if(!t)return; const el=$('#i_obs'); el.value=((el.value||'')+' '+t.dataset.t).trim(); el.focus();});
   const validDNI=v=>/^\d{7,9}$/.test(S.onlyDigits(v||''));
 
-  /* ===== Outbox offline (igual que ya tenías, compacto) ===== */
+  /* ===== Outbox offline ===== */
   function boxGet(){return LS.get('HSM_OUTBOX',[])}
   function boxSet(a){LS.set('HSM_OUTBOX',a); const el=$('#pendInfo'); if(el){el.textContent=a.length; el.className='badge '+(a.length?'ok':'off');}}
   async function boxFlush(){const box=boxGet(); if(!box.length){toast('No hay pendientes'); return;} const rest=[]; for(const it of box){try{if(it.kind==='ingreso') await API.saveIngreso(it.payload); if(it.kind==='alta') await API.saveAlta(it.payload);}catch(_){rest.push(it)}} boxSet(rest); toast(rest.length?('Quedan '+rest.length+' pendientes'):'Pendientes enviados ✔'); renderPend();}
@@ -457,7 +457,18 @@
   (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
   /* ===== Settings ===== */
-  function applyLogo(){const url=LS.get('HSM_LOGO_URL',''); const el=$('#logo'); if(!el)return; if(url){el.loading='lazy';el.decoding='async';el.src=url;el.hidden=false;} else el.hidden=true;}
+  function applyLogo(){
+    const url=LS.get('HSM_LOGO_URL','');
+    const el=$('#logo');
+    if(!el) return;
+    if(url){
+      try{ el.fetchPriority='high'; }catch(_){}
+      el.loading='eager';
+      el.decoding='async';
+      el.src=url;
+      el.hidden=false;
+    } else el.hidden=true;
+  }
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
   $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada');});
   $('#cfgTest')?.addEventListener('click',async()=>{try{const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK');}catch(e){$('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600)}});
@@ -470,4 +481,3 @@
   <!-- ========= /FIN LÓGICA ========= -->
 </body>
 </html>
-
