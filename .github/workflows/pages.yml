@@ -1,4 +1,4 @@
-name: Deploy to Pages (minify + build)
+name: Build, Audit (Lighthouse) & Deploy Pages
 
 on:
   push:
@@ -30,22 +30,54 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Build (minify)
+      - name: Build (minify + version bump)
         run: npm run build
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: dist
+          path: dist
+          if-no-files-found: error
+
+  lhci:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
           path: dist
 
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          configPath: .lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          # Instala http-server para servir dist/
+          runs: |
+            npm i -g http-server
+
   deploy:
-    needs: build
+    needs: [build, lhci]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
