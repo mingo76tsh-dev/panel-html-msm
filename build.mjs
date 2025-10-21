@@ -16,25 +16,24 @@ async function ensureOut() {
 const z = (n) => String(n).padStart(2, "0");
 function stamp() {
   const d = new Date();
-  return (
-    d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes())
-  );
+  return d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes());
 }
-const TAG = "v1.5.3-" + stamp(); // versión única por build
+// Tag único por build → se inyecta en SW y bust de recursos
+const TAG = "v1.6.0-" + stamp();
 
+/* ---------- Helpers de bust ---------- */
 function withIconBustInHTML(html) {
-  // agrega ?v=TAG a los href de iconos conocidos (sin romper rutas absolutas)
+  // agrega ?v=TAG a href/src de iconos/manifiesto/ sw (sin romper rutas absolutas)
   return html
     .replace(/href="\/panel-html-msm\/icons\/apple-touch-icon\.png"/g,
              `href="/panel-html-msm/icons/apple-touch-icon.png?v=${TAG}"`)
     .replace(/href="\/panel-html-msm\/icons\/favicon\.png"/g,
              `href="/panel-html-msm/icons/favicon.png?v=${TAG}"`)
-    .replace(/href="\/panel-html-msm\/icons\/maskable-192\.png"/g,
-             `href="/panel-html-msm/icons/maskable-192.png?v=${TAG}"`)
-    .replace(/href="\/panel-html-msm\/icons\/maskable-512\.png"/g,
-             `href="/panel-html-msm/icons/maskable-512.png?v=${TAG}"`);
+    .replace(/href="\/panel-html-msm\/manifest\.json"/g,
+             `href="/panel-html-msm/manifest.json?v=${TAG}"`);
 }
 
+/* ---------- index.html ---------- */
 async function buildHTML() {
   const src = await readFile(join(SRC, "index.html"), "utf8");
   const prebusted = withIconBustInHTML(src);
@@ -51,9 +50,10 @@ async function buildHTML() {
     quoteCharacter: '"'
   });
   await writeFile(join(OUT, "index.html"), html);
-  console.log("✓ index.html minificado (+ cache-bust íconos)");
+  console.log("✓ index.html minificado (+ cache-bust manifest/iconos)");
 }
 
+/* ---------- 404.html ---------- */
 async function build404() {
   let html;
   try {
@@ -66,6 +66,7 @@ async function build404() {
   console.log("✓ 404.html listo");
 }
 
+/* ---------- sw.js ---------- */
 async function buildSW() {
   const src = await readFile(join(SRC, "sw.js"), "utf8");
   const stamped = src.replace(/const\s+VERSION\s*=\s*['"`][^'"`]+['"`]\s*;/, `const VERSION = '${TAG}';`);
@@ -75,24 +76,32 @@ async function buildSW() {
   console.log("✓ sw.js minificado y versionado →", TAG);
 }
 
+/* ---------- manifest.json ---------- */
 async function copyManifest() {
   const raw = await readFile(join(SRC, "manifest.json"), "utf8");
-  const j = JSON.parse(raw); // validará JSON y fallará el build si hay comas faltantes
+  const j = JSON.parse(raw);
   // cache-bust en cada icon.src
   if (Array.isArray(j.icons)) {
-    j.icons = j.icons.map((it) => ({
-      ...it,
-      src: it.src?.includes("?v=") ? it.src : `${it.src}?v=${TAG}`
+    j.icons = j.icons.map((it) => ({ ...it, src: it.src?.includes("?v=") ? it.src : `${it.src}?v=${TAG}` }));
+  }
+  // bust en shortcuts icons
+  if (Array.isArray(j.shortcuts)) {
+    j.shortcuts = j.shortcuts.map((s) => ({
+      ...s,
+      icons: Array.isArray(s.icons)
+        ? s.icons.map((i) => ({ ...i, src: i.src?.includes("?v=") ? i.src : `${i.src}?v=${TAG}` }))
+        : s.icons
     }));
   }
-  // (opcional) actualizamos start_url para bust del shell PWA
+  // bust en start_url
   if (typeof j.start_url === "string" && !j.start_url.includes("?v=")) {
     j.start_url = `${j.start_url}${j.start_url.includes("?") ? "&" : "?"}v=${TAG}`;
   }
   await writeFile(join(OUT, "manifest.json"), JSON.stringify(j));
-  console.log("✓ manifest.json (+ cache-bust íconos)");
+  console.log("✓ manifest.json (+ cache-bust íconos/shortcuts/start_url)");
 }
 
+/* ---------- icons/ ---------- */
 async function copyIcons() {
   const srcIcons = join(SRC, "icons");
   if (existsSync(srcIcons)) {
@@ -101,13 +110,10 @@ async function copyIcons() {
   }
 }
 
+/* ---------- run ---------- */
 async function run() {
   await ensureOut();
   await Promise.all([buildHTML(), build404(), buildSW(), copyManifest(), copyIcons()]);
-  console.log("\nBuild OK → dist/");
+  console.log("\nBuild OK → dist/  (TAG:", TAG + ")");
 }
-
-run().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+run().catch((e) => { console.error(e); process.exit(1); });
