@@ -9,6 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline." />
+
   <title>HSM v7 • Móvil</title>
 
   <!-- Manifest + iconos (rutas absolutas para GitHub Pages /panel-html-msm/) -->
@@ -20,8 +21,7 @@
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
-  <!-- Pista de prioridad para el primer contenido -->
-  <link rel="preload" as="image" href="/panel-html-msm/icons/maskable-192.png" fetchpriority="high">
+  <!-- Nota: NO pre-cargamos iconos para evitar warnings de Lighthouse y competir con la red. -->
 
   <style>
     :root{
@@ -65,7 +65,7 @@
     .mut{color:#94a3b8}
     .logo{height:44px; width:auto; object-fit:contain; border-radius:8px}
     .chips{display:flex; flex-wrap:wrap; gap:8px}
-    .chip{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer}
+    .chip{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; text-decoration:none}
     .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
     .item{display:flex;gap:12px; padding:10px 12px; border-bottom:1px solid var(--bd); align-items:center}
     .item:last-child{border-bottom:0}
@@ -79,7 +79,7 @@
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
 
-    /* Fallback CSS-only por hash */
+    /* Fallback CSS-only por hash: si alguna vez falla JS, las vistas igual cambian */
     .view{ display:none }
     :root:has(:target#ing)  #v-ing,
     :root:has(:target#alta) #v-alta,
@@ -94,14 +94,15 @@
   <main id="main" class="wrap" role="main">
     <article class="card" aria-label="Aplicación HSM v7 Móvil">
       <header class="app">
-        <img id="logo" class="logo" alt="Logo de la institución" src="" hidden>
+        <img id="logo" class="logo" alt="Logo de la institución" src="" hidden loading="lazy" decoding="async">
         <h1 class="title" style="margin:0;font-size:16px">HSM v7 • Móvil</h1>
         <span id="online" class="badge off" aria-live="polite" title="Estado de red">Offline</span>
         <span class="sp"></span>
         <button id="btnInstall" class="btn sec" style="display:none">Instalar</button>
-        <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg">⚙️</button>
+        <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
+      <!-- NAV TABS: anchors con hash (#ing/#alta/#pend/#util) -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
         <a class="tab" id="tab-ing"  role="tab" href="#ing"  data-v="ing"  aria-selected="true">Ingreso</a>
         <a class="tab" id="tab-alta" role="tab" href="#alta" data-v="alta" aria-selected="false">Alta</a>
@@ -116,7 +117,7 @@
             <label for="i_dni">DNI</label>
             <div class="kv">
               <input id="i_dni" name="DNI" type="tel" inputmode="numeric" autocomplete="off" placeholder="7–9 dígitos" aria-required="true">
-              <button class="btn sec" id="dniCam">Cargar</button>
+              <button class="btn sec" id="dniCam" type="button">Cargar</button>
             </div>
           </div>
           <div>
@@ -132,14 +133,14 @@
             <label for="i_fi">Fecha ingreso</label>
             <div class="kv">
               <input id="i_fi" name="FechaIngresoManual" type="date">
-              <button class="btn sec" id="iFiNow">Ahora</button>
+              <button class="btn sec" id="iFiNow" type="button">Ahora</button>
             </div>
           </div>
           <div>
             <label for="i_hi">Hora ingreso</label>
             <div class="kv">
               <input id="i_hi" name="HoraIngresoManual" type="time">
-              <button class="btn sec" id="iHiNow">Ahora</button>
+              <button class="btn sec" id="iHiNow" type="button">Ahora</button>
             </div>
           </div>
         </div>
@@ -191,8 +192,8 @@
 
         <div class="st mut" id="ingMsg" aria-live="polite"></div>
         <div class="kv" style="margin-top:12px; gap:10px; flex-wrap:wrap">
-          <button class="btn" id="ingSave">Guardar ingreso</button>
-          <button class="btn ghost" id="ingShare">Compartir comprobante</button>
+          <button class="btn" id="ingSave" type="button">Guardar ingreso</button>
+          <button class="btn ghost" id="ingShare" type="button">Compartir comprobante</button>
         </div>
         <div class="small">Tip: admite <code>?dni=&amp;sexo=&amp;fi=YYYY-MM-DD</code> para prellenar.</div>
       </section>
@@ -202,7 +203,7 @@
         <div class="row">
           <div>
             <label for="a_dni">DNI</label>
-            <input id="a_dni" name="DNI" type="tel" inputmode="numeric" placeholder="7–9 dígitos">
+            <input id="a_dni" name="DNI" type="tel" inputmode="numeric" placeholder="7–9 dígitos" autocomplete="off">
           </div>
           <div>
             <label for="a_fn">Fecha Nac. (opcional)</label>
@@ -218,7 +219,7 @@
           <div>
             <label>Buscar ingreso</label>
             <div class="kv">
-              <button class="btn sec" id="aSearch">Buscar por DNI</button>
+              <button class="btn sec" id="aSearch" type="button">Buscar por DNI</button>
               <span id="aFound" class="small" aria-live="polite"></span>
             </div>
           </div>
@@ -228,13 +229,13 @@
           <div>
             <label for="a_fa">Fecha alta</label>
             <div class="kv">
-              <input id="a_fa" name="FechaAltaManual" type="date"><button class="btn sec" id="aFaNow">Ahora</button>
+              <input id="a_fa" name="FechaAltaManual" type="date"><button class="btn sec" id="aFaNow" type="button">Ahora</button>
             </div>
           </div>
           <div>
             <label for="a_ha">Hora alta</label>
             <div class="kv">
-              <input id="a_ha" name="HoraAltaManual" type="time"><button class="btn sec" id="aHaNow">Ahora</button>
+              <input id="a_ha" name="HoraAltaManual" type="time"><button class="btn sec" id="aHaNow" type="button">Ahora</button>
             </div>
           </div>
         </div>
@@ -250,18 +251,18 @@
 
         <div class="st mut" id="altaMsg" aria-live="polite"></div>
         <div class="kv" style="margin-top:12px; gap:10px; flex-wrap:wrap">
-          <button class="btn" id="altaSave">Guardar alta</button>
-          <button class="btn ghost" id="altaShare">Compartir comprobante</button>
+          <button class="btn" id="altaSave" type="button">Guardar alta</button>
+          <button class="btn ghost" id="altaShare" type="button">Compartir comprobante</button>
         </div>
       </section>
 
       <!-- PENDIENTES -->
       <section id="v-pend" class="view" role="tabpanel" aria-labelledby="tab-pend">
         <div class="kv" style="gap:8px; flex-wrap:wrap">
-          <button class="btn sec" id="flush">Enviar pendientes</button>
-          <button class="btn ghost" id="exp">Exportar JSON</button>
+          <button class="btn sec" id="flush" type="button">Enviar pendientes</button>
+          <button class="btn ghost" id="exp" type="button">Exportar JSON</button>
           <input id="impFile" type="file" accept="application/json" style="display:none" aria-hidden="true">
-          <button class="btn ghost" id="imp">Importar JSON</button>
+          <button class="btn ghost" id="imp" type="button">Importar JSON</button>
           <span id="pendInfo" class="badge off">0</span>
         </div>
         <hr/>
@@ -275,17 +276,18 @@
             <b>Escáner rápido (DNI)</b><br>
             <div class="small">Usá la cámara/teclado del celular para pegar/teclear DNI y validar.</div>
             <div class="kv" style="margin-top:8px">
-              <input id="u_dni" type="tel" inputmode="numeric" placeholder="DNI">
-              <button class="btn sec" id="uVal">Validar</button>
+              <input id="u_dni" type="tel" inputmode="numeric" placeholder="DNI" autocomplete="off">
+              <button class="btn sec" id="uVal" type="button">Validar</button>
             </div>
             <div id="u_res" class="st mut" aria-live="polite"></div>
           </div>
           <div class="card" style="padding:12px">
             <b>Atajos</b>
             <div class="chips" style="margin-top:8px">
-              <button class="chip" data-go="ing">Ir a Ingreso</button>
-              <button class="chip" data-go="alta">Ir a Alta</button>
-              <button class="chip" data-go="pend">Ver Pendientes</button>
+              <!-- Enlaces: funcionan aún sin JS -->
+              <a class="chip" href="#ing"  role="link">Ir a Ingreso</a>
+              <a class="chip" href="#alta" role="link">Ir a Alta</a>
+              <a class="chip" href="#pend" role="link">Ver Pendientes</a>
             </div>
             <hr>
             <div class="small">Versión app: <span id="vver">v7-móvil</span></div>
@@ -313,27 +315,28 @@
     </form>
   </dialog>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite">No hay pendientes</div>
 
   <!-- ========= LÓGICA / PWA / CIERRE ========= -->
   <script>
-  /* ===== Helpers ultra-livianos ===== */
+  /* ===== Helpers ===== */
   const LS={get:(k,d=null)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(_){return localStorage.getItem(k)||d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(_){localStorage.setItem(k,v)}},del:(k)=>localStorage.removeItem(k)};
   const $=(s,r=document)=>r.querySelector(s); const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const vibrate=p=>('vibrate'in navigator)&&navigator.vibrate(p);
   const toast=(t,ms=2200)=>{const el=$("#toast"); if(!el)return; el.textContent=t; el.style.display='block'; setTimeout(()=>el.style.display='none',ms)};
 
   const S=Object.freeze({normStr:v=>(v==null?'':String(v).trim()),onlyDigits:v=>String(v==null?'':v).replace(/\D/g,''),normDate(v){v=this.normStr(v);if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){const[d,m,y]=v.split('/');return `${y}-${m}-${d}`}return v},normTime(v){v=this.normStr(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(!m)return'';const hh=String(Math.max(0,Math.min(23,parseInt(m[1],10)||0))).padStart(2,'0');const mm=String(Math.max(0,Math.min(59,parseInt(m[2],10)||0))).padStart(2,'0');return `${hh}:${mm}`}});
+
   const DEFAULTS={WEBAPP_URL:'',API_KEY:''};
   const API={url(){return LS.get('HSM_WEBAPP_URL',DEFAULTS.WEBAPP_URL)},key(){return LS.get('HSM_API_KEY',DEFAULTS.API_KEY)},async call(action,payload={}){const u=this.url(); if(!u) throw new Error('Sin URL configurada'); const r=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action,apiKey:this.key(),payload})});const t=await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status} ${t}`); try{return JSON.parse(t)}catch{return{ok:false,code:'E_PARSE',message:t}}},ping(){return this.call('ping')},cie10(){return this.call('cie10_list')},findByDni(d,days=120){return this.call('find',{dni:d,days})},saveIngreso(p){return this.call('save',p)},saveAlta(p){return this.call('alta',p)}};
 
-  /* ===== Estado de red ===== */
+  /* ===== Online badge ===== */
   function setOnline(ok){const b=$('#online'); if(!b)return; b.textContent=ok?'Online':'Offline'; b.className='badge '+(ok?'ok':'off')}
   addEventListener('online', ()=>{setOnline(true); toast('Conectado'); tryAutoFlush();});
   addEventListener('offline',()=>{setOnline(false);toast('Sin conexión');});
   setOnline(navigator.onLine);
 
-  /* ===== PWA: Install + SW ===== */
+  /* ===== PWA: Instalar + Service Worker ===== */
   let _deferredPrompt=null;
   addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').style.display='inline-block';});
   $('#btnInstall')?.addEventListener('click',async()=>{if(!_deferredPrompt)return;_deferredPrompt.prompt();try{await _deferredPrompt.userChoice}catch(_){} _deferredPrompt=null;$('#btnInstall').style.display='none';});
@@ -352,7 +355,7 @@
     });
   }
 
-  /* ===== Tabs accesibles ===== */
+  /* ===== Tabs robustas (hash + teclado) ===== */
   function switchTab(id){
     const tabs=$$('.tab');
     tabs.forEach(btn=>{const sel=(btn.dataset.v===id); btn.setAttribute('aria-selected',String(sel)); btn.classList.toggle('act',sel);});
@@ -374,7 +377,7 @@
   }
   addEventListener('hashchange',()=>{const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v);});
 
-  /* ===== Utilidad de fechas/horas ===== */
+  /* ===== Utilidad varias ===== */
   const nowDate=()=>new Date().toISOString().slice(0,10);
   const nowTime=()=>new Date().toTimeString().slice(0,5);
   $('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate());
@@ -390,7 +393,7 @@
   async function boxFlush(){const box=boxGet(); if(!box.length){toast('No hay pendientes'); return;} const rest=[]; for(const it of box){try{if(it.kind==='ingreso') await API.saveIngreso(it.payload); if(it.kind==='alta') await API.saveAlta(it.payload);}catch(_){rest.push(it)}} boxSet(rest); toast(rest.length?('Quedan '+rest.length+' pendientes'):'Pendientes enviados ✔'); renderPend();}
   function tryAutoFlush(){ if(navigator.onLine && boxGet().length) setTimeout(boxFlush,400); }
   $('#flush')?.addEventListener('click',boxFlush);
-  $('#exp')?.addEventListener('click',()=>{const a=document.createElement('a'); a.download='hsm_outbox.json'; a.href=URL.createObjectURL(new Blob([JSON.stringify(boxGet(),null,2)],{type:'application/json'})); a.click();});
+  $('#exp')?.addEventListener('click',()=>{const a=document.createElement('a'); a.download='hsm_outbox.json'; a.href=URL.createObjectURL(new Blob([JSON.stringify(boxGet(),null,2)],{type:'application/json'})); a.click(); a.remove();});
   $('#imp')?.addEventListener('click',()=>$('#impFile').click());
   $('#impFile')?.addEventListener('change',e=>{const f=e.target.files?.[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{try{const arr=JSON.parse(rd.result||'[]'); if(!Array.isArray(arr)) throw 0; boxSet(boxGet().concat(arr)); renderPend(); toast('Importado');}catch(_){toast('Archivo inválido',2600)}}; rd.readAsText(f);});
   function renderPend(){const box=boxGet(), el=$('#pendList'); if(!el)return; el.innerHTML=''; if(!box.length){el.innerHTML='<div class="item"><span class="small">No hay pendientes.</span></div>';return;} box.forEach((it,ix)=>{const d=document.createElement('div'); d.className='item'; d.innerHTML=`<div class="small">${it.kind.toUpperCase()}</div><div>DNI <b>${it.payload.DNI||'?'}</b> • ${new Date(it.ts).toLocaleString()}</div><span class="sp"></span><button class="btn ghost" data-i="${ix}" type="button">Borrar</button>`; el.appendChild(d);}); el.onclick=e=>{const b=e.target.closest('button'); if(!b)return; const i=+b.dataset.i; const box=boxGet(); box.splice(i,1); boxSet(box); renderPend();};}
@@ -463,14 +466,7 @@
 
   /* ===== Boot ===== */
   addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') tryAutoFlush(); });
-  addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs();
-    try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){}
-    try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){}
-    if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate();
-    if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime();
-    // Pequeño yield para liberar la primera pintura bajo throttling
-    setTimeout(tryAutoFlush, 0);
-  });
+  addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
   </script>
   <!-- ========= /FIN LÓGICA ========= -->
