@@ -1,4 +1,4 @@
-name: Build, Audit (Lighthouse) & Deploy Pages
+name: Build, Lighthouse (móvil) & Deploy to Pages
 
 on:
   push:
@@ -40,7 +40,8 @@ jobs:
           path: dist
           if-no-files-found: error
 
-  lhci:
+  lighthouse:
+    name: Lighthouse CI (perfil móvil)
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -50,18 +51,43 @@ jobs:
           name: dist
           path: dist
 
+      - name: Install static server
+        run: npm i -g http-server
+
       - name: Lighthouse CI
+        id: lhci
         uses: treosh/lighthouse-ci-action@v11
         with:
           configPath: .lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
-          # Instala http-server para servir dist/
+          # Sirve dist/ en puerto 4173, SPA mode
           runs: |
-            npm i -g http-server
+            http-server dist -p 4173 -s &
+
+      - name: Publicar reportes como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: ".lighthouseci"
+
+      - name: Resumen en el job
+        if: always()
+        run: |
+          echo "## Lighthouse (perfil móvil)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Performance**: ${{ steps.lhci.outputs.performance }} " >> $GITHUB_STEP_SUMMARY
+          echo "- **Accessibility**: ${{ steps.lhci.outputs.accessibility }} " >> $GITHUB_STEP_SUMMARY
+          echo "- **Best Practices**: ${{ steps.lhci.outputs.bestPractices }} " >> $GITHUB_STEP_SUMMARY
+          echo "- **SEO**: ${{ steps.lhci.outputs.seo }} " >> $GITHUB_STEP_SUMMARY
+          if [ -f ".lighthouseci/links.txt" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Enlaces a reportes temporales:" >> $GITHUB_STEP_SUMMARY
+            cat .lighthouseci/links.txt >> $GITHUB_STEP_SUMMARY
+          fi
 
   deploy:
-    needs: [build, lhci]
+    needs: [build, lighthouse]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
