@@ -1,6 +1,6 @@
-/* sw.js — HSM v7 Móvil (pro+) */
+/* sw.js — HSM v7 Móvil (pro+) — versionado por build */
 /* ========================================================================== */
-/* Pensado para GitHub Pages en /panel-html-msm/                              */
+/* Rutas pensadas para GitHub Pages en /panel-html-msm/                       */
 /* ========================================================================== */
 
 /* (Opcional) Listas para warmup manual desde el cliente */
@@ -20,17 +20,17 @@ const ICONS = [
 ];
 
 /* ===== Versionado de caches ===== */
-const VERSION = 'v1.6.0';
+const VERSION = 'v1.5.3'; // será reemplazado por build.mjs
 const PREFIX  = 'hsm-cache';
 const STATIC  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
 const IMAGES  = `${PREFIX}-img-${VERSION}`;
 
-/* ===== Helpers de rutas (resuelven contra el scope real del SW) ===== */
+/* ===== Helpers de rutas ===== */
 const SCOPE_URL = new URL(self.registration.scope);
 const P = (rel) => new URL(rel, SCOPE_URL).toString();
 
-/* Core que se precachea en install */
+/* Core que se precachea en install (mínimo para no bloquear) */
 const CORE_ASSETS = [
   P('./'),
   P('index.html'),
@@ -62,7 +62,7 @@ async function cleanStaleCaches() {
   );
 }
 
-function timeoutFetch(request, ms = 10000) {
+function timeoutFetch(request, ms = 8000) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
   return fetch(request, { signal: ctrl.signal }).finally(() => clearTimeout(id));
@@ -100,7 +100,7 @@ async function broadcast(msg){
   for (const c of clis) c.postMessage(msg);
 }
 
-/* ===== Install (precache core) ===== */
+/* ===== Install ===== */
 self.addEventListener('install', (event) => {
   event.waitUntil((async ()=>{
     try { const c = await caches.open(STATIC); await c.addAll(CORE_ASSETS); } catch(_){}
@@ -108,7 +108,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-/* ===== Activate (clean + navigation preload + notify) ===== */
+/* ===== Activate ===== */
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     await cleanStaleCaches();
@@ -120,7 +120,7 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-/* ===== Mensajes desde la página ===== */
+/* ===== Mensajes ===== */
 self.addEventListener('message', (event) => {
   const data = event.data;
   if (!data) return;
@@ -197,28 +197,25 @@ self.addEventListener('fetch', (event) => {
 
   // Misma-origen:
 
-  // JS / CSS / Fuentes → CacheFirst (mejor TTFB y LCP en repetidas visitas)
-  if (req.destination === 'script' || req.destination === 'style' || req.destination === 'font') {
+  // JS / CSS → stale-while-revalidate
+  if (req.destination === 'script' || req.destination === 'style') {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME);
-      const hit = await cache.match(req);
-      if (hit) return hit;
-      try {
-        const net = await fetch(req);
-        if (net && net.ok) await put(RUNTIME, req, net.clone(), 60);
-        return net;
-      } catch {
-        return new Response('', { status: 504 });
-      }
+      const cached = await cache.match(req);
+      const fetchAndUpdate = fetch(req).then((res) => {
+        if (res && res.ok) cache.put(req, res.clone());
+        return res;
+      }).catch(() => null);
+      return cached || (await fetchAndUpdate) || new Response('', { status: 504 });
     })());
     return;
   }
 
-  // Imágenes / íconos → CacheFirst con límite
+  // Imágenes / íconos → cache-first con límite
   if (req.destination === 'image' || url.pathname.includes('/icons/')) {
     event.respondWith((async () => {
-      const hit = await caches.match(req);
-      if (hit) return hit;
+      const cached = await caches.match(req);
+      if (cached) return cached;
       try {
         const net = await fetch(req);
         if (net && net.ok) await put(IMAGES, req, net.clone(), 100);
@@ -242,6 +239,18 @@ self.addEventListener('fetch', (event) => {
       return hit || (await net) || new Response('{}', {
         status: 200, headers: { 'Content-Type': 'application/json' }
       });
+    })());
+    return;
+  }
+
+  // Fuentes → cache-first (evita FOUT offline)
+  if (req.destination === 'font') {
+    event.respondWith((async () => {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      const net = await fetch(req).catch(() => null);
+      if (net && net.ok) await put(RUNTIME, req, net.clone(), 40);
+      return net || new Response('', { status: 504 });
     })());
     return;
   }
