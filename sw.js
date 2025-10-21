@@ -1,6 +1,6 @@
-/* sw.js — HSM v7 Móvil (pro+) — v1.5.2 */
+/* sw.js — HSM v7 Móvil (pro+) */
 /* ========================================================================== */
-/* Rutas pensadas para GitHub Pages en /panel-html-msm/                       */
+/* Pensado para GitHub Pages en /panel-html-msm/                              */
 /* ========================================================================== */
 
 /* (Opcional) Listas para warmup manual desde el cliente */
@@ -20,7 +20,7 @@ const ICONS = [
 ];
 
 /* ===== Versionado de caches ===== */
-const VERSION = 'v1.5.2';
+const VERSION = 'v1.6.0';
 const PREFIX  = 'hsm-cache';
 const STATIC  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
@@ -176,7 +176,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Otros orígenes: solo imágenes → cache-first light (sin guardar fallos opacos)
+  // Otros orígenes: solo imágenes → cache-first light
   if (url.origin !== location.origin) {
     if (req.destination === 'image') {
       event.respondWith((async () => {
@@ -197,25 +197,28 @@ self.addEventListener('fetch', (event) => {
 
   // Misma-origen:
 
-  // JS / CSS → stale-while-revalidate
-  if (req.destination === 'script' || req.destination === 'style') {
+  // JS / CSS / Fuentes → CacheFirst (mejor TTFB y LCP en repetidas visitas)
+  if (req.destination === 'script' || req.destination === 'style' || req.destination === 'font') {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME);
-      const cached = await cache.match(req);
-      const fetchAndUpdate = fetch(req).then((res) => {
-        if (res && res.ok) cache.put(req, res.clone());
-        return res;
-      }).catch(() => null);
-      return cached || (await fetchAndUpdate) || new Response('', { status: 504 });
+      const hit = await cache.match(req);
+      if (hit) return hit;
+      try {
+        const net = await fetch(req);
+        if (net && net.ok) await put(RUNTIME, req, net.clone(), 60);
+        return net;
+      } catch {
+        return new Response('', { status: 504 });
+      }
     })());
     return;
   }
 
-  // Imágenes / íconos → cache-first con límite
+  // Imágenes / íconos → CacheFirst con límite
   if (req.destination === 'image' || url.pathname.includes('/icons/')) {
     event.respondWith((async () => {
-      const cached = await caches.match(req);
-      if (cached) return cached;
+      const hit = await caches.match(req);
+      if (hit) return hit;
       try {
         const net = await fetch(req);
         if (net && net.ok) await put(IMAGES, req, net.clone(), 100);
@@ -239,18 +242,6 @@ self.addEventListener('fetch', (event) => {
       return hit || (await net) || new Response('{}', {
         status: 200, headers: { 'Content-Type': 'application/json' }
       });
-    })());
-    return;
-  }
-
-  // Fuentes → cache-first (evita FOUT offline)
-  if (req.destination === 'font') {
-    event.respondWith((async () => {
-      const cached = await caches.match(req);
-      if (cached) return cached;
-      const net = await fetch(req).catch(() => null);
-      if (net && net.ok) await put(RUNTIME, req, net.clone(), 40);
-      return net || new Response('', { status: 504 });
     })());
     return;
   }
