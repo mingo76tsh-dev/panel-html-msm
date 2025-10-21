@@ -20,7 +20,7 @@ function stamp() {
     d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes())
   );
 }
-const TAG = "v1.5.1-" + stamp(); // ⚠️ se usa en todo el build
+const TAG = "v1.6.0-" + stamp(); // se usa en todo el build
 
 function withIconBustInHTML(html) {
   // agrega ?v=TAG a los href de iconos conocidos (sin romper rutas absolutas)
@@ -28,11 +28,8 @@ function withIconBustInHTML(html) {
     .replace(/href="\/panel-html-msm\/icons\/apple-touch-icon\.png"/g,
              `href="/panel-html-msm/icons/apple-touch-icon.png?v=${TAG}"`)
     .replace(/href="\/panel-html-msm\/icons\/favicon\.png"/g,
-             `href="/panel-html-msm/icons/favicon.png?v=${TAG}"`)
-    .replace(/href="\/panel-html-msm\/icons\/maskable-192\.png"/g,
-             `href="/panel-html-msm/icons/maskable-192.png?v=${TAG}"`)
-    .replace(/href="\/panel-html-msm\/icons\/maskable-512\.png"/g,
-             `href="/panel-html-msm/icons/maskable-512.png?v=${TAG}"`);
+             `href="/panel-html-msm/icons/favicon.png?v=${TAG}"`);
+  // maskables se sirven por manifest; no hace falta bust aquí.
 }
 
 async function buildHTML() {
@@ -90,7 +87,7 @@ async function copyManifest() {
     j.start_url = `${j.start_url}${j.start_url.includes("?") ? "&" : "?"}v=${TAG}`;
   }
   await writeFile(join(OUT, "manifest.json"), JSON.stringify(j));
-  console.log("✓ manifest.json (+ cache-bust íconos)");
+  console.log("✓ manifest.json (+ cache-bust íconos y start_url)");
 }
 
 async function copyIcons() {
