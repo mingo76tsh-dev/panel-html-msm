@@ -27,9 +27,27 @@
   ],
 
   "shortcuts": [
-    { "name": "Nuevo ingreso", "short_name": "Ingreso", "url": "/panel-html-msm/#ing",  "description": "Ir directo a Ingreso" },
-    { "name": "Dar alta",      "short_name": "Alta",    "url": "/panel-html-msm/#alta", "description": "Ir directo a Alta" },
-    { "name": "Pendientes",    "short_name": "Pend.",   "url": "/panel-html-msm/#pend", "description": "Ver pendientes offline" }
+    {
+      "name": "Nuevo ingreso",
+      "short_name": "Ingreso",
+      "url": "/panel-html-msm/#ing",
+      "description": "Ir directo a Ingreso",
+      "icons": [{ "src": "/panel-html-msm/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Dar alta",
+      "short_name": "Alta",
+      "url": "/panel-html-msm/#alta",
+      "description": "Ir directo a Alta",
+      "icons": [{ "src": "/panel-html-msm/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Pendientes",
+      "short_name": "Pendientes",
+      "url": "/panel-html-msm/#pend",
+      "description": "Ver pendientes offline",
+      "icons": [{ "src": "/panel-html-msm/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ],
 
   "protocol_handlers": [
