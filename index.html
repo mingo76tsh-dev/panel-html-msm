@@ -20,11 +20,9 @@
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
-  <!-- Si el LOGO se muestra como parte visible del header (LCP), lo priorizaremos desde JS con fetchPriority.
-       Si usas un logo por defecto, descomenta el preload: -->
-  <!-- <link rel="preload" as="image" href="/panel-html-msm/icons/maskable-192.png" fetchpriority="high"> -->
+  <!-- Pista de prioridad para el primer contenido -->
+  <link rel="preload" as="image" href="/panel-html-msm/icons/maskable-192.png" fetchpriority="high">
 
-  <!-- CSS CRÍTICO (lo mínimo para pintar header + vista Ingreso) -->
   <style>
     :root{
       --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
@@ -81,9 +79,12 @@
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
 
-    /* Estado por defecto: Ingreso visible sin depender de JS ni :has() */
+    /* Fallback CSS-only por hash */
     .view{ display:none }
-    #v-ing { display:block }
+    :root:has(:target#ing)  #v-ing,
+    :root:has(:target#alta) #v-alta,
+    :root:has(:target#pend) #v-pend,
+    :root:has(:target#util) #v-util { display:block }
   </style>
 </head>
 
@@ -101,7 +102,6 @@
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg">⚙️</button>
       </header>
 
-      <!-- NAV TABS -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
         <a class="tab" id="tab-ing"  role="tab" href="#ing"  data-v="ing"  aria-selected="true">Ingreso</a>
         <a class="tab" id="tab-alta" role="tab" href="#alta" data-v="alta" aria-selected="false">Alta</a>
@@ -317,24 +317,23 @@
 
   <!-- ========= LÓGICA / PWA / CIERRE ========= -->
   <script>
-  /* ===== Helpers ===== */
+  /* ===== Helpers ultra-livianos ===== */
   const LS={get:(k,d=null)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(_){return localStorage.getItem(k)||d}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(_){localStorage.setItem(k,v)}},del:(k)=>localStorage.removeItem(k)};
   const $=(s,r=document)=>r.querySelector(s); const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const vibrate=p=>('vibrate'in navigator)&&navigator.vibrate(p);
   const toast=(t,ms=2200)=>{const el=$("#toast"); if(!el)return; el.textContent=t; el.style.display='block'; setTimeout(()=>el.style.display='none',ms)};
 
   const S=Object.freeze({normStr:v=>(v==null?'':String(v).trim()),onlyDigits:v=>String(v==null?'':v).replace(/\D/g,''),normDate(v){v=this.normStr(v);if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){const[d,m,y]=v.split('/');return `${y}-${m}-${d}`}return v},normTime(v){v=this.normStr(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(!m)return'';const hh=String(Math.max(0,Math.min(23,parseInt(m[1],10)||0))).padStart(2,'0');const mm=String(Math.max(0,Math.min(59,parseInt(m[2],10)||0))).padStart(2,'0');return `${hh}:${mm}`}});
-
   const DEFAULTS={WEBAPP_URL:'',API_KEY:''};
   const API={url(){return LS.get('HSM_WEBAPP_URL',DEFAULTS.WEBAPP_URL)},key(){return LS.get('HSM_API_KEY',DEFAULTS.API_KEY)},async call(action,payload={}){const u=this.url(); if(!u) throw new Error('Sin URL configurada'); const r=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action,apiKey:this.key(),payload})});const t=await r.text(); if(!r.ok) throw new Error(`HTTP ${r.status} ${t}`); try{return JSON.parse(t)}catch{return{ok:false,code:'E_PARSE',message:t}}},ping(){return this.call('ping')},cie10(){return this.call('cie10_list')},findByDni(d,days=120){return this.call('find',{dni:d,days})},saveIngreso(p){return this.call('save',p)},saveAlta(p){return this.call('alta',p)}};
 
-  /* ===== Online badge ===== */
+  /* ===== Estado de red ===== */
   function setOnline(ok){const b=$('#online'); if(!b)return; b.textContent=ok?'Online':'Offline'; b.className='badge '+(ok?'ok':'off')}
   addEventListener('online', ()=>{setOnline(true); toast('Conectado'); tryAutoFlush();});
   addEventListener('offline',()=>{setOnline(false);toast('Sin conexión');});
   setOnline(navigator.onLine);
 
-  /* ===== PWA: Instalar + Service Worker ===== */
+  /* ===== PWA: Install + SW ===== */
   let _deferredPrompt=null;
   addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').style.display='inline-block';});
   $('#btnInstall')?.addEventListener('click',async()=>{if(!_deferredPrompt)return;_deferredPrompt.prompt();try{await _deferredPrompt.userChoice}catch(_){} _deferredPrompt=null;$('#btnInstall').style.display='none';});
@@ -353,7 +352,7 @@
     });
   }
 
-  /* ===== Tabs robustas (hash + teclado) ===== */
+  /* ===== Tabs accesibles ===== */
   function switchTab(id){
     const tabs=$$('.tab');
     tabs.forEach(btn=>{const sel=(btn.dataset.v===id); btn.setAttribute('aria-selected',String(sel)); btn.classList.toggle('act',sel);});
@@ -375,7 +374,7 @@
   }
   addEventListener('hashchange',()=>{const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v);});
 
-  /* ===== Utilidad varias ===== */
+  /* ===== Utilidad de fechas/horas ===== */
   const nowDate=()=>new Date().toISOString().slice(0,10);
   const nowTime=()=>new Date().toTimeString().slice(0,5);
   $('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate());
@@ -457,25 +456,21 @@
   (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
   /* ===== Settings ===== */
-  function applyLogo(){
-    const url=LS.get('HSM_LOGO_URL','');
-    const el=$('#logo');
-    if(!el) return;
-    if(url){
-      try{ el.fetchPriority='high'; }catch(_){}
-      el.loading='eager';
-      el.decoding='async';
-      el.src=url;
-      el.hidden=false;
-    } else el.hidden=true;
-  }
+  function applyLogo(){const url=LS.get('HSM_LOGO_URL',''); const el=$('#logo'); if(!el)return; if(url){el.loading='lazy';el.decoding='async';el.src=url;el.hidden=false;} else el.hidden=true;}
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
   $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada');});
   $('#cfgTest')?.addEventListener('click',async()=>{try{const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK');}catch(e){$('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600)}});
 
   /* ===== Boot ===== */
   addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') tryAutoFlush(); });
-  addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
+  addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs();
+    try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){}
+    try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){}
+    if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate();
+    if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime();
+    // Pequeño yield para liberar la primera pintura bajo throttling
+    setTimeout(tryAutoFlush, 0);
+  });
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
   </script>
   <!-- ========= /FIN LÓGICA ========= -->
