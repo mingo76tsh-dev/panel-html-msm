@@ -1,9 +1,9 @@
-/* sw.js — HSM v7 Móvil (pro+) — versionado por build */
+/* sw.js — HSM v7 Móvil (pro+) — versión se pisa en build */
 /* ========================================================================== */
 /* Rutas pensadas para GitHub Pages en /panel-html-msm/                       */
 /* ========================================================================== */
 
-/* (Opcional) Listas para warmup manual desde el cliente */
+/* (Opcional) Warmup manual desde el cliente */
 const APP_SHELL = [
   '/panel-html-msm/',
   '/panel-html-msm/index.html',
@@ -20,17 +20,17 @@ const ICONS = [
 ];
 
 /* ===== Versionado de caches ===== */
-const VERSION = 'v1.5.3'; // será reemplazado por build.mjs
+const VERSION = 'dev-v1.6.0';
 const PREFIX  = 'hsm-cache';
 const STATIC  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
 const IMAGES  = `${PREFIX}-img-${VERSION}`;
 
-/* ===== Helpers de rutas ===== */
+/* ===== Helpers de rutas (resuelven contra el scope real del SW) ===== */
 const SCOPE_URL = new URL(self.registration.scope);
 const P = (rel) => new URL(rel, SCOPE_URL).toString();
 
-/* Core que se precachea en install (mínimo para no bloquear) */
+/* Core que se precachea en install */
 const CORE_ASSETS = [
   P('./'),
   P('index.html'),
@@ -46,6 +46,7 @@ const isHTML = (req, evt) =>
   (evt && evt.request.destination === 'document');
 
 async function put(cacheName, request, response, maxEntries) {
+  if (!response) return;
   const cache = await caches.open(cacheName);
   await cache.put(request, response);
   if (maxEntries) {
@@ -57,12 +58,10 @@ async function put(cacheName, request, response, maxEntries) {
 async function cleanStaleCaches() {
   const keep = [STATIC, RUNTIME, IMAGES];
   const names = await caches.keys();
-  await Promise.all(
-    names.map((n) => (n.startsWith(PREFIX) && !keep.includes(n) ? caches.delete(n) : null))
-  );
+  await Promise.all(names.map((n) => (n.startsWith(PREFIX) && !keep.includes(n) ? caches.delete(n) : null)));
 }
 
-function timeoutFetch(request, ms = 8000) {
+function timeoutFetch(request, ms = 10000) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
   return fetch(request, { signal: ctrl.signal }).finally(() => clearTimeout(id));
@@ -100,7 +99,7 @@ async function broadcast(msg){
   for (const c of clis) c.postMessage(msg);
 }
 
-/* ===== Install ===== */
+/* ===== Install (precache core) ===== */
 self.addEventListener('install', (event) => {
   event.waitUntil((async ()=>{
     try { const c = await caches.open(STATIC); await c.addAll(CORE_ASSETS); } catch(_){}
@@ -108,7 +107,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-/* ===== Activate ===== */
+/* ===== Activate (clean + navigation preload + notify) ===== */
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     await cleanStaleCaches();
@@ -120,7 +119,7 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-/* ===== Mensajes ===== */
+/* ===== Mensajes desde la página ===== */
 self.addEventListener('message', (event) => {
   const data = event.data;
   if (!data) return;
@@ -176,7 +175,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Otros orígenes: solo imágenes → cache-first light
+  // Otros orígenes: solo imágenes → cache-first light (sin guardar fallos opacos)
   if (url.origin !== location.origin) {
     if (req.destination === 'image') {
       event.respondWith((async () => {
