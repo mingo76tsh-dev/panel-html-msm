@@ -22,11 +22,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # --- Normaliza/depura icons/ automáticamente (usa tu clean-icons.sh)
+      - name: Clean & normalize icons
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y imagemagick -qq
+          bash clean-icons.sh
+
       # --- Verificación de tamaños de íconos y screenshots (falla si algo no coincide)
       - name: Verify PWA icons and screenshots
         run: |
-          sudo apt-get update >/dev/null
-          sudo apt-get install -y imagemagick >/dev/null
           check() { identify -format "%wx%h\n" "$1" | grep -qx "$2" || { echo "::error::Bad size for $1 (want $2)"; exit 1; }; }
           test -f icons/icon-192.png          && check icons/icon-192.png          192x192
           test -f icons/icon-512.png          && check icons/icon-512.png          512x512
@@ -63,11 +68,6 @@ jobs:
           name: dist
           path: dist
           if-no-files-found: error
-- name: Clean & normalize icons
-  run: |
-    sudo apt-get update -qq
-    sudo apt-get install -y imagemagick -qq
-    bash clean-icons.sh
 
   lighthouse:
     name: Lighthouse CI (perfil móvil)
@@ -79,6 +79,12 @@ jobs:
         with:
           name: dist
           path: dist
+
+      # Asegura Node para instalar http-server
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Install static server
         run: npm i -g http-server
