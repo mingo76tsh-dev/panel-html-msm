@@ -2,3 +2,14 @@ node_modules
 dist
 npm-debug.log*
 .DS_Store
+# No versionar fuentes de diseño ni zips
+*.zip
+*.psd
+*.ai
+*.sketch
+*.xcf
+
+# Evita nombres “raros” que ya te aparecieron
+icons/*tu versión*
+icons/*→*
+icons/*(180×180, sin transparencia)*
