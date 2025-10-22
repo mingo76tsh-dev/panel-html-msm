@@ -63,6 +63,11 @@ jobs:
           name: dist
           path: dist
           if-no-files-found: error
+- name: Clean & normalize icons
+  run: |
+    sudo apt-get update -qq
+    sudo apt-get install -y imagemagick -qq
+    bash clean-icons.sh
 
   lighthouse:
     name: Lighthouse CI (perfil móvil)
