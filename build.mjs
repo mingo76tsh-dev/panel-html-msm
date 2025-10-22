@@ -1,4 +1,4 @@
-// build.mjs — minify + version bump + cache-bust icons
+// build.mjs
 import { readFile, writeFile, mkdir, cp } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -16,18 +16,19 @@ async function ensureOut() {
 const z = (n) => String(n).padStart(2, "0");
 function stamp() {
   const d = new Date();
-  return d.getFullYear() + z(d.getMonth()+1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes());
+  return (
+    d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes())
+  );
 }
-const TAG = "v1.6.0-" + stamp(); // ← nuevo tag cada build
+const TAG = "v1.5.2-" + stamp(); // usado en todo el build
 
 function withIconBustInHTML(html) {
+  // agrega ?v=TAG a los href de iconos conocidos
   return html
     .replace(/href="\/panel-html-msm\/icons\/apple-touch-icon\.png"/g,
              `href="/panel-html-msm/icons/apple-touch-icon.png?v=${TAG}"`)
     .replace(/href="\/panel-html-msm\/icons\/favicon\.png"/g,
-             `href="/panel-html-msm/icons/favicon.png?v=${TAG}"`)
-    .replace(/href="\/panel-html-msm\/manifest\.json"/g,
-             `href="/panel-html-msm/manifest.json?v=${TAG}"`);
+             `href="/panel-html-msm/icons/favicon.png?v=${TAG}"`);
 }
 
 async function buildHTML() {
@@ -46,11 +47,17 @@ async function buildHTML() {
     quoteCharacter: '"'
   });
   await writeFile(join(OUT, "index.html"), html);
-  console.log("✓ index.html minificado (+ bust manifest & iconos)");
+  console.log("✓ index.html minificado (+ cache-bust íconos)");
 }
 
 async function build404() {
-  const html = '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/panel-html-msm/"><title>HSM • Redireccionando…</title>';
+  let html;
+  try {
+    const raw = await readFile(join(SRC, "404.html"), "utf8");
+    html = await minifyHTML(raw, { collapseWhitespace: true, removeComments: true, minifyCSS: true, minifyJS: true });
+  } catch {
+    html = '<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/panel-html-msm/"><title>HSM • Redireccionando…</title>';
+  }
   await writeFile(join(OUT, "404.html"), html);
   console.log("✓ 404.html listo");
 }
@@ -65,28 +72,33 @@ async function buildSW() {
 }
 
 async function copyManifest() {
+  // manifest fuente del repo
   const raw = await readFile(join(SRC, "manifest.json"), "utf8");
   const j = JSON.parse(raw);
 
-  // cache-bust icons y start_url
+  // cache-bust en cada icon.src y screenshot.src
+  const bust = (s) => (s?.includes("?v=") ? s : `${s}?v=${TAG}`);
+
   if (Array.isArray(j.icons)) {
-    j.icons = j.icons.map((it) => ({ ...it, src: it.src?.includes("?v=") ? it.src : `${it.src}?v=${TAG}` }));
+    j.icons = j.icons.map((it) => ({ ...it, src: bust(it.src) }));
   }
   if (Array.isArray(j.screenshots)) {
-    j.screenshots = j.screenshots.map((it) => ({ ...it, src: it.src?.includes("?v=") ? it.src : `${it.src}?v=${TAG}` }));
+    j.screenshots = j.screenshots.map((it) => ({ ...it, src: bust(it.src) }));
   }
+  // bust al start_url para forzar update del shell
   if (typeof j.start_url === "string" && !j.start_url.includes("?v=")) {
     j.start_url = `${j.start_url}${j.start_url.includes("?") ? "&" : "?"}v=${TAG}`;
   }
+
   await writeFile(join(OUT, "manifest.json"), JSON.stringify(j));
-  console.log("✓ manifest.json (+ cache-bust íconos & screenshots)");
+  console.log("✓ manifest.json (+ cache-bust íconos/screenshots)");
 }
 
 async function copyIcons() {
   const srcIcons = join(SRC, "icons");
   if (existsSync(srcIcons)) {
     await cp(srcIcons, join(OUT, "icons"), { recursive: true });
-    console.log("✓ icons/ copiados");
+    console.log("✓ icons/");
   }
 }
 
@@ -96,4 +108,7 @@ async function run() {
   console.log("\nBuild OK → dist/");
 }
 
-run().catch((e) => { console.error(e); process.exit(1); });
+run().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
