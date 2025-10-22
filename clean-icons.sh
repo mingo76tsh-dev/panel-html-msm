@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Requisitos: ImageMagick (convert/identify). Opcional: oxipng para optimizar PNG.
+# Requisitos: ImageMagick (convert/identify).
 # Ubuntu/Debian: sudo apt-get update && sudo apt-get install -y imagemagick
-# Opcional:      sudo apt-get install -y oxipng   (o usa kirillt/oxipng-action en el workflow)
 
-THEME_BG="#0b1220"   # Color sólido de fondo para apple-touch (sin transparencia)
+THEME_BG="#0b1220"   # color sólido para apple-touch (sin alpha)
 DIR="icons"
+
 keep=(
   "icon-192.png"
   "icon-512.png"
@@ -25,80 +25,47 @@ have(){ command -v "$1" >/dev/null 2>&1; }
 
 [ -d "$DIR" ] || fail "No existe la carpeta $DIR/"
 
-if ! have convert || ! have identify; then
-  fail "Falta ImageMagick (comandos convert/identify). Instálalo y reintenta."
-fi
+have identify || fail "Falta ImageMagick (identify)"
+have convert   || fail "Falta ImageMagick (convert)"
 
-# --- Utilidades de imagen ---
-ensure_square() { # $1 in $2 out $3 size (p.ej. 512x512) $4 background (none|#hex)
-  local in="$1" out="$2" size="$3" bg="${4:-none}"
-  if [[ "$bg" == "none" ]]; then
-    convert "$in" -resize "$size" -gravity center -background none -extent "$size" "PNG32:$out"
-  else
-    convert "$in" -resize "$size" -gravity center -background "$bg" -extent "$size" \
-      -alpha remove -alpha off "PNG24:$out"
+say "1) Borrando archivos basura o duplicados…"
+shopt -s nullglob
+for f in "$DIR"/*; do
+  base=$(basename "$f")
+  ok=0
+  for k in "${keep[@]}"; do
+    [[ "$base" == "$k" ]] && ok=1 && break
+  done
+  [[ $ok -eq 1 ]] || { rm -f "$f"; echo "  - delete $base"; }
+done
+shopt -u nullglob
+
+say "2) Verificando tamaños y corrigiendo si aplica…"
+fix_size () {
+  local f="$1" want="$2"
+  if [[ ! -f "$f" ]]; then fail "Falta $f"; fi
+  local got; got="$(identify -format "%wx%h" "$f")"
+  if [[ "$got" != "$want" ]]; then
+    echo "  - resize $f ($got → $want)"
+    convert "$f" -resize "$want" -gravity center -extent "$want" "$f"
   fi
 }
 
-check_size(){ # $1 file $2 WxH
-  local got
-  got="$(identify -format "%wx%h" "$1" 2>/dev/null || echo "0x0")"
-  [[ "$got" == "$2" ]] || fail "Tamaño inválido para $1 (esperado $2, real $got)"
-}
+fix_size "$DIR/icon-192.png"         "192x192"
+fix_size "$DIR/icon-512.png"         "512x512"
+fix_size "$DIR/maskable-192.png"     "192x192"
+fix_size "$DIR/maskable-512.png"     "512x512"
+fix_size "$DIR/screen-1080x1920.png" "1080x1920"
+fix_size "$DIR/screen-1920x1080.png" "1920x1080"
 
-# --- Detectar “mejor fuente” disponible ---
-src_flat=""        # icono plano para 'icon-*.png' y favicon
-src_maskable=""    # icono con padding seguro para 'maskable-*.png'
-
-[[ -f "$DIR/icon-512.png"       ]] && src_flat="$DIR/icon-512.png"
-[[ -z "$src_flat" && -f "$DIR/icon-192.png"       ]] && src_flat="$DIR/icon-192.png"
-[[ -z "$src_flat" ]] && fail "No encuentro icono plano base (icon-512.png / icon-192.png)."
-
-[[ -f "$DIR/maskable-512.png"   ]] && src_maskable="$DIR/maskable-512.png"
-[[ -z "$src_maskable" && -f "$DIR/maskable-192.png" ]] && src_maskable="$DIR/maskable-192.png"
-# Si no hay maskable, usamos el plano como fallback (no ideal, pero funcional).
-[[ -z "$src_maskable" ]] && src_maskable="$src_flat"
-
-say "Regenerando íconos estándar y maskables…"
-ensure_square "$src_flat"     "$DIR/icon-512.png"       "512x512"  "none"
-ensure_square "$src_flat"     "$DIR/icon-192.png"       "192x192"  "none"
-ensure_square "$src_maskable" "$DIR/maskable-512.png"   "512x512"  "none"
-ensure_square "$src_maskable" "$DIR/maskable-192.png"   "192x192"  "none"
-
-say "Generando apple-touch-icon (sin transparencia, 180×180)…"
-ensure_square "$src_flat"     "$DIR/apple-touch-icon.png" "180x180" "$THEME_BG"
-
-say "Generando favicon (32×32)…"
-ensure_square "$src_flat"     "$DIR/favicon.png"         "32x32"    "none"
-
-# --- Validaciones de tamaño exacto ---
-say "Validando tamaños…"
-check_size "$DIR/icon-192.png"          "192x192"
-check_size "$DIR/icon-512.png"          "512x512"
-check_size "$DIR/maskable-192.png"      "192x192"
-check_size "$DIR/maskable-512.png"      "512x512"
-check_size "$DIR/apple-touch-icon.png"  "180x180"
-check_size "$DIR/favicon.png"           "32x32"
-[[ -f "$DIR/screen-1080x1920.png" ]] && check_size "$DIR/screen-1080x1920.png" "1080x1920" || true
-[[ -f "$DIR/screen-1920x1080.png" ]] && check_size "$DIR/screen-1920x1080.png" "1920x1080" || true
-
-# --- Borrar todo lo que no sea necesario (y nombres raros) ---
-say "Limpiando archivos no usados en icons/…"
-shopt -s extglob dotglob
-for f in "$DIR"/*; do
-  base="$(basename "$f")"
-  keep_this=false
-  for k in "${keep[@]}"; do [[ "$base" == "$k" ]] && keep_this=true && break; done
-  $keep_this || rm -f -- "$f"
-done
-shopt -u extglob dotglob
-
-# --- Optimización lossless si está oxipng disponible ---
-if have oxipng; then
-  say "Optimizando PNG (oxipng)…"
-  oxipng -o3 -strip safe "$DIR"/*.png >/dev/null || true
-else
-  say "Sugerencia: instala oxipng para comprimir sin pérdidas (opcional)."
+say "3) Generando apple-touch-icon (180x180, sin transparencia, fondo theme)…"
+if [[ -f "$DIR/icon-192.png" ]]; then
+  convert "$DIR/icon-192.png" -resize 180x180 -background "$THEME_BG" -alpha remove -alpha off -gravity center -extent 180x180 "$DIR/apple-touch-icon.png"
 fi
 
-say "✅ Listo. Carpeta icons/ limpia, normalizada y validada."
+say "4) Generando favicon.png (32x32, desde icon-192)…"
+if [[ -f "$DIR/icon-192.png" ]]; then
+  convert "$DIR/icon-192.png" -resize 32x32 "$DIR/favicon.png"
+fi
+
+say "OK ✔ icons/"
