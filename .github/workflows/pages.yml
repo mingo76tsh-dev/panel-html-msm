@@ -2,7 +2,7 @@ name: Build, Lighthouse (móvil) & Deploy to Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -16,23 +16,47 @@ concurrency:
 
 jobs:
   build:
+    name: Build (con verificación de íconos)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # --- Verificación de tamaños de íconos y screenshots (falla si algo no coincide)
+      - name: Verify PWA icons and screenshots
+        run: |
+          sudo apt-get update >/dev/null
+          sudo apt-get install -y imagemagick >/dev/null
+          check() { identify -format "%wx%h\n" "$1" | grep -qx "$2" || { echo "::error::Bad size for $1 (want $2)"; exit 1; }; }
+          test -f icons/icon-192.png          && check icons/icon-192.png          192x192
+          test -f icons/icon-512.png          && check icons/icon-512.png          512x512
+          test -f icons/maskable-192.png      && check icons/maskable-192.png      192x192
+          test -f icons/maskable-512.png      && check icons/maskable-512.png      512x512
+          test -f icons/apple-touch-icon.png  && check icons/apple-touch-icon.png  180x180
+          test -f icons/screen-1080x1920.png  && check icons/screen-1080x1920.png  1080x1920
+          test -f icons/screen-1920x1080.png  && check icons/screen-1920x1080.png  1920x1080
+
+      # --- Optimización lossless de PNG (reduce peso sin cambiar tamaños/alpha)
+      - name: Optimize PNGs (lossless)
+        uses: kirillt/oxipng-action@v1
+        with:
+          paths: icons
+          strip: safe
+          optimize: 3
+
+      # --- Build estático a dist/
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
 
       - name: Install deps
         run: npm ci
 
-      - name: Build (minify + version bump)
-        run: npm run build
+      - name: Build
+        run: node build.mjs
 
+      # --- Publicamos dist como artifact para otros jobs
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -45,7 +69,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Download build
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
@@ -61,7 +85,6 @@ jobs:
           configPath: .lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
-          # Sirve dist/ en puerto 4173, SPA mode
           runs: |
             http-server dist -p 4173 -s &
 
@@ -87,23 +110,27 @@ jobs:
           fi
 
   deploy:
+    name: Deploy to Pages
     needs: [build, lighthouse]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download build
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
 
-      - name: Upload artifact for Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
