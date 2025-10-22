@@ -1,9 +1,4 @@
-/* sw.js — HSM v7 Móvil (pro+) — versión se pisa en build */
-/* ========================================================================== */
-/* Rutas pensadas para GitHub Pages en /panel-html-msm/                       */
-/* ========================================================================== */
-
-/* (Opcional) Warmup manual desde el cliente */
+/* sw.js — HSM v7 Móvil — versión se estampa en build.mjs */
 const APP_SHELL = [
   '/panel-html-msm/',
   '/panel-html-msm/index.html',
@@ -19,18 +14,15 @@ const ICONS = [
   '/panel-html-msm/icons/maskable-512.png',
 ];
 
-/* ===== Versionado de caches ===== */
-const VERSION = 'dev-v1.6.0';
+const VERSION = 'v-dev';            // ← se reemplaza en build
 const PREFIX  = 'hsm-cache';
 const STATIC  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
 const IMAGES  = `${PREFIX}-img-${VERSION}`;
 
-/* ===== Helpers de rutas (resuelven contra el scope real del SW) ===== */
 const SCOPE_URL = new URL(self.registration.scope);
 const P = (rel) => new URL(rel, SCOPE_URL).toString();
 
-/* Core que se precachea en install */
 const CORE_ASSETS = [
   P('./'),
   P('index.html'),
@@ -39,26 +31,26 @@ const CORE_ASSETS = [
   P('icons/maskable-512.png'),
 ];
 
-/* ===== Utils ===== */
 const isHTML = (req, evt) =>
   req.mode === 'navigate' ||
   (req.method === 'GET' && req.headers.get('accept')?.includes('text/html')) ||
   (evt && evt.request.destination === 'document');
 
 async function put(cacheName, request, response, maxEntries) {
-  if (!response) return;
   const cache = await caches.open(cacheName);
   await cache.put(request, response);
   if (maxEntries) {
     const keys = await cache.keys();
-    if (keys.length > maxEntries) await cache.delete(keys[0]); // FIFO simple
+    if (keys.length > maxEntries) await cache.delete(keys[0]);
   }
 }
 
 async function cleanStaleCaches() {
   const keep = [STATIC, RUNTIME, IMAGES];
   const names = await caches.keys();
-  await Promise.all(names.map((n) => (n.startsWith(PREFIX) && !keep.includes(n) ? caches.delete(n) : null)));
+  await Promise.all(
+    names.map((n) => (n.startsWith(PREFIX) && !keep.includes(n) ? caches.delete(n) : null))
+  );
 }
 
 function timeoutFetch(request, ms = 10000) {
@@ -99,7 +91,7 @@ async function broadcast(msg){
   for (const c of clis) c.postMessage(msg);
 }
 
-/* ===== Install (precache core) ===== */
+/* Install */
 self.addEventListener('install', (event) => {
   event.waitUntil((async ()=>{
     try { const c = await caches.open(STATIC); await c.addAll(CORE_ASSETS); } catch(_){}
@@ -107,7 +99,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-/* ===== Activate (clean + navigation preload + notify) ===== */
+/* Activate */
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     await cleanStaleCaches();
@@ -119,7 +111,7 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-/* ===== Mensajes desde la página ===== */
+/* Mensajes */
 self.addEventListener('message', (event) => {
   const data = event.data;
   if (!data) return;
@@ -138,14 +130,14 @@ self.addEventListener('message', (event) => {
   }
 });
 
-/* ===== Background Sync ===== */
+/* Background Sync */
 self.addEventListener('sync', (event) => {
   if (event.tag === 'flush-pend') {
     event.waitUntil(broadcast({ type: 'TRY_FLUSH_PEND' }));
   }
 });
 
-/* ===== Fetch strategies ===== */
+/* Fetch */
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
@@ -154,7 +146,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegaciones/HTML: network-first + navigationPreload + SPA fallback
+  // Navegación/HTML → network-first con fallback
   if (isHTML(req, event)) {
     event.respondWith((async () => {
       try {
@@ -175,7 +167,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Otros orígenes: solo imágenes → cache-first light (sin guardar fallos opacos)
+  // Recursos de otros orígenes: solo imágenes → cache-first light
   if (url.origin !== location.origin) {
     if (req.destination === 'image') {
       event.respondWith((async () => {
@@ -194,7 +186,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Misma-origen:
+  // Misma-origen
 
   // JS / CSS → stale-while-revalidate
   if (req.destination === 'script' || req.destination === 'style') {
@@ -226,7 +218,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // JSON / manifest → cache-first + actualización oportunista
+  // JSON / manifest → cache-first + update oportunista
   if (req.destination === 'manifest' || url.pathname.endsWith('.json')) {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME);
@@ -242,7 +234,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Fuentes → cache-first (evita FOUT offline)
+  // Fuentes → cache-first
   if (req.destination === 'font') {
     event.respondWith((async () => {
       const cached = await caches.match(req);
@@ -254,7 +246,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Resto (misma-origen) → cache-first con revalidación en 2º plano
+  // Resto → cache-first + revalidación en 2º plano
   event.respondWith((async () => {
     const cached = await caches.match(req);
     const net = fetch(req).then((res) => {
