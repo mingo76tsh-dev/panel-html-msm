@@ -1,4 +1,9 @@
-/* sw.js — HSM v7 Móvil — versión se estampa en build.mjs */
+/* sw.js — HSM v7 Móvil (pro+) — build versioned */
+/* ========================================================================== */
+/* Rutas pensadas para GitHub Pages en /panel-html-msm/                       */
+/* ========================================================================== */
+
+/* (Opcional) Listas para warmup manual desde el cliente */
 const APP_SHELL = [
   '/panel-html-msm/',
   '/panel-html-msm/index.html',
@@ -14,12 +19,14 @@ const ICONS = [
   '/panel-html-msm/icons/maskable-512.png',
 ];
 
-const VERSION = 'v-dev';            // ← se reemplaza en build
+/* ===== Versionado de caches (el build pisa VERSION con TAG) ===== */
+const VERSION = 'v1.5.2';
 const PREFIX  = 'hsm-cache';
 const STATIC  = `${PREFIX}-static-${VERSION}`;
 const RUNTIME = `${PREFIX}-rt-${VERSION}`;
 const IMAGES  = `${PREFIX}-img-${VERSION}`;
 
+/* ===== Helpers ===== */
 const SCOPE_URL = new URL(self.registration.scope);
 const P = (rel) => new URL(rel, SCOPE_URL).toString();
 
@@ -41,16 +48,14 @@ async function put(cacheName, request, response, maxEntries) {
   await cache.put(request, response);
   if (maxEntries) {
     const keys = await cache.keys();
-    if (keys.length > maxEntries) await cache.delete(keys[0]);
+    if (keys.length > maxEntries) await cache.delete(keys[0]); // FIFO simple
   }
 }
 
 async function cleanStaleCaches() {
   const keep = [STATIC, RUNTIME, IMAGES];
   const names = await caches.keys();
-  await Promise.all(
-    names.map((n) => (n.startsWith(PREFIX) && !keep.includes(n) ? caches.delete(n) : null))
-  );
+  await Promise.all(names.map((n) => (n.startsWith(PREFIX) && !keep.includes(n) ? caches.delete(n) : null)));
 }
 
 function timeoutFetch(request, ms = 10000) {
@@ -65,7 +70,7 @@ function htmlOfflineResponse() {
   <title>Offline • HSM</title>
   <style>
     html,body{height:100%;margin:0;background:#0b1220;color:#e5e7eb;font:14px/1.46 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .c{max-width:560px;margin:0 auto;display:flex;height:100%;align-items:center}
+    .c{max-width:560px;margin:0 auto;display:flex;height:100%;align-items:center;padding:12px}
     .card{background:#0f172a;border:1px solid #1f2a44;border-radius:16px;padding:16px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
     .mut{color:#94a3b8}
     button{margin-top:10px;border:1px solid #1f2a44;background:#13203b;color:#e5e7eb;border-radius:10px;padding:10px 14px;cursor:pointer}
@@ -91,7 +96,7 @@ async function broadcast(msg){
   for (const c of clis) c.postMessage(msg);
 }
 
-/* Install */
+/* ===== Install ===== */
 self.addEventListener('install', (event) => {
   event.waitUntil((async ()=>{
     try { const c = await caches.open(STATIC); await c.addAll(CORE_ASSETS); } catch(_){}
@@ -99,7 +104,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-/* Activate */
+/* ===== Activate ===== */
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     await cleanStaleCaches();
@@ -111,42 +116,42 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-/* Mensajes */
+/* ===== Mensajes ===== */
 self.addEventListener('message', (event) => {
   const data = event.data;
   if (!data) return;
-
   if (data === 'SKIP_WAITING') self.skipWaiting();
-
   if (data.type === 'WARMUP') {
     event.waitUntil((async () => {
       try { const c  = await caches.open(STATIC); await c.addAll(APP_SHELL); } catch {}
       try { const ic = await caches.open(IMAGES); await ic.addAll(ICONS); } catch {}
     })());
   }
-
   if (data === 'REQUEST_SYNC' && 'sync' in self.registration) {
     self.registration.sync.register('flush-pend').catch(() => {});
   }
 });
 
-/* Background Sync */
+/* ===== Background Sync ===== */
 self.addEventListener('sync', (event) => {
   if (event.tag === 'flush-pend') {
     event.waitUntil(broadcast({ type: 'TRY_FLUSH_PEND' }));
   }
 });
 
-/* Fetch */
+/* ===== Fetch strategies ===== */
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+
+  // Evitar manejar llamadas de extensión o chrome-extension
+  if (new URL(req.url).protocol.startsWith('chrome')) return;
 
   if (req.method !== 'GET') {
     event.respondWith(fetch(req).catch(() => new Response(null, { status: 503 })));
     return;
   }
 
-  // Navegación/HTML → network-first con fallback
+  // Navegaciones/HTML: network-first + navigationPreload + SPA fallback
   if (isHTML(req, event)) {
     event.respondWith((async () => {
       try {
@@ -167,7 +172,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Recursos de otros orígenes: solo imágenes → cache-first light
+  // Otros orígenes: solo imágenes → cache-first light
   if (url.origin !== location.origin) {
     if (req.destination === 'image') {
       event.respondWith((async () => {
@@ -186,7 +191,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Misma-origen
+  // Misma-origen:
 
   // JS / CSS → stale-while-revalidate
   if (req.destination === 'script' || req.destination === 'style') {
@@ -218,7 +223,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // JSON / manifest → cache-first + update oportunista
+  // JSON / manifest → cache-first + actualización oportunista
   if (req.destination === 'manifest' || url.pathname.endsWith('.json')) {
     event.respondWith((async () => {
       const cache = await caches.open(RUNTIME);
@@ -234,7 +239,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Fuentes → cache-first
+  // Fuentes → cache-first (evita FOUT offline)
   if (req.destination === 'font') {
     event.respondWith((async () => {
       const cached = await caches.match(req);
@@ -246,7 +251,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Resto → cache-first + revalidación en 2º plano
+  // Resto → cache-first con revalidación en 2º plano
   event.respondWith((async () => {
     const cached = await caches.match(req);
     const net = fetch(req).then((res) => {
