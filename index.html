@@ -1,33 +1,36 @@
 <!doctype html>
 <html lang="es" dir="ltr">
 <head>
-  <!-- ===== BEGIN: PWA + SEO ===== -->
+  <!-- ===== PWA + SEO (GH Pages /panel-html-msm/) ===== -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
   <meta name="theme-color" content="#0b1220" />
   <meta name="format-detection" content="telephone=no" />
-  <meta name="mobile-web-app-capable" content="yes">       <!-- Android / Chrome -->
-  <meta name="apple-mobile-web-app-capable" content="yes"> <!-- iOS / Safari -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest + iconos (rutas absolutas para GitHub Pages /panel-html-msm/) -->
+  <!-- Manifest + iconos (rutas absolutas para GH Pages) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
 
-  <!-- Hint: precarga de un ícono local (no bloquea) -->
-  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png" imagesrcset="/panel-html-msm/icons/icon-192.png 192w, /panel-html-msm/icons/icon-512.png 512w" imagesizes="(max-width: 480px) 192px, 512px">
-
   <!-- Preconexión (Apps Script) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
-  <!-- ===== END: PWA + SEO ===== -->
 
-  <!-- ===== BEGIN: Estilos ===== -->
+  <!-- Hint: si se muestra logo, precárgalo para bajar LCP -->
+  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png" fetchpriority="high">
+
+  <!-- Seguridad mínima y aislamiento (mejora Best Practices sin romper nada) -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="interest-cohort=(), autoplay=(), camera=(), microphone=()">
+
+  <!-- ===== Estilos (optimizados para CLS/LCP) ===== -->
   <style>
     :root{
       --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
@@ -38,12 +41,9 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-
-    /* === Layout principal (mejora LCP) === */
-    .wrap{max-width:980px;margin:0 auto;padding:12px; content-visibility:auto; contain-intrinsic-size: 1000px 1200px;}
-    .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);overflow:hidden; content-visibility:auto; contain-intrinsic-size: 980px 640px;}
-    header.app{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd); min-height:64px; content-visibility:auto; contain-intrinsic-size: 980px 64px;}
-
+    .wrap{max-width:980px;margin:0 auto;padding:12px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+    header.app{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd); min-height:64px}
     .title{font-weight:800; letter-spacing:.3px}
     .sp{flex:1}
     .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
@@ -64,20 +64,15 @@
     nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
     .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700; text-decoration:none; -webkit-tap-highlight-color:transparent}
     .tab[aria-selected="true"]{background:var(--card);color:#fff}
-
-    /* Las vistas grandes también con CV: */
     section.view{padding:12px; content-visibility:auto; contain-intrinsic-size: 800px 1200px;}
-
     .kv{display:flex; gap:8px; align-items:center}
     .kv input{flex:1}
     .st{margin-top:10px;font-size:13px}
     .ok{color:#86efac}
     .err{color:#fca5a5}
     .mut{color:#94a3b8}
-
-    /* CLS-safe: tamaño fijo del logo */
-    .logo{width:100px;height:44px; object-fit:contain; border-radius:8px}
-
+    /* Reservamos espacio para evitar CLS si aparece el logo */
+    .logo{height:44px; width:44px; object-fit:cover; border-radius:8px; inline-size:44px; block-size:44px}
     .chips{display:flex; flex-wrap:wrap; gap:8px}
     .chip,.pill{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; text-decoration:none}
     .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
@@ -86,14 +81,12 @@
     .small{font-size:12px;color:#94a3b8}
     hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
-
     dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
     dialog::backdrop{background:rgba(2,6,23,.55)}
     :focus-visible{outline:2px solid #60a5fa; outline-offset: 2px}
     @media (prefers-reduced-motion: reduce){
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
-
     /* Fallback CSS-only por hash: si falla JS, igual cambia la vista */
     .view{ display:none }
     :root:has(:target#ing)  #v-ing,
@@ -103,15 +96,12 @@
 
     .footer {display:flex; gap:8px; align-items:center; justify-content:center; padding:10px; color:#a8b3c7; font-size:12px; border-top:1px solid var(--bd); background:#0f172a;}
   </style>
-  <!-- ===== END: Estilos ===== -->
 </head>
 
 <body>
   <noscript>
     <div class="wrap">
-      <div class="card" style="padding:12px; margin-top:12px">
-        Se requiere JavaScript para usar esta aplicación.
-      </div>
+      <div class="card" style="padding:12px; margin-top:12px">Se requiere JavaScript para usar esta aplicación.</div>
     </div>
   </noscript>
 
@@ -120,7 +110,8 @@
   <main id="main" class="wrap" role="main">
     <article class="card" aria-label="Aplicación HSM v7 Móvil">
       <header class="app">
-        <img id="logo" class="logo" alt="Logo de la institución" src="" hidden decoding="async">
+        <!-- El logo se aplica por Config; reservamos tamaño fijo para evitar CLS -->
+        <img id="logo" class="logo" alt="Logo de la institución" src="/panel-html-msm/icons/icon-512.png" fetchpriority="high">
         <h1 class="title" style="margin:0;font-size:16px">HSM v7 • Móvil</h1>
         <span id="online" class="badge off" aria-live="polite" title="Estado de red">Offline</span>
         <span class="sp"></span>
@@ -128,7 +119,7 @@
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
-      <!-- NAV TABS (progresivo: <a href="#...">) -->
+      <!-- NAV TABS -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
         <a class="tab" id="tab-ing"  role="tab" href="#ing"  data-v="ing"  aria-selected="true">Ingreso</a>
         <a class="tab" id="tab-alta" role="tab" href="#alta" data-v="alta" aria-selected="false">Alta</a>
@@ -310,7 +301,6 @@
           <div class="card" style="padding:12px">
             <b>Atajos</b>
             <div class="chips" id="shortcuts" style="margin-top:8px">
-              <!-- Degradación progresiva: enlaces reales -->
               <a class="pill" href="#ing"  data-go="ing">Ir a Ingreso</a>
               <a class="pill" href="#alta" data-go="alta">Ir a Alta</a>
               <a class="pill" href="#pend" data-go="pend">Ver Pendientes</a>
@@ -322,7 +312,7 @@
       </section>
 
       <div class="footer">
-        <span>“Sembrando esperanza, cultivando bienestar” • “Mentes que acompañan”</span>
+        <span>“Sembrando esperanza, cultivando bienestar”</span>
         <span>·</span>
         <span>Desarrollado por Lic. Domingo Alarcón · HSM v7</span>
       </div>
@@ -384,7 +374,7 @@
     });
   }
 
-  /* ===== Tabs (robusto: href + JS) ===== */
+  /* ===== Tabs ===== */
   function switchTab(id){
     const ids=['ing','alta','pend','util'];
     $$('.tab').forEach(btn=>{const sel=(btn.dataset.v===id); btn.setAttribute('aria-selected',String(sel));});
@@ -406,14 +396,14 @@
   }
   addEventListener('hashchange',()=>{const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v);});
 
-  /* ===== Atajos (enlaces + refuerzo JS) ===== */
+  /* ===== Atajos ===== */
   document.addEventListener('click',e=>{
     const pill=e.target.closest('[data-go]'); if(!pill) return;
     const id=pill.getAttribute('data-go'); if(!id) return;
     e.preventDefault(); switchTab(id);
   });
 
-  /* ===== Utilidades varias ===== */
+  /* ===== Utilidades ===== */
   const nowDate=()=>new Date().toISOString().slice(0,10);
   const nowTime=()=>new Date().toTimeString().slice(0,5);
   $('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate());
@@ -495,11 +485,7 @@
   (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
   /* ===== Config ===== */
-  function applyLogo(){
-    const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png');
-    const el=$('#logo'); if(!el) return;
-    if(url){ el.src=url; el.hidden=false; } else { el.hidden=true; }
-  }
+  function applyLogo(){const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png'); const el=$('#logo'); if(!el)return; if(url){el.loading='eager';el.decoding='async';el.src=url;el.hidden=false;} else { el.hidden=true; }}
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
   $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada');});
   $('#cfgTest')?.addEventListener('click',async()=>{try{const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK');}catch(e){$('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600)}});
@@ -510,13 +496,12 @@
 
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
 
-  // Atajo: Ctrl+Alt+U fuerza actualizar SW
+  // Atajo oculto: forzar actualización de SW (Ctrl+Alt+U)
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'u') {
       if (navigator.serviceWorker?.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        toast('Actualizando…');
-        setTimeout(()=>location.reload(), 1200);
+        toast('Actualizando…'); setTimeout(()=>location.reload(), 1200);
       }
     }
   });
