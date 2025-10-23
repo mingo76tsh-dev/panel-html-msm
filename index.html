@@ -1,20 +1,15 @@
 <!doctype html>
 <html lang="es" dir="ltr">
 <head>
-  <!-- ===== BEGIN: PWA + SEO (pegar justo después de <head>) ===== -->
-  <!-- Básicos -->
+  <!-- ===== BEGIN: PWA + SEO ===== -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
   <meta name="theme-color" content="#0b1220" />
   <meta name="format-detection" content="telephone=no" />
-
-  <!-- PWA metas -->
   <meta name="mobile-web-app-capable" content="yes">       <!-- Android / Chrome -->
   <meta name="apple-mobile-web-app-capable" content="yes"> <!-- iOS / Safari -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-  <!-- SEO -->
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
@@ -28,6 +23,7 @@
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
   <!-- ===== END: PWA + SEO ===== -->
 
+  <!-- ===== BEGIN: Estilos ===== -->
   <style>
     :root{
       --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
@@ -52,7 +48,10 @@
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:740px){ .row{grid-template-columns:1fr} }
     label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
-    input,select,textarea{width:100%; background:var(--field); color:var(--ink); border:1px solid var(--bd); border-radius:12px; padding:11px 12px; outline:none}
+    input,select,textarea{
+      width:100%; background:var(--field); color:var(--ink);
+      border:1px solid var(--bd); border-radius:12px; padding:11px 12px; outline:none;
+    }
     input:focus,select:focus,textarea:focus{border-color:#3b82f6; box-shadow:var(--focus)}
     textarea{min-height:90px;resize:vertical}
     nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
@@ -71,7 +70,7 @@
     .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
     .item{display:flex;gap:12px; padding:10px 12px; border-bottom:1px solid var(--bd); align-items:center}
     .item:last-child{border-bottom:0}
-    .small{font-size:12px;color:var(--mut)}
+    .small{font-size:12px;color:#94a3b8}
     hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
     dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
@@ -80,16 +79,28 @@
     @media (prefers-reduced-motion: reduce){
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
+
     /* Fallback CSS-only por hash: si falla JS, igual cambia la vista */
     .view{ display:none }
     :root:has(:target#ing)  #v-ing,
     :root:has(:target#alta) #v-alta,
     :root:has(:target#pend) #v-pend,
     :root:has(:target#util) #v-util { display:block }
+
+    .footer {display:flex; gap:8px; align-items:center; justify-content:center; padding:10px; color:#a8b3c7; font-size:12px; border-top:1px solid var(--bd); background:#0f172a;}
   </style>
+  <!-- ===== END: Estilos ===== -->
 </head>
 
 <body>
+  <noscript>
+    <div class="wrap">
+      <div class="card" style="padding:12px; margin-top:12px">
+        Se requiere JavaScript para usar esta aplicación.
+      </div>
+    </div>
+  </noscript>
+
   <a class="visually-hidden" href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Saltar al contenido</a>
 
   <main id="main" class="wrap" role="main">
@@ -103,7 +114,7 @@
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
-      <!-- NAV TABS (degradación progresiva: <a href="#..."> reales) -->
+      <!-- NAV TABS (progresivo: <a href="#...">) -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
         <a class="tab" id="tab-ing"  role="tab" href="#ing"  data-v="ing"  aria-selected="true">Ingreso</a>
         <a class="tab" id="tab-alta" role="tab" href="#alta" data-v="alta" aria-selected="false">Alta</a>
@@ -284,8 +295,8 @@
           </div>
           <div class="card" style="padding:12px">
             <b>Atajos</b>
-            <div id="shortcuts" class="chips" style="margin-top:8px">
-              <!-- Degradación progresiva: enlaces directos -->
+            <div class="chips" id="shortcuts" style="margin-top:8px">
+              <!-- Degradación progresiva: enlaces reales -->
               <a class="pill" href="#ing"  data-go="ing">Ir a Ingreso</a>
               <a class="pill" href="#alta" data-go="alta">Ir a Alta</a>
               <a class="pill" href="#pend" data-go="pend">Ver Pendientes</a>
@@ -295,6 +306,12 @@
           </div>
         </div>
       </section>
+
+      <div class="footer">
+        <span>“Sembrando esperanza, cultivando bienestar” • “Mentes que acompañan”</span>
+        <span>·</span>
+        <span>Desarrollado por Lic. Domingo Alarcón · HSM v7</span>
+      </div>
     </article>
   </main>
 
@@ -327,12 +344,7 @@
   const toast=(t,ms=2200)=>{const el=$("#toast"); if(!el)return; el.textContent=t; el.style.display='block'; setTimeout(()=>el.style.display='none',ms)};
 
   const S=Object.freeze({normStr:v=>(v==null?'':String(v).trim()),onlyDigits:v=>String(v==null?'':v).replace(/\D/g,''),normDate(v){v=this.normStr(v);if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){const[d,m,y]=v.split('/');return `${y}-${m}-${d}`}return v},normTime(v){v=this.normStr(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(!m)return'';const hh=String(Math.max(0,Math.min(23,parseInt(m[1],10)||0))).padStart(2,'0');const mm=String(Math.max(0,Math.min(59,parseInt(m[2],10)||0))).padStart(2,'0');return `${hh}:${mm}`}});
-
-  /* ===== Defaults (preconfigurados) ===== */
-  const DEFAULTS = {
-    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec',
-    API_KEY: 'HSM2025KEY'
-  };
+  const DEFAULTS={ WEBAPP_URL:'https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec', API_KEY:'HSM2025KEY' };
 
   /* ===== Estado de red ===== */
   function setOnline(ok){const b=$('#online'); if(!b)return; b.textContent=ok?'Online':'Offline'; b.className='badge '+(ok?'ok':'off')}
@@ -344,11 +356,9 @@
   let _deferredPrompt=null;
   addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').style.display='inline-block';});
   $('#btnInstall')?.addEventListener('click',async()=>{if(!_deferredPrompt)return;_deferredPrompt.prompt();try{await _deferredPrompt.userChoice}catch(_){} _deferredPrompt=null;$('#btnInstall').style.display='none';});
-
   if('serviceWorker' in navigator){
     addEventListener('load', ()=>{
-      const SCOPE='/panel-html-msm/';
-      navigator.serviceWorker.register(`${SCOPE}sw.js`,{scope:SCOPE})
+      navigator.serviceWorker.register('/panel-html-msm/sw.js',{scope:'/panel-html-msm/'})
         .then(async reg=>{
           try{const sw=await navigator.serviceWorker.ready; sw.active?.postMessage({type:'WARMUP'});}catch(_){}
           if('sync' in reg){try{await reg.sync.register('flush-pend');}catch(_){ }}
@@ -382,8 +392,8 @@
   }
   addEventListener('hashchange',()=>{const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v);});
 
-  /* ===== Atajos (enlaces + refuerzo JS SOLO en su contenedor) ===== */
-  $('#shortcuts')?.addEventListener('click',e=>{
+  /* ===== Atajos (enlaces + refuerzo JS) ===== */
+  document.addEventListener('click',e=>{
     const pill=e.target.closest('[data-go]'); if(!pill) return;
     const id=pill.getAttribute('data-go'); if(!id) return;
     e.preventDefault(); switchTab(id);
@@ -402,45 +412,13 @@
   /* ===== Outbox offline ===== */
   function boxGet(){return LS.get('HSM_OUTBOX',[])}
   function boxSet(a){LS.set('HSM_OUTBOX',a); const el=$('#pendInfo'); if(el){el.textContent=a.length; el.className='badge '+(a.length?'ok':'off');}}
-  async function boxFlush(){
-    const box=boxGet(); if(!box.length){toast('No hay pendientes'); return;}
-    const rest=[];
-    for(const it of box){
-      try{ if(it.kind==='ingreso') await API.saveIngreso(it.payload);
-           if(it.kind==='alta')    await API.saveAlta(it.payload);
-      }catch(_){ rest.push(it) }
-    }
-    boxSet(rest); toast(rest.length?('Quedan '+rest.length+' pendientes'):'Pendientes enviados ✔'); renderPend();
-  }
+  async function boxFlush(){const box=boxGet(); if(!box.length){toast('No hay pendientes'); return;} const rest=[]; for(const it of box){try{if(it.kind==='ingreso') await API.saveIngreso(it.payload); if(it.kind==='alta') await API.saveAlta(it.payload);}catch(_){rest.push(it)}} boxSet(rest); toast(rest.length?('Quedan '+rest.length+' pendientes'):'Pendientes enviados ✔'); renderPend();}
   function tryAutoFlush(){ if(navigator.onLine && boxGet().length) setTimeout(boxFlush,400); }
   $('#flush')?.addEventListener('click',boxFlush);
   $('#exp')?.addEventListener('click',()=>{const a=document.createElement('a'); a.download='hsm_outbox.json'; a.href=URL.createObjectURL(new Blob([JSON.stringify(boxGet(),null,2)],{type:'application/json'})); a.click();});
   $('#imp')?.addEventListener('click',()=>$('#impFile').click());
-  $('#impFile')?.addEventListener('change',e=>{
-    const f=e.target.files?.[0]; if(!f)return;
-    const rd=new FileReader();
-    rd.onload=()=>{try{
-      const arr=JSON.parse(rd.result||'[]'); if(!Array.isArray(arr)) throw 0;
-      boxSet(boxGet().concat(arr)); renderPend(); toast('Importado');
-    }catch(_){toast('Archivo inválido',2600)}};
-    rd.readAsText(f);
-  });
-  function renderPend(){
-    const box=boxGet(), el=$('#pendList'); if(!el)return;
-    el.innerHTML='';
-    if(!box.length){el.innerHTML='<div class="item"><span class="small">No hay pendientes.</span></div>';return;}
-    box.forEach((it,ix)=>{
-      const d=document.createElement('div'); d.className='item';
-      d.innerHTML=`<div class="small">${it.kind.toUpperCase()}</div>
-        <div>DNI <b>${it.payload.DNI||'?'}</b> • ${new Date(it.ts).toLocaleString()}</div>
-        <span class="sp"></span><button class="btn ghost" data-i="${ix}" type="button">Borrar</button>`;
-      el.appendChild(d);
-    });
-    el.onclick=e=>{
-      const b=e.target.closest('button'); if(!b)return;
-      const i=+b.dataset.i; const box=boxGet(); box.splice(i,1); boxSet(box); renderPend();
-    };
-  }
+  $('#impFile')?.addEventListener('change',e=>{const f=e.target.files?.[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{try{const arr=JSON.parse(rd.result||'[]'); if(!Array.isArray(arr)) throw 0; boxSet(boxGet().concat(arr)); renderPend(); toast('Importado');}catch(_){toast('Archivo inválido',2600)}}; rd.readAsText(f);});
+  function renderPend(){const box=boxGet(), el=$('#pendList'); if(!el)return; el.innerHTML=''; if(!box.length){el.innerHTML='<div class="item"><span class="small">No hay pendientes.</span></div>';return;} box.forEach((it,ix)=>{const d=document.createElement('div'); d.className='item'; d.innerHTML=`<div class="small">${it.kind.toUpperCase()}</div><div>DNI <b>${it.payload.DNI||'?'}</b> • ${new Date(it.ts).toLocaleString()}</div><span class="sp"></span><button class="btn ghost" data-i="${ix}" type="button">Borrar</button>`; el.appendChild(d);}); el.onclick=e=>{const b=e.target.closest('button'); if(!b)return; const i=+b.dataset.i; const box=boxGet(); box.splice(i,1); boxSet(box); renderPend();};}
   const recentKey=(k,d)=>`HSM_REC_${k}_${d}`; const dedupeSet=(k,d)=>LS.set(recentKey(k,d),Date.now()); const dedupeHit=(k,d,ms=60000)=>(Date.now()-(+LS.get(recentKey(k,d),0)))<ms;
   const DRAFT_ING='HSM_DRAFT_ING', DRAFT_ALTA='HSM_DRAFT_ALTA';
   function saveDraft(id,fs){const o={}; fs.forEach(f=>o[f]=$('#'+f)?.value??''); LS.set(id,o);}
@@ -455,25 +433,13 @@
       const dni=S.onlyDigits($('#i_dni').value);
       if(!/^\d{7,9}$/.test(dni)){ $('#ingMsg').textContent='DNI inválido'; $('#ingMsg').className='st err'; vibrate(200); return; }
       if(dedupeHit('ing',dni)){ toast('Ingreso enviado hace instantes'); return; }
-      const payload={
-        DNI:dni,Sexo:($('#i_sexo').value||'').toUpperCase(),
-        FechaIngresoManual:S.normDate($('#i_fi').value),HoraIngresoManual:S.normTime($('#i_hi').value),
-        IdeacionIntento:S.normStr($('#i_ii').value),MetodoLetalidad:S.normStr($('#i_met').value),
-        Consumo:S.normStr($('#i_con').value),TipoSustancia:S.normStr($('#i_sus').value),
-        DxProvisorio_CIE10:S.normStr($('#i_cie').value).toUpperCase(),Observaciones:S.normStr($('#i_obs').value)
-      };
+      const payload={DNI:dni,Sexo:($('#i_sexo').value||'').toUpperCase(),FechaIngresoManual:S.normDate($('#i_fi').value),HoraIngresoManual:S.normTime($('#i_hi').value),IdeacionIntento:S.normStr($('#i_ii').value),MetodoLetalidad:S.normStr($('#i_met').value),Consumo:S.normStr($('#i_con').value),TipoSustancia:S.normStr($('#i_sus').value),DxProvisorio_CIE10:S.normStr($('#i_cie').value).toUpperCase(),Observaciones:S.normStr($('#i_obs').value)};
       $('#ingMsg').textContent='Guardando…'; $('#ingMsg').className='st mut';
       const j=await API.saveIngreso(payload);
       if(j?.ok){ $('#ingMsg').textContent='Guardado ✔'; $('#ingMsg').className='st ok'; lastReceipt={kind:'Ingreso',dni,ts:Date.now()}; dedupeSet('ing',dni); LS.del(DRAFT_ING); vibrate([60,40,60]); }
       else throw new Error(j?.message||j?.code||'Error');
     }catch(e){
-      const it={kind:'ingreso',payload:{
-        DNI:S.onlyDigits($('#i_dni').value),Sexo:$('#i_sexo').value,
-        FechaIngresoManual:$('#i_fi').value,HoraIngresoManual:$('#i_hi').value,
-        IdeacionIntento:$('#i_ii').value,MetodoLetalidad:$('#i_met').value,
-        Consumo:$('#i_con').value,TipoSustancia:$('#i_sus').value,
-        DxProvisorio_CIE10:$('#i_cie').value,Observaciones:$('#i_obs').value
-      },ts:Date.now()};
+      const it={kind:'ingreso',payload:{DNI:S.onlyDigits($('#i_dni').value),Sexo:$('#i_sexo').value,FechaIngresoManual:$('#i_fi').value,HoraIngresoManual:$('#i_hi').value,IdeacionIntento:$('#i_ii').value,MetodoLetalidad:$('#i_met').value,Consumo:$('#i_con').value,TipoSustancia:$('#i_sus').value,DxProvisorio_CIE10:$('#i_cie').value,Observaciones:$('#i_obs').value},ts:Date.now()};
       const box=boxGet(); box.push(it); boxSet(box);
       $('#ingMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#ingMsg').className='st err'; vibrate(150);
     }
@@ -495,21 +461,13 @@
       const dni=S.onlyDigits($('#a_dni').value);
       if(!validDNI(dni)){ $('#altaMsg').textContent='DNI inválido'; $('#altaMsg').className='st err'; vibrate(200); return; }
       if(dedupeHit('alta',dni)){ toast('Alta enviada hace instantes'); return; }
-      const payload={
-        DNI:dni,Sexo:($('#a_sexo').value||'').toUpperCase(),
-        FechaAltaManual:S.normDate($('#a_fa').value),HoraAltaManual:S.normTime($('#a_ha').value),
-        EstadoEgreso:S.normStr($('#a_estado').value)||'Alta',Observaciones:S.normStr($('#a_obs').value)
-      };
+      const payload={DNI:dni,Sexo:($('#a_sexo').value||'').toUpperCase(),FechaAltaManual:S.normDate($('#a_fa').value),HoraAltaManual:S.normTime($('#a_ha').value),EstadoEgreso:S.normStr($('#a_estado').value)||'Alta',Observaciones:S.normStr($('#a_obs').value)};
       $('#altaMsg').textContent='Guardando…'; $('#altaMsg').className='st mut';
       const j=await API.saveAlta(payload);
       if(j?.ok){ $('#altaMsg').textContent='Alta guardada ✔'; $('#altaMsg').className='st ok'; lastReceipt={kind:'Alta',dni,ts:Date.now()}; dedupeSet('alta',dni); LS.del(DRAFT_ALTA); vibrate([60,40,60]); }
       else throw new Error(j?.message||j?.code||'Error');
     }catch(e){
-      const it={kind:'alta',payload:{
-        DNI:S.onlyDigits($('#a_dni').value),Sexo:$('#a_sexo').value,
-        FechaAltaManual:$('#a_fa').value,HoraAltaManual:$('#a_ha').value,
-        EstadoEgreso:$('#a_estado').value,Observaciones:$('#a_obs').value
-      },ts:Date.now()};
+      const it={kind:'alta',payload:{DNI:S.onlyDigits($('#a_dni').value),Sexo:$('#a_sexo').value,FechaAltaManual:$('#a_fa').value,HoraAltaManual:$('#a_ha').value,EstadoEgreso:$('#a_estado').value,Observaciones:$('#a_obs').value},ts:Date.now()};
       const box=boxGet(); box.push(it); boxSet(box);
       $('#altaMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#altaMsg').className='st err'; vibrate(150);
     }
@@ -517,55 +475,30 @@
   $('#altaShare')?.addEventListener('click',()=>{const txt=lastReceipt?`HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HSM • Alta registrada'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));});
 
   /* ===== CIE10 (cache 10 min) ===== */
-  (function(){const CK='CIE_CACHE',TS='CIE_TS'; async function load(){try{
-    const now=Date.now(); let list=LS.get(CK,null), t=+LS.get(TS,0);
-    if(!list||(now-t)>600000){const j=await API.cie10(); list=(j&&j.ok&&j.list)||[]; LS.set(CK,list); LS.set(TS,now);}
-    const dl=$('#cie-list'); if(!dl)return; dl.innerHTML='';
-    LS.get(CK,[]).slice(0,2000).forEach(x=>{const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o);});
-  }catch(_){}} if('requestIdleCallback'in window) requestIdleCallback(load,{timeout:3000}); else setTimeout(load,800); })();
+  (function(){const CK='CIE_CACHE',TS='CIE_TS'; async function load(){try{const now=Date.now(); let list=LS.get(CK,null), t=+LS.get(TS,0); if(!list||(now-t)>600000){const j=await API.cie10(); list=(j&&j.ok&&j.list)||[]; LS.set(CK,list); LS.set(TS,now);} const dl=$('#cie-list'); if(!dl)return; dl.innerHTML=''; LS.get(CK,[]).slice(0,2000).forEach(x=>{const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o);}); }catch(_){}} if('requestIdleCallback'in window) requestIdleCallback(load,{timeout:3000}); else setTimeout(load,800); })();
 
   /* ===== Prefill por query ===== */
-  (function(){const q=new URLSearchParams(location.search);
-    if(q.get('dni')) $('#i_dni').value=q.get('dni');
-    if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase();
-    if(q.get('fi')) $('#i_fi').value=q.get('fi');
-  })();
+  (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
   /* ===== Config ===== */
-  function applyLogo(){
-    const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png');
-    const el=$('#logo'); if(!el)return; if(url){el.loading='lazy';el.decoding='async';el.src=url;el.hidden=false;} else el.hidden=true;
-  }
+  function applyLogo(){const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png'); const el=$('#logo'); if(!el)return; if(url){el.loading='lazy';el.decoding='async';el.src=url;el.hidden=false;} else el.hidden=true;}
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
-  $('#cfg')?.addEventListener('close',()=>{
-    const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim();
-    if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL');
-    if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY');
-    if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL');
-    applyLogo(); toast('Configuración guardada');
-  });
+  $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada');});
   $('#cfgTest')?.addEventListener('click',async()=>{try{const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK');}catch(e){$('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600)}});
 
   /* ===== Boot ===== */
   addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') tryAutoFlush(); });
-  addEventListener('DOMContentLoaded',()=>{
-    applyLogo(); boxSet(boxGet()); wireTabs();
-    try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){}
-    try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){}
-    if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate();
-    if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime();
-    tryAutoFlush();
-  });
+  addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
 
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
 
-  /* ===== API mínima ===== */
+  /* ===== API ===== */
   const API=(function(){
     const url=()=>LS.get('HSM_WEBAPP_URL',DEFAULTS.WEBAPP_URL);
     const key=()=>LS.get('HSM_API_KEY',DEFAULTS.API_KEY);
-    async function req(qs,body){
+    async function req(path,body){
       const u=url(); if(!u) throw new Error('Sin URL configurada');
-      const res=await fetch(u+qs,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key()},body:JSON.stringify(body),mode:'cors'});
+      const res=await fetch(u+path,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key()},body:JSON.stringify(body),mode:'cors'});
       if(!res.ok) throw new Error('HTTP '+res.status);
       return res.json();
     }
@@ -574,11 +507,7 @@
       async ping(){ const u=url(); const r=await fetch(u+'?ping=1',{mode:'no-cors'}).catch(()=>null); return {ok:!!r,version:'online'}; },
       async saveIngreso(payload){ return req('?op=ingreso',payload); },
       async saveAlta(payload){ return req('?op=alta',payload); },
-      async findByDni(dni,timeout=120){
-        const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),timeout*1000);
-        try{const u=url(); const r=await fetch(u+`?op=find&dni=${encodeURIComponent(dni)}`,{signal:ctrl.signal}); clearTimeout(t); if(!r.ok) return {ok:false}; return r.json();}
-        catch(_){ return {ok:false}; }
-      },
+      async findByDni(dni,timeout=120){ const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),timeout*1000); try{const u=url(); const r=await fetch(u+`?op=find&dni=${encodeURIComponent(dni)}`,{signal:ctrl.signal}); clearTimeout(t); if(!r.ok) return {ok:false}; return r.json(); }catch(_){ return {ok:false}; } },
       async cie10(){ const u=url(); const r=await fetch(u+'?op=cie10'); if(!r.ok) return {ok:false,list:[]}; return r.json(); }
     };
   })();
