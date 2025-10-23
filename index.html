@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es" dir="ltr">
 <head>
-  <!-- ===== PWA + SEO (GH Pages /panel-html-msm/) ===== -->
+  <!-- ===== PWA + SEO ===== -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
@@ -13,24 +13,18 @@
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest + iconos (rutas absolutas para GH Pages) -->
+  <!-- Manifest + iconos (absolutos para /panel-html-msm/) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
+  <!-- Preload del logo por defecto (ayuda si termina viéndose) -->
+  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png" imagesrcset="/panel-html-msm/icons/icon-192.png 192w, /panel-html-msm/icons/icon-512.png 512w" imagesizes="44px">
 
   <!-- Preconexión (Apps Script) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
-  <!-- Hint: si se muestra logo, precárgalo para bajar LCP -->
-  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png" fetchpriority="high">
-
-  <!-- Seguridad mínima y aislamiento (mejora Best Practices sin romper nada) -->
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-  <meta http-equiv="Permissions-Policy" content="interest-cohort=(), autoplay=(), camera=(), microphone=()">
-
-  <!-- ===== Estilos (optimizados para CLS/LCP) ===== -->
+  <!-- ===== Estilos ===== -->
   <style>
     :root{
       --bg:#0b1220; --card:#0f172a; --ink:#e5e7eb; --mut:#94a3b8;
@@ -43,7 +37,7 @@
     body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     .wrap{max-width:980px;margin:0 auto;padding:12px}
     .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
-    header.app{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd); min-height:64px}
+    header.app{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px}
     .title{font-weight:800; letter-spacing:.3px}
     .sp{flex:1}
     .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
@@ -71,8 +65,7 @@
     .ok{color:#86efac}
     .err{color:#fca5a5}
     .mut{color:#94a3b8}
-    /* Reservamos espacio para evitar CLS si aparece el logo */
-    .logo{height:44px; width:44px; object-fit:cover; border-radius:8px; inline-size:44px; block-size:44px}
+    .logo{height:44px; width:44px; object-fit:cover; border-radius:8px}
     .chips{display:flex; flex-wrap:wrap; gap:8px}
     .chip,.pill{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; text-decoration:none}
     .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
@@ -87,7 +80,7 @@
     @media (prefers-reduced-motion: reduce){
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
-    /* Fallback CSS-only por hash: si falla JS, igual cambia la vista */
+    /* Fallback por hash: si falla JS igual cambia la vista */
     .view{ display:none }
     :root:has(:target#ing)  #v-ing,
     :root:has(:target#alta) #v-alta,
@@ -101,7 +94,9 @@
 <body>
   <noscript>
     <div class="wrap">
-      <div class="card" style="padding:12px; margin-top:12px">Se requiere JavaScript para usar esta aplicación.</div>
+      <div class="card" style="padding:12px; margin-top:12px">
+        Se requiere JavaScript para usar esta aplicación.
+      </div>
     </div>
   </noscript>
 
@@ -110,8 +105,10 @@
   <main id="main" class="wrap" role="main">
     <article class="card" aria-label="Aplicación HSM v7 Móvil">
       <header class="app">
-        <!-- El logo se aplica por Config; reservamos tamaño fijo para evitar CLS -->
-        <img id="logo" class="logo" alt="Logo de la institución" src="/panel-html-msm/icons/icon-512.png" fetchpriority="high">
+        <!-- Logo por defecto con prioridad baja y dimensiones fijas (evita CLS y no compite por LCP) -->
+        <img id="logo" class="logo" alt="Logo de la institución"
+             src="/panel-html-msm/icons/icon-512.png"
+             loading="eager" decoding="async" fetchpriority="low">
         <h1 class="title" style="margin:0;font-size:16px">HSM v7 • Móvil</h1>
         <span id="online" class="badge off" aria-live="polite" title="Estado de red">Offline</span>
         <span class="sp"></span>
@@ -403,7 +400,7 @@
     e.preventDefault(); switchTab(id);
   });
 
-  /* ===== Utilidades ===== */
+  /* ===== Utilidades varias ===== */
   const nowDate=()=>new Date().toISOString().slice(0,10);
   const nowTime=()=>new Date().toTimeString().slice(0,5);
   $('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate());
@@ -484,24 +481,34 @@
   /* ===== Prefill por query ===== */
   (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
-  /* ===== Config ===== */
-  function applyLogo(){const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png'); const el=$('#logo'); if(!el)return; if(url){el.loading='eager';el.decoding='async';el.src=url;el.hidden=false;} else { el.hidden=true; }}
+  /* ===== Config (logo aplicado lo antes posible) ===== */
+  function applyLogoEarly(){
+    const url=LS.get('HSM_LOGO_URL',''); if(!url) return; const el=$('#logo'); if(!el)return;
+    if(url!==el.getAttribute('src')){ el.src=url; }
+  }
+  function applyLogoLate(){
+    const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png'); const el=$('#logo'); if(!el)return;
+    if(url){el.loading='eager';el.decoding='async';el.src=url;} else el.hidden=true;
+  }
+  applyLogoEarly(); // <-- reduce LCP cuando hay logo custom guardado
+
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
-  $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada');});
+  $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogoLate(); toast('Configuración guardada');});
   $('#cfgTest')?.addEventListener('click',async()=>{try{const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK');}catch(e){$('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600)}});
 
   /* ===== Boot ===== */
   addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') tryAutoFlush(); });
-  addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
+  addEventListener('DOMContentLoaded',()=>{ applyLogoLate(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
 
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
 
-  // Atajo oculto: forzar actualización de SW (Ctrl+Alt+U)
+  // Atajo para forzar update del SW
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'u') {
       if (navigator.serviceWorker?.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        toast('Actualizando…'); setTimeout(()=>location.reload(), 1200);
+        toast('Actualizando…');
+        setTimeout(()=>location.reload(), 1200);
       }
     }
   });
