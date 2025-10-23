@@ -1,30 +1,32 @@
 <!doctype html>
 <html lang="es" dir="ltr">
 <head>
-  <!-- ===== Básicos ===== -->
+  <!-- ===== BEGIN: PWA + SEO (pegar justo después de <head>) ===== -->
+  <!-- Básicos -->
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
   <meta name="theme-color" content="#0b1220" />
   <meta name="format-detection" content="telephone=no" />
 
-  <!-- ===== PWA metas ===== -->
-  <meta name="mobile-web-app-capable" content="yes">        <!-- Android / Chrome -->
-  <meta name="apple-mobile-web-app-capable" content="yes">  <!-- iOS / Safari -->
+  <!-- PWA metas -->
+  <meta name="mobile-web-app-capable" content="yes">       <!-- Android / Chrome -->
+  <meta name="apple-mobile-web-app-capable" content="yes"> <!-- iOS / Safari -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <!-- ===== SEO ===== -->
+  <!-- SEO -->
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- ===== Manifest + iconos (absolutas para GH Pages /panel-html-msm/) ===== -->
+  <!-- Manifest + iconos (rutas absolutas para GitHub Pages /panel-html-msm/) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
 
-  <!-- ===== Preconexión (Apps Script) ===== -->
+  <!-- Preconexión (Apps Script) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
+  <!-- ===== END: PWA + SEO ===== -->
 
   <style>
     :root{
@@ -583,3 +585,4 @@
   </script>
 </body>
 </html>
+
