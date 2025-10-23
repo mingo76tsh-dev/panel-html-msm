@@ -10,17 +10,15 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
-  <title>HSM v7 • Móvil</title>
+  <meta name="description" content="HS-V7 — Panel Salud Mental • Ingreso/Alta rápida con soporte offline y cola de pendientes." />
+  <title>HS-V7 — Panel Salud Mental</title>
 
-  <!-- Manifest + iconos (absolutos para /panel-html-msm/) -->
+  <!-- Manifest + iconos (rutas absolutas para GH Pages /panel-html-msm/) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
-  <!-- Preload del logo por defecto (ayuda si termina viéndose) -->
-  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png" imagesrcset="/panel-html-msm/icons/icon-192.png 192w, /panel-html-msm/icons/icon-512.png 512w" imagesizes="44px">
 
-  <!-- Preconexión (Apps Script) -->
+  <!-- Conexión a Apps Script (para menor latencia) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
@@ -37,8 +35,8 @@
     body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     .wrap{max-width:980px;margin:0 auto;padding:12px}
     .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
-    header.app{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px}
-    .title{font-weight:800; letter-spacing:.3px}
+    header.app{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd)}
+    .title{font-weight:800;letter-spacing:.3px}
     .sp{flex:1}
     .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
     .badge.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
@@ -50,73 +48,65 @@
     @media (max-width:740px){ .row{grid-template-columns:1fr} }
     label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
     input,select,textarea{
-      width:100%; background:var(--field); color:var(--ink);
-      border:1px solid var(--bd); border-radius:12px; padding:11px 12px; outline:none;
+      width:100%;background:var(--field);color:var(--ink);
+      border:1px solid var(--bd);border-radius:12px;padding:11px 12px;outline:none;
     }
-    input:focus,select:focus,textarea:focus{border-color:#3b82f6; box-shadow:var(--focus)}
+    input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:var(--focus)}
     textarea{min-height:90px;resize:vertical}
     nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
-    .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700; text-decoration:none; -webkit-tap-highlight-color:transparent}
+    .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent}
     .tab[aria-selected="true"]{background:var(--card);color:#fff}
-    section.view{padding:12px; content-visibility:auto; contain-intrinsic-size: 800px 1200px;}
-    .kv{display:flex; gap:8px; align-items:center}
+    section.view{padding:12px;content-visibility:auto;contain-intrinsic-size: 800px 1200px;}
+    .kv{display:flex;gap:8px;align-items:center}
     .kv input{flex:1}
     .st{margin-top:10px;font-size:13px}
-    .ok{color:#86efac}
-    .err{color:#fca5a5}
-    .mut{color:#94a3b8}
-    .logo{height:44px; width:44px; object-fit:cover; border-radius:8px}
-    .chips{display:flex; flex-wrap:wrap; gap:8px}
-    .chip,.pill{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; text-decoration:none}
-    .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
-    .item{display:flex;gap:12px; padding:10px 12px; border-bottom:1px solid var(--bd); align-items:center}
+    .ok{color:#86efac}.err{color:#fca5a5}.mut{color:#94a3b8}
+    .logo{height:44px;width:auto;object-fit:contain;border-radius:8px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip,.pill{background:var(--chip);border:1px solid var(--bd);color:#d1d5db;padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer;text-decoration:none}
+    .list{border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+    .item{display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:center}
     .item:last-child{border-bottom:0}
     .small{font-size:12px;color:#94a3b8}
-    hr{border:0;border-top:1px solid var(--bd); margin:14px 0}
+    hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
     dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
     dialog::backdrop{background:rgba(2,6,23,.55)}
-    :focus-visible{outline:2px solid #60a5fa; outline-offset: 2px}
+    :focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
     @media (prefers-reduced-motion: reduce){
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
-    /* Fallback por hash: si falla JS igual cambia la vista */
-    .view{ display:none }
+    /* Fallback CSS-only por hash */
+    .view{display:none}
     :root:has(:target#ing)  #v-ing,
     :root:has(:target#alta) #v-alta,
     :root:has(:target#pend) #v-pend,
-    :root:has(:target#util) #v-util { display:block }
-
-    .footer {display:flex; gap:8px; align-items:center; justify-content:center; padding:10px; color:#a8b3c7; font-size:12px; border-top:1px solid var(--bd); background:#0f172a;}
+    :root:has(:target#util) #v-util {display:block}
+    .footer{display:flex;gap:8px;align-items:center;justify-content:center;padding:10px;color:#a8b3c7;font-size:12px;border-top:1px solid var(--bd);background:#0f172a}
   </style>
 </head>
 
 <body>
   <noscript>
     <div class="wrap">
-      <div class="card" style="padding:12px; margin-top:12px">
-        Se requiere JavaScript para usar esta aplicación.
-      </div>
+      <div class="card" style="padding:12px;margin-top:12px">Se requiere JavaScript para usar esta aplicación.</div>
     </div>
   </noscript>
 
   <a class="visually-hidden" href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Saltar al contenido</a>
 
   <main id="main" class="wrap" role="main">
-    <article class="card" aria-label="Aplicación HSM v7 Móvil">
+    <article class="card" aria-label="HS-V7 — Panel Salud Mental">
       <header class="app">
-        <!-- Logo por defecto con prioridad baja y dimensiones fijas (evita CLS y no compite por LCP) -->
-        <img id="logo" class="logo" alt="Logo de la institución"
-             src="/panel-html-msm/icons/icon-512.png"
-             loading="eager" decoding="async" fetchpriority="low">
-        <h1 class="title" style="margin:0;font-size:16px">HSM v7 • Móvil</h1>
+        <img id="logo" class="logo" alt="Logo de la institución" src="" hidden width="44" height="44" decoding="async">
+        <h1 class="title" style="margin:0;font-size:16px">HS-V7 — Panel Salud Mental</h1>
         <span id="online" class="badge off" aria-live="polite" title="Estado de red">Offline</span>
         <span class="sp"></span>
         <button id="btnInstall" class="btn sec" style="display:none">Instalar</button>
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
-      <!-- NAV TABS -->
+      <!-- NAV -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
         <a class="tab" id="tab-ing"  role="tab" href="#ing"  data-v="ing"  aria-selected="true">Ingreso</a>
         <a class="tab" id="tab-alta" role="tab" href="#alta" data-v="alta" aria-selected="false">Alta</a>
@@ -136,9 +126,7 @@
           </div>
           <div>
             <label for="i_sexo">Sexo</label>
-            <select id="i_sexo" name="Sexo">
-              <option value="">—</option><option>M</option><option>F</option><option>X</option>
-            </select>
+            <select id="i_sexo" name="Sexo"><option value="">—</option><option>M</option><option>F</option><option>X</option></select>
           </div>
         </div>
 
@@ -162,9 +150,7 @@
         <div class="row">
           <div>
             <label for="i_ii">Ideación / Intento</label>
-            <select id="i_ii" name="IdeacionIntento">
-              <option value="">—</option><option>Ideación</option><option>Intento</option>
-            </select>
+            <select id="i_ii" name="IdeacionIntento"><option value="">—</option><option>Ideación</option><option>Intento</option></select>
           </div>
           <div>
             <label for="i_met">Método / Letalidad</label>
@@ -205,7 +191,7 @@
         </div>
 
         <div class="st mut" id="ingMsg" aria-live="polite"></div>
-        <div class="kv" style="margin-top:12px; gap:10px; flex-wrap:wrap">
+        <div class="kv" style="margin-top:12px;gap:10px;flex-wrap:wrap">
           <button class="btn" id="ingSave">Guardar ingreso</button>
           <button class="btn ghost" id="ingShare">Compartir comprobante</button>
         </div>
@@ -264,7 +250,7 @@
         <textarea id="a_obs" name="Observaciones" placeholder="Breve detalle (opcional)"></textarea>
 
         <div class="st mut" id="altaMsg" aria-live="polite"></div>
-        <div class="kv" style="margin-top:12px; gap:10px; flex-wrap:wrap">
+        <div class="kv" style="margin-top:12px;gap:10px;flex-wrap:wrap">
           <button class="btn" id="altaSave">Guardar alta</button>
           <button class="btn ghost" id="altaShare">Compartir comprobante</button>
         </div>
@@ -272,7 +258,7 @@
 
       <!-- ============== PENDIENTES ============== -->
       <section id="v-pend" class="view" role="tabpanel" aria-labelledby="tab-pend">
-        <div class="kv" style="gap:8px; flex-wrap:wrap">
+        <div class="kv" style="gap:8px;flex-wrap:wrap">
           <button class="btn sec" id="flush">Enviar pendientes</button>
           <button class="btn ghost" id="exp">Exportar JSON</button>
           <input id="impFile" type="file" accept="application/json" style="display:none" aria-hidden="true">
@@ -311,12 +297,12 @@
       <div class="footer">
         <span>“Sembrando esperanza, cultivando bienestar”</span>
         <span>·</span>
-        <span>Desarrollado por Lic. Domingo Alarcón · HSM v7</span>
+        <span>Desarrollado por Lic. Domingo Alarcón · HS-V7</span>
       </div>
     </article>
   </main>
 
-  <!-- CONFIG -->
+  <!-- ========= CONFIG ========= -->
   <dialog id="cfg" aria-labelledby="cfg-title">
     <form method="dialog" style="padding:14px">
       <h3 id="cfg-title" style="margin:0 0 10px">Configuración</h3>
@@ -326,7 +312,7 @@
       <input id="cfg_key" placeholder="Si está activa">
       <label for="cfg_logo">Logo URL (png/jpg/svg)</label>
       <input id="cfg_logo" placeholder="https://.../logo.png" inputmode="url">
-      <div class="kv" style="margin-top:10px; gap:8px">
+      <div class="kv" style="margin-top:10px;gap:8px">
         <button class="btn sec" id="cfgTest" type="button">Probar</button>
         <button class="btn">Guardar</button>
       </div>
@@ -362,7 +348,7 @@
       navigator.serviceWorker.register('/panel-html-msm/sw.js',{scope:'/panel-html-msm/'})
         .then(async reg=>{
           try{const sw=await navigator.serviceWorker.ready; sw.active?.postMessage({type:'WARMUP'});}catch(_){}
-          if('sync' in reg){try{await reg.sync.register('flush-pend');}catch(_){ }}
+          if('sync' in reg){try{await reg.sync.register('flush-pend');}catch(_){}}
         }).catch(()=>{});
     },{once:true});
     navigator.serviceWorker.addEventListener('message',ev=>{
@@ -400,7 +386,7 @@
     e.preventDefault(); switchTab(id);
   });
 
-  /* ===== Utilidades varias ===== */
+  /* ===== Utilidades ===== */
   const nowDate=()=>new Date().toISOString().slice(0,10);
   const nowTime=()=>new Date().toTimeString().slice(0,5);
   $('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate());
@@ -445,7 +431,7 @@
       $('#ingMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#ingMsg').className='st err'; vibrate(150);
     }
   });
-  $('#ingShare')?.addEventListener('click',()=>{const txt=lastReceipt?`HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HSM • Ingreso registrado'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));});
+  $('#ingShare')?.addEventListener('click',()=>{const txt=lastReceipt?`HS-V7 • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HS-V7 • Ingreso registrado'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));});
 
   $('#aSearch')?.addEventListener('click',async()=>{
     try{
@@ -473,7 +459,7 @@
       $('#altaMsg').textContent='Sin red. Guardado en pendientes ('+box.length+')'; $('#altaMsg').className='st err'; vibrate(150);
     }
   });
-  $('#altaShare')?.addEventListener('click',()=>{const txt=lastReceipt?`HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HSM • Alta registrada'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));});
+  $('#altaShare')?.addEventListener('click',()=>{const txt=lastReceipt?`HS-V7 • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HS-V7 • Alta registrada'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));});
 
   /* ===== CIE10 (cache 10 min) ===== */
   (function(){const CK='CIE_CACHE',TS='CIE_TS'; async function load(){try{const now=Date.now(); let list=LS.get(CK,null), t=+LS.get(TS,0); if(!list||(now-t)>600000){const j=await API.cie10(); list=(j&&j.ok&&j.list)||[]; LS.set(CK,list); LS.set(TS,now);} const dl=$('#cie-list'); if(!dl)return; dl.innerHTML=''; LS.get(CK,[]).slice(0,2000).forEach(x=>{const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o);}); }catch(_){}} if('requestIdleCallback'in window) requestIdleCallback(load,{timeout:3000}); else setTimeout(load,800); })();
@@ -481,34 +467,24 @@
   /* ===== Prefill por query ===== */
   (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
-  /* ===== Config (logo aplicado lo antes posible) ===== */
-  function applyLogoEarly(){
-    const url=LS.get('HSM_LOGO_URL',''); if(!url) return; const el=$('#logo'); if(!el)return;
-    if(url!==el.getAttribute('src')){ el.src=url; }
-  }
-  function applyLogoLate(){
-    const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png'); const el=$('#logo'); if(!el)return;
-    if(url){el.loading='eager';el.decoding='async';el.src=url;} else el.hidden=true;
-  }
-  applyLogoEarly(); // <-- reduce LCP cuando hay logo custom guardado
-
+  /* ===== Config ===== */
+  function applyLogo(){const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png'); const el=$('#logo'); if(!el)return; if(url){el.loading='lazy';el.decoding='async';el.src=url;el.hidden=false;} else el.hidden=true;}
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
-  $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogoLate(); toast('Configuración guardada');});
+  $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada');});
   $('#cfgTest')?.addEventListener('click',async()=>{try{const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK');}catch(e){$('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600)}});
 
   /* ===== Boot ===== */
   addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') tryAutoFlush(); });
-  addEventListener('DOMContentLoaded',()=>{ applyLogoLate(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
+  addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
 
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
 
-  // Atajo para forzar update del SW
+  // Atajo: Ctrl+Alt+U → forzar actualización SW
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'u') {
       if (navigator.serviceWorker?.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        toast('Actualizando…');
-        setTimeout(()=>location.reload(), 1200);
+        toast('Actualizando…'); setTimeout(()=>location.reload(),1200);
       }
     }
   });
@@ -535,4 +511,3 @@
   </script>
 </body>
 </html>
-
