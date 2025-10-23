@@ -11,7 +11,7 @@
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest + iconos (rutas absolutas para GitHub Pages /panel-html-msm/) -->
+  <!-- Manifest + iconos (absolutos para GitHub Pages /panel-html-msm/) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" href="/panel-html-msm/icons/favicon.png" type="image/png" sizes="any">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
@@ -62,7 +62,7 @@
     .mut{color:#94a3b8}
     .logo{height:44px; width:auto; object-fit:contain; border-radius:8px}
     .chips{display:flex; flex-wrap:wrap; gap:8px}
-    .chip{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; text-decoration:none}
+    .chip,.pill{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; text-decoration:none}
     .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
     .item{display:flex;gap:12px; padding:10px 12px; border-bottom:1px solid var(--bd); align-items:center}
     .item:last-child{border-bottom:0}
@@ -76,7 +76,7 @@
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
 
-    /* Fallback CSS-only por hash: si alguna vez falla JS, las vistas igual cambian */
+    /* Fallback CSS-only por hash: si falla JS, igual cambia la vista */
     .view{ display:none }
     :root:has(:target#ing)  #v-ing,
     :root:has(:target#alta) #v-alta,
@@ -99,7 +99,7 @@
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
-      <!-- NAV TABS -->
+      <!-- NAV TABS (degradación progresiva: son <a href> reales) -->
       <nav class="tabs" role="tablist" aria-label="Secciones">
         <a class="tab" id="tab-ing"  role="tab" href="#ing"  data-v="ing"  aria-selected="true">Ingreso</a>
         <a class="tab" id="tab-alta" role="tab" href="#alta" data-v="alta" aria-selected="false">Alta</a>
@@ -107,7 +107,7 @@
         <a class="tab" id="tab-util" role="tab" href="#util" data-v="util" aria-selected="false">Útiles</a>
       </nav>
 
-      <!-- INGRESO -->
+      <!-- ============== INGRESO ============== -->
       <section id="v-ing" class="view" role="tabpanel" aria-labelledby="tab-ing">
         <div class="row">
           <div>
@@ -195,7 +195,7 @@
         <div class="small">Tip: admite <code>?dni=&amp;sexo=&amp;fi=YYYY-MM-DD</code> para prellenar.</div>
       </section>
 
-      <!-- ALTA -->
+      <!-- ============== ALTA ============== -->
       <section id="v-alta" class="view" role="tabpanel" aria-labelledby="tab-alta">
         <div class="row">
           <div>
@@ -253,7 +253,7 @@
         </div>
       </section>
 
-      <!-- PENDIENTES -->
+      <!-- ============== PENDIENTES ============== -->
       <section id="v-pend" class="view" role="tabpanel" aria-labelledby="tab-pend">
         <div class="kv" style="gap:8px; flex-wrap:wrap">
           <button class="btn sec" id="flush">Enviar pendientes</button>
@@ -266,7 +266,7 @@
         <div class="list" id="pendList" role="list"></div>
       </section>
 
-      <!-- ÚTILES -->
+      <!-- ============== ÚTILES ============== -->
       <section id="v-util" class="view" role="tabpanel" aria-labelledby="tab-util">
         <div class="row">
           <div class="card" style="padding:12px">
@@ -281,10 +281,10 @@
           <div class="card" style="padding:12px">
             <b>Atajos</b>
             <div class="chips" style="margin-top:8px">
-              <!-- Enlaces reales: funcionan sin JS -->
-              <a class="chip" href="#ing">Ir a Ingreso</a>
-              <a class="chip" href="#alta">Ir a Alta</a>
-              <a class="chip" href="#pend">Ver Pendientes</a>
+              <!-- Degradación progresiva: son enlaces directos -->
+              <a class="pill" href="#ing"  data-go="ing">Ir a Ingreso</a>
+              <a class="pill" href="#alta" data-go="alta">Ir a Alta</a>
+              <a class="pill" href="#pend" data-go="pend">Ver Pendientes</a>
             </div>
             <hr>
             <div class="small">Versión app: <span id="vver">v7-móvil</span></div>
@@ -323,61 +323,24 @@
   const toast=(t,ms=2200)=>{const el=$("#toast"); if(!el)return; el.textContent=t; el.style.display='block'; setTimeout(()=>el.style.display='none',ms)};
 
   const S=Object.freeze({normStr:v=>(v==null?'':String(v).trim()),onlyDigits:v=>String(v==null?'':v).replace(/\D/g,''),normDate(v){v=this.normStr(v);if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)){const[d,m,y]=v.split('/');return `${y}-${m}-${d}`}return v},normTime(v){v=this.normStr(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(!m)return'';const hh=String(Math.max(0,Math.min(23,parseInt(m[1],10)||0))).padStart(2,'0');const mm=String(Math.max(0,Math.min(59,parseInt(m[2],10)||0))).padStart(2,'0');return `${hh}:${mm}`}});
+  const DEFAULTS={ WEBAPP_URL:'https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec', API_KEY:'HSM2025KEY' };
 
-  /* ===== Defaults (preconfigurados) ===== */
-  const DEFAULTS = {
-    WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec',
-    API_KEY: 'HSM2025KEY',
-    LOGO: '/panel-html-msm/icons/icon-512.png'
-  };
-
-  /* ===== API robusta ===== */
-  const API=(function(){
-    const url = ()=> LS.get('HSM_WEBAPP_URL',DEFAULTS.WEBAPP_URL);
-    const key = ()=> LS.get('HSM_API_KEY',DEFAULTS.API_KEY);
-    const _fetch = async (action, payload={}, {timeout=12000, retries=1}={})=>{
-      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort('timeout'),timeout);
-      try{
-        const r= await fetch(url(),{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({action, key:key(), ...payload}),
-          signal: ctrl.signal
-        });
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        return await r.json();
-      }catch(e){
-        if(retries>0) return _fetch(action,payload,{timeout, retries:retries-1});
-        throw e;
-      }finally{ clearTimeout(t); }
-    };
-    return {
-      url, key,
-      async ping(){ return _fetch('ping'); },
-      async cie10(){ return _fetch('cie10'); },
-      async findByDni(dni, wait=120){ return _fetch('findByDni',{dni,wait}); },
-      async saveIngreso(payload){ return _fetch('ingreso',payload); },
-      async saveAlta(payload){ return _fetch('alta',payload); }
-    };
-  })();
-
-  /* ===== Online badge ===== */
+  /* ===== Estado de red ===== */
   function setOnline(ok){const b=$('#online'); if(!b)return; b.textContent=ok?'Online':'Offline'; b.className='badge '+(ok?'ok':'off')}
   addEventListener('online', ()=>{setOnline(true); toast('Conectado'); tryAutoFlush();});
   addEventListener('offline',()=>{setOnline(false);toast('Sin conexión');});
   setOnline(navigator.onLine);
 
-  /* ===== PWA: Instalar + Service Worker ===== */
+  /* ===== PWA: SW + instalar ===== */
   let _deferredPrompt=null;
   addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').style.display='inline-block';});
   $('#btnInstall')?.addEventListener('click',async()=>{if(!_deferredPrompt)return;_deferredPrompt.prompt();try{await _deferredPrompt.userChoice}catch(_){} _deferredPrompt=null;$('#btnInstall').style.display='none';});
-
   if('serviceWorker' in navigator){
     addEventListener('load', ()=>{
       navigator.serviceWorker.register('/panel-html-msm/sw.js',{scope:'/panel-html-msm/'})
         .then(async reg=>{
           try{const sw=await navigator.serviceWorker.ready; sw.active?.postMessage({type:'WARMUP'});}catch(_){}
-          if('sync' in reg){try{await reg.sync.register('flush-pend');}catch(_){ }}
+          if('sync' in reg){try{await reg.sync.register('flush-pend');}catch(_){}}
         }).catch(()=>{});
     },{once:true});
     navigator.serviceWorker.addEventListener('message',ev=>{
@@ -386,11 +349,11 @@
     });
   }
 
-  /* ===== Tabs robustas (hash + teclado) ===== */
+  /* ===== Tabs (robusto: href + JS) ===== */
   function switchTab(id){
-    const tabs=$$('.tab');
-    tabs.forEach(btn=>{const sel=(btn.dataset.v===id); btn.setAttribute('aria-selected',String(sel)); btn.classList.toggle('act',sel);});
-    for(const v of ['ing','alta','pend','util']){ const el=$('#v-'+v); if(el) el.style.display=(v===id?'block':'none'); }
+    const ids=['ing','alta','pend','util'];
+    $$('.tab').forEach(btn=>{const sel=(btn.dataset.v===id); btn.setAttribute('aria-selected',String(sel));});
+    ids.forEach(v=>{const el=$('#v-'+v); if(el) el.style.display=(v===id?'block':'none');});
     if(location.hash!=='#'+id) history.replaceState(null,'','#'+id);
   }
   function wireTabs(){
@@ -408,7 +371,14 @@
   }
   addEventListener('hashchange',()=>{const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v);});
 
-  /* ===== Utilidad varias ===== */
+  /* ===== Atajos (enlaces + refuerzo JS) ===== */
+  document.addEventListener('click',e=>{
+    const pill=e.target.closest('[data-go]'); if(!pill) return;
+    const id=pill.getAttribute('data-go'); if(!id) return;
+    e.preventDefault(); switchTab(id);
+  });
+
+  /* ===== Utilidades varias ===== */
   const nowDate=()=>new Date().toISOString().slice(0,10);
   const nowTime=()=>new Date().toTimeString().slice(0,5);
   $('#iFiNow')?.addEventListener('click',()=>$('#i_fi').value=nowDate());
@@ -435,7 +405,7 @@
   ;['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs'].forEach(id=>$('#'+id)?.addEventListener('input',()=>saveDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs'])));
   ;['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs'].forEach(id=>$('#'+id)?.addEventListener('input',()=>saveDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs'])));
 
-  /* ===== Ingreso / Alta ===== */
+  /* ===== Llamadas ===== */
   let lastReceipt=null;
   $('#ingSave')?.addEventListener('click',async()=>{
     try{
@@ -489,17 +459,37 @@
   /* ===== Prefill por query ===== */
   (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
-  /* ===== Settings ===== */
-  function applyLogo(){const url=LS.get('HSM_LOGO_URL',DEFAULTS.LOGO); const el=$('#logo'); if(!el)return; if(url){el.loading='lazy';el.decoding='async';el.src=url;el.hidden=false;} else el.hidden=true;}
+  /* ===== Config ===== */
+  function applyLogo(){const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png'); const el=$('#logo'); if(!el)return; if(url){el.loading='lazy';el.decoding='async';el.src=url;el.hidden=false;} else el.hidden=true;}
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
   $('#cfg')?.addEventListener('close',()=>{const u=$('#cfg_url').value.trim(),k=$('#cfg_key').value.trim(),l=$('#cfg_logo').value.trim(); if(u)LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL'); if(k)LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); if(l)LS.set('HSM_LOGO_URL',l); else LS.del('HSM_LOGO_URL'); applyLogo(); toast('Configuración guardada');});
   $('#cfgTest')?.addEventListener('click',async()=>{try{const r=await API.ping(); $('#cfgMsg').textContent='OK '+(r.version||''); toast('WebApp OK');}catch(e){$('#cfgMsg').textContent='Error: '+(e.message||e); toast('No conecta',2600)}});
 
   /* ===== Boot ===== */
-  $('#uVal')?.addEventListener('click',()=>{const dni=S.onlyDigits($('#u_dni').value); const ok=/^\d{7,9}$/.test(dni); $('#u_res').textContent= ok?('DNI válido: '+dni):'DNI inválido'; $('#u_res').className='st '+(ok?'ok':'err'); if(ok) vibrate([40,20,40]);});
   addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') tryAutoFlush(); });
   addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
+
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
+
+  /* ===== API (mínimo necesario; se asume sw.js maneja fetch/cola) ===== */
+  const API=(function(){
+    const url=()=>LS.get('HSM_WEBAPP_URL',DEFAULTS.WEBAPP_URL);
+    const key=()=>LS.get('HSM_API_KEY',DEFAULTS.API_KEY);
+    async function req(path,body){
+      const u=url(); if(!u) throw new Error('Sin URL configurada');
+      const res=await fetch(u+path,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key()},body:JSON.stringify(body),mode:'cors'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return res.json();
+    }
+    return {
+      url, key,
+      async ping(){ const u=url(); const r=await fetch(u+'?ping=1',{mode:'no-cors'}).catch(()=>null); return {ok:!!r,version:'online'}; },
+      async saveIngreso(payload){ return req('?op=ingreso',payload); },
+      async saveAlta(payload){ return req('?op=alta',payload); },
+      async findByDni(dni,timeout=120){ const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),timeout*1000); try{const u=url(); const r=await fetch(u+`?op=find&dni=${encodeURIComponent(dni)}`,{signal:ctrl.signal}); clearTimeout(t); if(!r.ok) return {ok:false}; return r.json(); }catch(_){ return {ok:false}; } },
+      async cie10(){ const u=url(); const r=await fetch(u+'?op=cie10'); if(!r.ok) return {ok:false,list:[]}; return r.json(); }
+    };
+  })();
   </script>
 </body>
 </html>
