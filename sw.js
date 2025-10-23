@@ -1,59 +1,81 @@
-/* sw.js — HSM v7 móvil */
+/* sw.js — HSM v7 móvil (prod) */
 const SCOPE = '/panel-html-msm/';
-const VERSION = 'v7.3';
-const STATIC_CACHE = `static-${VERSION}`;
+const VERSION = 'v7.4';                    // <- si cambiás algo, subí versión
+const STATIC_CACHE  = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
-const QUEUE = 'hsm-outbox';
 
 // Precargamos solo UI crítica liviana (NO screenshots)
 const PRECACHE = [
   `${SCOPE}`,
-  `${SCOPE}index.html`,        // si existe (en GH Pages puede ser la raíz del repo)
+  `${SCOPE}index.html`,        // en GH Pages puede resolverse a la raíz del repo
   `${SCOPE}manifest.json`,
   `${SCOPE}icons/icon-192.png`,
   `${SCOPE}icons/icon-512.png`,
   `${SCOPE}icons/apple-touch-icon.png`
-  // NADA de screen-*.png acá
+  // NO incluir screen-*.png acá
 ];
 
-// Pequeño helper
-const isHTML = (req) => req.mode === 'navigate' ||
+// Helper: ¿es navegación/HTML?
+const isHTML = (req) =>
+  req.mode === 'navigate' ||
   (req.headers.get('accept') || '').includes('text/html');
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(STATIC_CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+// ----- Install -----
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE)
+      .then((c) => c.addAll(PRECACHE))
+      .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil((async () => {
+// ----- Activate -----
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    // Navigation Preload puede mejorar LCP
+    if (self.registration.navigationPreload) {
+      try { await self.registration.navigationPreload.enable(); } catch (_) {}
+    }
+
+    // Borrar caches viejos
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter(k => ![STATIC_CACHE, RUNTIME_CACHE].includes(k)).map(k => caches.delete(k))
+      keys.filter((k) => ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
+          .map((k) => caches.delete(k))
     );
+
     await self.clients.claim();
-    // Calentamos levemente
-    self.registration.active && self.registration.active.postMessage({ type: 'WARMUP' });
+
+    // Ping suave a clientes
+    try {
+      self.registration.active && self.registration.active.postMessage({ type: 'WARMUP' });
+    } catch (_) {}
   })());
 });
 
-// Estrategias:
-// - HTML: network-first → fallback cache → offline page mínima
-// - Estáticos del scope (css/js/png/svg/etc): cache-first con revalidate asíncrona
-// - Imágenes "extrañas" (screenshots, externos): dejamos pasar (no interceptar)
-// - No cachear respuestas con status >= 400
+// ----- Fetch -----
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
 
-self.addEventListener('fetch', (e) => {
-  const { request } = e;
+  // Solo manejamos nuestro scope y mismo origen
+  if (url.origin !== self.location.origin) return;
+  if (!url.pathname.startsWith(SCOPE)) return;
 
-  // Solo manejamos nuestro scope
-  if (!new URL(request.url).pathname.startsWith(SCOPE)) return;
-
-  // 1) Navegación/HTML → network-first
+  // 1) HTML → network-first con preload + fallback cache + offline page
   if (isHTML(request)) {
-    e.respondWith((async () => {
+    event.respondWith((async () => {
       try {
+        // Preload si está disponible (puede venir ya descargado por el browser)
+        const preload = await event.preloadResponse;
+        if (preload && preload.ok) {
+          const copy = preload.clone();
+          const cache = await caches.open(RUNTIME_CACHE);
+          cache.put(request, copy);
+          return preload;
+        }
+
+        // Fetch normal
         const net = await fetch(request, { cache: 'no-store' });
         if (!net || net.status >= 400) throw new Error('bad html');
         const copy = net.clone();
@@ -64,26 +86,35 @@ self.addEventListener('fetch', (e) => {
         const cache = await caches.open(RUNTIME_CACHE);
         const hit = await cache.match(request);
         if (hit) return hit;
-        // fallback ultra mínima
-        return new Response('<!doctype html><meta charset="utf-8"><body style="background:#0b1220;color:#e5e7eb;font:16px system-ui"><h1>Sin conexión</h1><p>La app sigue disponible offline.</p></body>', { headers: { 'Content-Type': 'text/html;charset=utf-8' }});
+        // Offline ultra mínimo
+        return new Response(
+          '<!doctype html><meta charset="utf-8"><body style="background:#0b1220;color:#e5e7eb;font:16px system-ui"><h1>Sin conexión</h1><p>La app sigue disponible offline.</p></body>',
+          { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+        );
       }
     })());
     return;
   }
 
-  // 2) Recursos estáticos del scope (NO screenshots)
-  const u = new URL(request.url);
-  const isOurStatic = u.pathname.startsWith(SCOPE) &&
-    !u.pathname.includes('screen-1080x1920.png') &&
-    !u.pathname.includes('screen-1920x1080.png');
+  // 2) Estáticos de nuestro scope (NO screenshots) → cache-first con revalidación
+  const isScreenshot =
+    url.pathname.includes('screen-1080x1920.png') ||
+    url.pathname.includes('screen-1920x1080.png');
 
-  if (isOurStatic && /(\.png|\.jpg|\.jpeg|\.svg|\.ico|\.webp|\.css|\.js|\.json)$/i.test(u.pathname)) {
-    e.respondWith((async () => {
+  const isOurStatic =
+    url.pathname.startsWith(SCOPE) &&
+    !isScreenshot &&
+    /(\.png|\.jpg|\.jpeg|\.svg|\.ico|\.webp|\.css|\.js|\.json)$/i.test(url.pathname);
+
+  if (isOurStatic) {
+    event.respondWith((async () => {
       const cache = await caches.open(STATIC_CACHE);
       const cached = await cache.match(request);
       if (cached) {
-        // SWR: revalidamos a un costado
-        fetch(request).then(r => (r && r.ok) ? cache.put(request, r.clone()) : 0).catch(()=>{});
+        // Stale-While-Revalidate (actualizamos en background)
+        fetch(request).then((r) => {
+          if (r && r.ok) cache.put(request, r.clone());
+        }).catch(() => {});
         return cached;
       }
       try {
@@ -97,18 +128,25 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // 3) Todo lo demás: dejar pasar (no ensuciar cache con 404/galería)
-  // (No respondWith → el navegador maneja normal)
+  // 3) Todo lo demás → dejar pasar (no ensuciamos la cache)
+  // (sin respondWith → maneja el navegador)
 });
 
-// (Opcional) background sync (nombre de etiqueta en tu app: 'flush-pend')
-self.addEventListener('sync', (e) => {
-  if (e.tag === 'flush-pend') {
-    e.waitUntil((async () => {
-      // Tu app hace postMessage TRY_FLUSH_PEND → el cliente lo ejecuta
+// ----- Background Sync opcional (etiqueta: 'flush-pend') -----
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'flush-pend') {
+    event.waitUntil((async () => {
       const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
-      cs.forEach(c => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
+      cs.forEach((c) => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
     })());
   }
 });
 
+// ----- Mensajes utilitarios -----
+self.addEventListener('message', (event) => {
+  // Te permite, si querés, forzar que la nueva versión del SW tome control ya:
+  // navigator.serviceWorker.controller.postMessage({type:'SKIP_WAITING'})
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
