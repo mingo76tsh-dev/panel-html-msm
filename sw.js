@@ -1,124 +1,114 @@
-/* HSM v7 • SW “excelencia” */
+/* sw.js — HSM v7 móvil */
 const SCOPE = '/panel-html-msm/';
-const VERSION = 'v7.2.' + (self.registration ? self.registration.scope.length : '') + '.20251022';
-const CACHE_APP   = `app-${VERSION}`;
-const CACHE_ASSET = `asset-${VERSION}`;
+const VERSION = 'v7.3';
+const STATIC_CACHE = `static-${VERSION}`;
+const RUNTIME_CACHE = `runtime-${VERSION}`;
+const QUEUE = 'hsm-outbox';
 
-const APP_SHELL = [
+// Precargamos solo UI crítica liviana (NO screenshots)
+const PRECACHE = [
   `${SCOPE}`,
-  `${SCOPE}index.html`,
+  `${SCOPE}index.html`,        // si existe (en GH Pages puede ser la raíz del repo)
   `${SCOPE}manifest.json`,
-  `${SCOPE}sw.js`,
   `${SCOPE}icons/icon-192.png`,
   `${SCOPE}icons/icon-512.png`,
   `${SCOPE}icons/apple-touch-icon.png`
+  // NADA de screen-*.png acá
 ];
 
-/* Utilidades */
-const isGET = req => req.method === 'GET';
-const sameOrigin = url => new URL(url, self.location.href).origin === self.location.origin;
-const isNav = req => req.mode === 'navigate';
+// Pequeño helper
+const isHTML = (req) => req.mode === 'navigate' ||
+  (req.headers.get('accept') || '').includes('text/html');
 
-/* Instalación: pre-cache del shell */
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_APP).then(c => c.addAll(APP_SHELL)).then(() => self.skipWaiting())
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(STATIC_CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
   );
 });
 
-/* Activación: limpia versiones viejas y avisa a clientes */
-self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => ![CACHE_APP, CACHE_ASSET].includes(k)).map(k => caches.delete(k)));
+    await Promise.all(
+      keys.filter(k => ![STATIC_CACHE, RUNTIME_CACHE].includes(k)).map(k => caches.delete(k))
+    );
     await self.clients.claim();
-    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const client of clients) {
-      client.postMessage({ type: 'SW_ACTIVATED', version: VERSION });
-    }
+    // Calentamos levemente
+    self.registration.active && self.registration.active.postMessage({ type: 'WARMUP' });
   })());
 });
 
-/* Estrategias:
-   - Navegación: network-first (timeout) → cache → /index.html
-   - Estáticos same-origin: stale-while-revalidate
-   - Apps Script (Google): network-first con fallback 503 JSON */
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  if (!isGET(request)) return;
+// Estrategias:
+// - HTML: network-first → fallback cache → offline page mínima
+// - Estáticos del scope (css/js/png/svg/etc): cache-first con revalidate asíncrona
+// - Imágenes "extrañas" (screenshots, externos): dejamos pasar (no interceptar)
+// - No cachear respuestas con status >= 400
 
-  // Navegaciones
-  if (isNav(request)) {
-    event.respondWith(navNetworkFirst(request));
+self.addEventListener('fetch', (e) => {
+  const { request } = e;
+
+  // Solo manejamos nuestro scope
+  if (!new URL(request.url).pathname.startsWith(SCOPE)) return;
+
+  // 1) Navegación/HTML → network-first
+  if (isHTML(request)) {
+    e.respondWith((async () => {
+      try {
+        const net = await fetch(request, { cache: 'no-store' });
+        if (!net || net.status >= 400) throw new Error('bad html');
+        const copy = net.clone();
+        const cache = await caches.open(RUNTIME_CACHE);
+        cache.put(request, copy);
+        return net;
+      } catch (_) {
+        const cache = await caches.open(RUNTIME_CACHE);
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        // fallback ultra mínima
+        return new Response('<!doctype html><meta charset="utf-8"><body style="background:#0b1220;color:#e5e7eb;font:16px system-ui"><h1>Sin conexión</h1><p>La app sigue disponible offline.</p></body>', { headers: { 'Content-Type': 'text/html;charset=utf-8' }});
+      }
+    })());
     return;
   }
 
-  const url = new URL(request.url);
+  // 2) Recursos estáticos del scope (NO screenshots)
+  const u = new URL(request.url);
+  const isOurStatic = u.pathname.startsWith(SCOPE) &&
+    !u.pathname.includes('screen-1080x1920.png') &&
+    !u.pathname.includes('screen-1920x1080.png');
 
-  // Apps Script (API backend)
-  if (/^https:\/\/script\.google(usercontent)?\.com/.test(url.origin) ||
-      url.hostname === 'script.google.com') {
-    event.respondWith(apiNetworkFirst(request));
+  if (isOurStatic && /(\.png|\.jpg|\.jpeg|\.svg|\.ico|\.webp|\.css|\.js|\.json)$/i.test(u.pathname)) {
+    e.respondWith((async () => {
+      const cache = await caches.open(STATIC_CACHE);
+      const cached = await cache.match(request);
+      if (cached) {
+        // SWR: revalidamos a un costado
+        fetch(request).then(r => (r && r.ok) ? cache.put(request, r.clone()) : 0).catch(()=>{});
+        return cached;
+      }
+      try {
+        const net = await fetch(request);
+        if (net && net.ok) cache.put(request, net.clone());
+        return net;
+      } catch (_) {
+        return cached || Response.error();
+      }
+    })());
     return;
   }
 
-  // Estáticos same-origin
-  if (sameOrigin(request.url)) {
-    event.respondWith(staleWhileRevalidate(request));
-    return;
-  }
-
-  // Cross-origin estáticos: cache primero, si no → red
-  event.respondWith(staleWhileRevalidate(request));
+  // 3) Todo lo demás: dejar pasar (no ensuciar cache con 404/galería)
+  // (No respondWith → el navegador maneja normal)
 });
 
-/* Mensajes desde la página */
-self.addEventListener('message', (event) => {
-  const msg = event.data || {};
-  if (msg.type === 'WARMUP') {
-    caches.open(CACHE_APP).then(c => c.addAll(APP_SHELL).catch(()=>{}));
+// (Opcional) background sync (nombre de etiqueta en tu app: 'flush-pend')
+self.addEventListener('sync', (e) => {
+  if (e.tag === 'flush-pend') {
+    e.waitUntil((async () => {
+      // Tu app hace postMessage TRY_FLUSH_PEND → el cliente lo ejecuta
+      const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+      cs.forEach(c => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
+    })());
   }
-  if (msg.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-/* ------------------ Estrategias concretas ------------------ */
-
-async function navNetworkFirst(request) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 3500);
-  try {
-    const res = await fetch(request, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (res && res.ok) return res;
-    throw 0;
-  } catch {
-    const cache = await caches.open(CACHE_APP);
-    return (await cache.match(`${SCOPE}index.html`)) ||
-           (await cache.match('/index.html')) ||
-           Response.error();
-  }
-}
-
-async function apiNetworkFirst(request) {
-  try {
-    const res = await fetch(request, { cache: 'no-store' });
-    if (res && res.ok) return res;
-    throw 0;
-  } catch {
-    // Fallback JSON amable cuando no hay red
-    return new Response(JSON.stringify({ ok:false, offline:true, code:'OFFLINE' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-}
-
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_ASSET);
-  const cached = await cache.match(request);
-  const fetchPromise = fetch(request).then((res) => {
-    if (res && res.ok) cache.put(request, res.clone());
-    return res;
-  }).catch(() => cached);
-  return cached || fetchPromise;
-}
