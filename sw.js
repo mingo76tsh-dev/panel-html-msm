@@ -45,6 +45,11 @@ self.addEventListener('activate', (event) => {
     );
 
     await self.clients.claim();
+// dentro del activate, luego de claim()
+try {
+  const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
+  cs.forEach(c => c.postMessage({ type: 'SW_ACTIVATED', version: VERSION }));
+} catch (_) {}
 
     // Ping suave a clientes
     try {
