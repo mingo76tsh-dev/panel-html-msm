@@ -491,6 +491,17 @@
   addEventListener('DOMContentLoaded',()=>{ applyLogo(); boxSet(boxGet()); wireTabs(); try{loadDraft(DRAFT_ING,['i_dni','i_sexo','i_fi','i_hi','i_ii','i_met','i_con','i_sus','i_cie','i_obs']);}catch(_){ } try{loadDraft(DRAFT_ALTA,['a_dni','a_fn','a_sexo','a_fa','a_ha','a_estado','a_obs']);}catch(_){ } if($('#i_fi')&&!$('#i_fi').value) $('#i_fi').value=nowDate(); if($('#i_hi')&&!$('#i_hi').value) $('#i_hi').value=nowTime(); tryAutoFlush();});
 
   function safeFlushPend(){ if(!navigator.onLine) return; boxFlush(); }
+// Opción: botón escondido para forzar actualización
+document.addEventListener('keydown', (e) => {
+  // Ctrl + Alt + U => fuerza que el SW nuevo tome control
+  if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'u') {
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+      toast('Actualizando…');  // ya tenés toast()
+      setTimeout(()=>location.reload(), 1200);
+    }
+  }
+});
 
   /* ===== API ===== */
   const API=(function(){
@@ -514,4 +525,5 @@
   </script>
 </body>
 </html>
+
 
