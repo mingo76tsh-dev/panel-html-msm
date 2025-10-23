@@ -6,16 +6,17 @@
   "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
+
   "icons": [
     { "src": "/panel-html-msm/icons/icon-192.png", "type": "image/png", "sizes": "192x192" },
     { "src": "/panel-html-msm/icons/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" },
     { "src": "/panel-html-msm/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
   ],
+
   "screenshots": [
     { "src": "/panel-html-msm/icons/screen-1080x1920.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
     { "src": "/panel-html-msm/icons/screen-1920x1080.png", "sizes": "1920x1080", "type": "image/png", "form_factor": "wide" }
-  ]
-}
+  ],
 
   "shortcuts": [
     { "name": "Nuevo ingreso", "short_name": "Ingreso", "url": "/panel-html-msm/#ing",  "description": "Ir directo a Ingreso" },
@@ -27,3 +28,4 @@
     { "protocol": "web+hsm", "url": "/panel-html-msm/?deeplink=%s" }
   ]
 }
+
