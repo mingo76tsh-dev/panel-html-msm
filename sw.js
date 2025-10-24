@@ -1,6 +1,6 @@
 /* sw.js — HSM v7 móvil (prod) */
 const SCOPE = '/panel-html-msm/';
-const VERSION = 'v7.5';                    // bump para forzar update
+const VERSION = 'v7.6';                    // bump para forzar update
 const STATIC_CACHE  = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
