@@ -1,26 +1,22 @@
-/* sw.js — HS-V7 (prod) */
+/* sw.js — HS-V7 móvil (prod) */
 const SCOPE = '/panel-html-msm/';
-const VERSION = 'v7.5';                     // <— bump!
+const VERSION = 'v7.5';
 const STATIC_CACHE  = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
+// Precarga mínima (sin screenshots ni icon-512)
 const PRECACHE = [
   `${SCOPE}`,
   `${SCOPE}index.html`,
   `${SCOPE}manifest.json`,
   `${SCOPE}ICONS/icon-192.png`,
-  `${SCOPE}ICONS/icon-512.png`,
-  `${SCOPE}ICONS/icon-96.png`,
-  `${SCOPE}ICONS/screen-1080x1920.png`,
-  `${SCOPE}ICONS/screen-1920x1080.png`
+  `${SCOPE}ICONS/apple-touch-icon.png`
 ];
 
-// Helper…
 const isHTML = (req) =>
   req.mode === 'navigate' ||
   (req.headers.get('accept') || '').includes('text/html');
 
-// ----- Install -----
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -29,60 +25,74 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// ----- Activate -----
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     if (self.registration.navigationPreload) {
       try { await self.registration.navigationPreload.enable(); } catch (_) {}
     }
     const keys = await caches.keys();
-    await Promise.all(
-      keys.filter((k) => ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
-          .map((k) => caches.delete(k))
-    );
+    await Promise.all(keys
+      .filter(k => ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
+      .map(k => caches.delete(k)));
     await self.clients.claim();
+
+    // Avisar a clientes que hay versión nueva
     try {
       const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
       cs.forEach(c => c.postMessage({ type: 'SW_ACTIVATED', version: VERSION }));
     } catch (_) {}
+
+    try { self.registration.active?.postMessage({ type: 'WARMUP' }); } catch (_) {}
   })());
 });
 
-// ----- Fetch -----
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Mismo origen + dentro del scope
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.startsWith(SCOPE)) return;
 
+  // Ignorar favicons y screenshots: dejar que el navegador los maneje
+  const isFavicon = /\/ICONS\/favicon(-\d+)?\.png$|\/ICONS\/favicon\.ico$|\/favicon(-\d+)?\.png$|\/favicon\.ico$/i.test(url.pathname);
+  const isScreenshot = /\/ICONS\/screen-(1080x1920|1920x1080)\.png$|\/screen-(1080x1920|1920x1080)\.png$/i.test(url.pathname);
+  if (isFavicon || isScreenshot) {
+    // Dejar pasar: no interferiremos con la descarga del navegador
+    return;
+  }
+
+  // 1) HTML → network-first (con preload) + fallback cache + offline page
   if (isHTML(request)) {
     event.respondWith((async () => {
       try {
         const preload = await event.preloadResponse;
         if (preload && preload.ok) {
+          const copy = preload.clone();
           const cache = await caches.open(RUNTIME_CACHE);
-          cache.put(request, preload.clone());
+          cache.put(request, copy);
           return preload;
         }
         const net = await fetch(request, { cache: 'no-store' });
         if (!net || net.status >= 400) throw new Error('bad html');
+        const copy = net.clone();
         const cache = await caches.open(RUNTIME_CACHE);
-        cache.put(request, net.clone());
+        cache.put(request, copy);
         return net;
       } catch (_) {
         const cache = await caches.open(RUNTIME_CACHE);
-        return (await cache.match(request)) ||
-          new Response('<!doctype html><meta charset="utf-8"><body style="background:#0b1220;color:#e5e7eb;font:16px system-ui"><h1>Sin conexión</h1><p>La app sigue disponible offline.</p></body>',{headers:{'Content-Type':'text/html; charset=utf-8'}});
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        return new Response(
+          '<!doctype html><meta charset="utf-8"><body style="background:#0b1220;color:#e5e7eb;font:16px system-ui"><h1>Sin conexión</h1><p>La app sigue disponible offline.</p></body>',
+          { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+        );
       }
     })());
     return;
   }
 
-  const isScreenshot =
-    url.pathname.includes('screen-1080x1920.png') ||
-    url.pathname.includes('screen-1920x1080.png');
-
+  // 2) Estáticos del scope (NO screenshots) → cache-first con revalidación
   const isOurStatic =
     url.pathname.startsWith(SCOPE) &&
     !isScreenshot &&
@@ -93,7 +103,7 @@ self.addEventListener('fetch', (event) => {
       const cache = await caches.open(STATIC_CACHE);
       const cached = await cache.match(request);
       if (cached) {
-        fetch(request).then((r) => { if (r && r.ok) cache.put(request, r.clone()); }).catch(() => {});
+        fetch(request).then(r => { if (r && r.ok) cache.put(request, r.clone()); }).catch(()=>{});
         return cached;
       }
       try {
@@ -106,14 +116,15 @@ self.addEventListener('fetch', (event) => {
     })());
     return;
   }
+
+  // 3) Otros → dejar pasar
 });
 
-// ----- Background Sync -----
 self.addEventListener('sync', (event) => {
   if (event.tag === 'flush-pend') {
     event.waitUntil((async () => {
       const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
-      cs.forEach((c) => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
+      cs.forEach(c => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
     })());
   }
 });
