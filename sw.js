@@ -1,22 +1,25 @@
-/* sw.js — HS-V7 móvil (prod) */
+/* sw.js — HSM v7 móvil (prod) */
 const SCOPE = '/panel-html-msm/';
-const VERSION = 'v7.5';
+const VERSION = 'v7.5';                    // bump para forzar update
 const STATIC_CACHE  = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
-// Precarga mínima (sin screenshots ni icon-512)
+// Precache mínimo (sin screenshots)
 const PRECACHE = [
   `${SCOPE}`,
   `${SCOPE}index.html`,
   `${SCOPE}manifest.json`,
-  `${SCOPE}ICONS/icon-192.png`,
-  `${SCOPE}ICONS/apple-touch-icon.png`
+  `${SCOPE}icons/icon-192.png`,
+  `${SCOPE}icons/icon-512.png`,
+  `${SCOPE}icons/apple-touch-icon.png`
 ];
 
+// ¿Es navegación/HTML?
 const isHTML = (req) =>
   req.mode === 'navigate' ||
   (req.headers.get('accept') || '').includes('text/html');
 
+// Install
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -25,44 +28,38 @@ self.addEventListener('install', (event) => {
   );
 });
 
+// Activate
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     if (self.registration.navigationPreload) {
       try { await self.registration.navigationPreload.enable(); } catch (_) {}
     }
     const keys = await caches.keys();
-    await Promise.all(keys
-      .filter(k => ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
-      .map(k => caches.delete(k)));
+    await Promise.all(
+      keys.filter((k) => ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
+          .map((k) => caches.delete(k))
+    );
     await self.clients.claim();
-
-    // Avisar a clientes que hay versión nueva
     try {
       const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
       cs.forEach(c => c.postMessage({ type: 'SW_ACTIVATED', version: VERSION }));
     } catch (_) {}
-
-    try { self.registration.active?.postMessage({ type: 'WARMUP' }); } catch (_) {}
+    try {
+      self.registration.active && self.registration.active.postMessage({ type: 'WARMUP' });
+    } catch (_) {}
   })());
 });
 
+// Fetch
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Mismo origen + dentro del scope
+  // Solo mismo origen + scope
   if (url.origin !== self.location.origin) return;
   if (!url.pathname.startsWith(SCOPE)) return;
 
-  // Ignorar favicons y screenshots: dejar que el navegador los maneje
-  const isFavicon = /\/ICONS\/favicon(-\d+)?\.png$|\/ICONS\/favicon\.ico$|\/favicon(-\d+)?\.png$|\/favicon\.ico$/i.test(url.pathname);
-  const isScreenshot = /\/ICONS\/screen-(1080x1920|1920x1080)\.png$|\/screen-(1080x1920|1920x1080)\.png$/i.test(url.pathname);
-  if (isFavicon || isScreenshot) {
-    // Dejar pasar: no interferiremos con la descarga del navegador
-    return;
-  }
-
-  // 1) HTML → network-first (con preload) + fallback cache + offline page
+  // HTML -> network-first (+preload) con fallback caché + offline mínimo
   if (isHTML(request)) {
     event.respondWith((async () => {
       try {
@@ -92,7 +89,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2) Estáticos del scope (NO screenshots) → cache-first con revalidación
+  // Estáticos del scope (sin screenshots) -> cache-first con revalidate
+  const isScreenshot =
+    url.pathname.includes('screen-1080x1920.png') ||
+    url.pathname.includes('screen-1920x1080.png');
+
   const isOurStatic =
     url.pathname.startsWith(SCOPE) &&
     !isScreenshot &&
@@ -103,7 +104,7 @@ self.addEventListener('fetch', (event) => {
       const cache = await caches.open(STATIC_CACHE);
       const cached = await cache.match(request);
       if (cached) {
-        fetch(request).then(r => { if (r && r.ok) cache.put(request, r.clone()); }).catch(()=>{});
+        fetch(request).then((r) => { if (r && r.ok) cache.put(request, r.clone()); }).catch(()=>{});
         return cached;
       }
       try {
@@ -116,19 +117,20 @@ self.addEventListener('fetch', (event) => {
     })());
     return;
   }
-
-  // 3) Otros → dejar pasar
+  // El resto: dejar pasar
 });
 
+// Background Sync opcional
 self.addEventListener('sync', (event) => {
   if (event.tag === 'flush-pend') {
     event.waitUntil((async () => {
       const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
-      cs.forEach(c => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
+      cs.forEach((c) => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
     })());
   }
 });
 
+// Mensajes utilitarios
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
