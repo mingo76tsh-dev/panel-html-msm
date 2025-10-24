@@ -1,26 +1,45 @@
 {
   "name": "HS-V7 — Panel Salud Mental",
   "short_name": "HS-V7",
-  "description": "Registro de ingresos y altas con soporte offline, pendientes y PWA.",
-  "start_url": "/panel-html-msm/index.html",
+  "start_url": "/panel-html-msm/#ing",
   "scope": "/panel-html-msm/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
-  "dir": "ltr",
-  "lang": "es",
   "icons": [
-    { "src": "ICONS/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
-    { "src": "ICONS/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "ICONS/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/panel-html-msm/ICONS/icon-192.png",     "type": "image/png", "sizes": "192x192", "purpose": "any" },
+    { "src": "/panel-html-msm/ICONS/icon-512.png",     "type": "image/png", "sizes": "512x512", "purpose": "any" },
+    { "src": "/panel-html-msm/ICONS/maskable-192.png", "type": "image/png", "sizes": "192x192", "purpose": "maskable" },
+    { "src": "/panel-html-msm/ICONS/maskable-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" },
+    { "src": "/panel-html-msm/ICONS/apple-touch-icon.png", "type": "image/png", "sizes": "180x180" }
   ],
+  "screenshots": [],
   "shortcuts": [
-    { "name": "Ingreso",    "url": "/panel-html-msm/#ing"  },
-    { "name": "Alta",       "url": "/panel-html-msm/#alta" },
-    { "name": "Pendientes", "url": "/panel-html-msm/#pend" }
+    {
+      "name": "Nuevo ingreso",
+      "short_name": "Ingreso",
+      "url": "/panel-html-msm/#ing",
+      "description": "Ir directo a Ingreso",
+      "icons": [{ "src": "/panel-html-msm/ICONS/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Dar alta",
+      "short_name": "Alta",
+      "url": "/panel-html-msm/#alta",
+      "description": "Ir directo a Alta",
+      "icons": [{ "src": "/panel-html-msm/ICONS/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    },
+    {
+      "name": "Pendientes",
+      "short_name": "Pend.",
+      "url": "/panel-html-msm/#pend",
+      "description": "Ver pendientes offline",
+      "icons": [{ "src": "/panel-html-msm/ICONS/icon-96.png", "sizes": "96x96", "type": "image/png" }]
+    }
   ],
-  "screenshots": [
-    { "src": "ICONS/screen-1080x1920.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
-    { "src": "ICONS/screen-1920x1080.png", "sizes": "1920x1080", "type": "image/png", "form_factor": "wide" }
+  "protocol_handlers": [
+    { "protocol": "web+hsm", "url": "/panel-html-msm/?deeplink=%s" }
   ]
 }
+
