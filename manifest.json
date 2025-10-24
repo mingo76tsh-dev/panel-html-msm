@@ -1,27 +1,26 @@
 {
   "name": "HS-V7 — Panel Salud Mental",
   "short_name": "HS-V7",
-  "start_url": "/panel-html-msm/#ing",
+  "description": "Registro de ingresos y altas con soporte offline, pendientes y PWA.",
+  "start_url": "/panel-html-msm/index.html",
   "scope": "/panel-html-msm/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
+  "dir": "ltr",
+  "lang": "es",
   "icons": [
-    { "src": "/panel-html-msm/icons/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
-    { "src": "/panel-html-msm/icons/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
-    { "src": "/panel-html-msm/icons/apple-touch-icon.png", "type": "image/png", "sizes": "180x180" }
-  ],
-  "screenshots": [
-    { "src": "/panel-html-msm/icons/screen-1080x1920.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
-    { "src": "/panel-html-msm/icons/screen-1920x1080.png", "sizes": "1920x1080", "type": "image/png", "form_factor": "wide" }
+    { "src": "ICONS/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "ICONS/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "ICONS/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Nuevo ingreso", "short_name": "Ingreso", "url": "/panel-html-msm/#ing",  "description": "Ir directo a Ingreso" },
-    { "name": "Dar alta",      "short_name": "Alta",    "url": "/panel-html-msm/#alta", "description": "Ir directo a Alta" },
-    { "name": "Pendientes",    "short_name": "Pend.",   "url": "/panel-html-msm/#pend", "description": "Ver pendientes offline" }
+    { "name": "Ingreso",    "url": "/panel-html-msm/#ing"  },
+    { "name": "Alta",       "url": "/panel-html-msm/#alta" },
+    { "name": "Pendientes", "url": "/panel-html-msm/#pend" }
   ],
-  "protocol_handlers": [
-    { "protocol": "web+hsm", "url": "/panel-html-msm/?deeplink=%s" }
+  "screenshots": [
+    { "src": "ICONS/screen-1080x1920.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
+    { "src": "ICONS/screen-1920x1080.png", "sizes": "1920x1080", "type": "image/png", "form_factor": "wide" }
   ]
 }
