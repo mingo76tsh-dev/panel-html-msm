@@ -19,6 +19,9 @@
   <link rel="icon" href="/panel-html-msm/icons/favicon-16.png" type="image/png" sizes="16x16">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
 
+  <!-- (Opcional) Preload del logo por defecto, bajo prioridad -->
+  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png" imagesrcset="/panel-html-msm/icons/icon-192.png 192w, /panel-html-msm/icons/icon-512.png 512w" imagesizes="44px" importance="low">
+
   <!-- Preconexión (Apps Script) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
@@ -45,14 +48,7 @@
       padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px
     }
     .title{font-weight:800; letter-spacing:.3px; margin:0; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-
-    /* Logo como background: no participa del LCP, pero mantiene espacio (sin CLS) */
-    .logo{
-      height:44px; width:44px; border-radius:8px;
-      background:#0e2233 center/cover no-repeat;
-      visibility:hidden; opacity:0; transition:opacity .2s;
-    }
-
+    #logo{grid-column:1; height:44px; width:44px; object-fit:cover; border-radius:8px}
     #online{grid-column:4; min-width:78px; justify-content:center}
     .sp{grid-column:5}
     #btnInstall{grid-column:6; width:96px; text-align:center; visibility:hidden; opacity:0; transition:opacity .2s}
@@ -123,8 +119,11 @@
   <main id="main" class="wrap" role="main">
     <article class="card" aria-label="Aplicación HSM v7 Móvil">
       <header class="app">
-        <!-- Logo como background: no LCP, espacio reservado sin CLS -->
-        <div id="logo" class="logo" aria-hidden="true"></div>
+        <!-- Logo: reserva espacio desde el primer paint (sin hidden) -->
+        <img id="logo" alt="Logo de la institución"
+             src="/panel-html-msm/icons/icon-512.png"
+             width="44" height="44" decoding="async"
+             style="visibility:hidden;opacity:0;transition:opacity .2s">
         <div></div>
         <h1 class="title">HSM v7 • Móvil</h1>
         <span id="online" class="badge off" aria-live="polite" title="Estado de red">Offline</span>
@@ -499,18 +498,13 @@
   /* ===== Prefill por query ===== */
   (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
 
-  /* ===== Config (logo como background, sin LCP/CLS) ===== */
+  /* ===== Config (logo aplicado sin CLS) ===== */
   function applyLogo(){
-    // Usamos un PNG pequeño en header; 96px es suficiente a 44px
-    const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-96.png');
+    const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png');
     const el=$('#logo'); if(!el) return;
-    if(!url){ el.style.visibility='hidden'; el.style.opacity='0'; return; }
-    const img=new Image();
-    img.decoding='async';
-    img.fetchPriority='low';
-    img.onload=()=>{ el.style.backgroundImage=`url("${url}")`; el.style.visibility='visible'; el.style.opacity='1'; };
-    img.onerror=()=>{ el.style.visibility='hidden'; el.style.opacity='0'; };
-    img.src=url;
+    if (!url){ el.style.visibility='hidden'; el.style.opacity='0'; return; }
+    el.loading='eager'; el.decoding='async'; el.src=url;
+    el.addEventListener('load',()=>{ el.style.visibility='visible'; el.style.opacity='1'; },{once:true});
   }
 
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
