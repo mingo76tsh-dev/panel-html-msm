@@ -18,9 +18,10 @@ function stamp() {
   const d = new Date();
   return d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes());
 }
-const TAG = "v1.5.4-" + stamp();
+const TAG = "v1.5.4-" + stamp(); // usado en todo el build
 
 function withIconBustInHTML(html) {
+  // agrega ?v=TAG a hrefs de íconos en index
   return html
     .replace(/href="\/panel-html-msm\/icons\/apple-touch-icon\.png"/g,
              `href="/panel-html-msm/icons/apple-touch-icon.png?v=${TAG}"`)
@@ -34,9 +35,16 @@ async function buildHTML() {
   const src = await readFile(join(SRC, "index.html"), "utf8");
   const prebusted = withIconBustInHTML(src);
   const html = await minifyHTML(prebusted, {
-    collapseWhitespace: true, removeComments: true, removeRedundantAttributes: true,
-    removeEmptyAttributes: true, sortAttributes: true, sortClassName: true,
-    minifyCSS: true, minifyJS: true, keepClosingSlash: true, quoteCharacter: '"'
+    collapseWhitespace: true,
+    removeComments: true,
+    removeRedundantAttributes: true,
+    removeEmptyAttributes: true,
+    sortAttributes: true,
+    sortClassName: true,
+    minifyCSS: true,
+    minifyJS: true,
+    keepClosingSlash: true,
+    quoteCharacter: '"'
   });
   await writeFile(join(OUT, "index.html"), html);
   console.log("✓ index.html minificado (+ cache-bust íconos)");
@@ -66,10 +74,11 @@ async function buildSW() {
 async function copyManifest() {
   const raw = await readFile(join(SRC, "manifest.json"), "utf8");
   const j = JSON.parse(raw);
+
   const bust = (s) => (s?.includes("?v=") ? s : `${s}?v=${TAG}`);
 
-  if (Array.isArray(j.icons))       j.icons       = j.icons.map((it) => ({ ...it, src: bust(it.src) }));
-  if (Array.isArray(j.screenshots)) j.screenshots = j.screenshots.map((it) => ({ ...it, src: bust(it.src) }));
+  if (Array.isArray(j.icons))        j.icons       = j.icons.map((it) => ({ ...it, src: bust(it.src) }));
+  if (Array.isArray(j.screenshots))  j.screenshots = j.screenshots.map((it) => ({ ...it, src: bust(it.src) }));
 
   if (typeof j.start_url === "string" && !j.start_url.includes("?v=")) {
     j.start_url = `${j.start_url}${j.start_url.includes("?") ? "&" : "?"}v=${TAG}`;
@@ -91,4 +100,5 @@ async function run() {
   await Promise.all([buildHTML(), build404(), buildSW(), copyManifest(), copyIcons()]);
   console.log("\nBuild OK → dist/");
 }
+
 run().catch((e) => { console.error(e); process.exit(1); });
