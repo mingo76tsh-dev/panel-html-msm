@@ -13,7 +13,7 @@
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest + íconos existentes en /panel-html-msm/icons/ -->
+  <!-- Manifest + iconos -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" type="image/png" sizes="32x32" href="/panel-html-msm/icons/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/panel-html-msm/icons/favicon-16.png">
@@ -36,24 +36,33 @@
     body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
     .wrap{max-width:980px;margin:0 auto;padding:12px}
     .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
-    header.app{display:flex;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px}
-    .title{font-weight:800; letter-spacing:.3px}
-    .sp{flex:1}
-    .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
+
+    /* Header sin CLS: grid de columnas fijas */
+    header.app{
+      display:grid;
+      grid-template-columns: 44px 12px 1fr 78px 1fr 96px 48px; /* logo, gap, título, badge, spacer, instalar, cfg */
+      align-items:center;
+      padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px
+    }
+    .title{grid-column:3;font-weight:800;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #logo{grid-column:1;height:44px;width:44px;object-fit:cover;border-radius:8px;visibility:hidden;opacity:0;transition:opacity .2s}
+    #online{grid-column:4;min-width:78px;display:inline-flex;gap:6px;align-items:center;justify-content:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
+    #btnInstall{grid-column:6;width:96px;visibility:hidden;opacity:0;transition:opacity .2s}
+    #btnInstall.shown{visibility:visible;opacity:1}
+    #btnCfg{grid-column:7;width:48px;text-align:center}
+
     .badge.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
     .badge.off{background:rgba(148,163,184,.12);color:#94a3b8}
-    /* CLS: reservamos ancho fijo para el badge */
-    #online{min-width:72px;justify-content:center}
+    .sp{grid-column:5}
+
     .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--acc);color:#04121f}
     .btn.sec{background:#1f2937;color:#d1d5db}
     .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1}
+
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     @media (max-width:740px){ .row{grid-template-columns:1fr} }
     label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
-    input,select,textarea{
-      width:100%; background:var(--field); color:var(--ink);
-      border:1px solid var(--bd); border-radius:12px; padding:11px 12px; outline:none;
-    }
+    input,select,textarea{ width:100%; background:var(--field); color:var(--ink); border:1px solid var(--bd); border-radius:12px; padding:11px 12px; outline:none; }
     input:focus,select:focus,textarea:focus{border-color:#3b82f6; box-shadow:var(--focus)}
     textarea{min-height:90px;resize:vertical}
     nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
@@ -66,7 +75,7 @@
     .ok{color:#86efac}
     .err{color:#fca5a5}
     .mut{color:#94a3b8}
-    .logo{height:44px; width:44px; object-fit:cover; border-radius:8px; visibility:hidden; opacity:0; transition:opacity .2s;}
+    .logo{height:44px; width:44px; object-fit:cover; border-radius:8px}
     .chips{display:flex; flex-wrap:wrap; gap:8px}
     .chip,.pill{background:var(--chip); border:1px solid var(--bd); color:#d1d5db; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; text-decoration:none}
     .list{border:1px solid var(--bd); border-radius:12px; overflow:hidden}
@@ -81,7 +90,7 @@
     @media (prefers-reduced-motion: reduce){
       *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
     }
-    /* Fallback por hash */
+    /* Fallback por hash: si falla JS igual cambia la vista */
     .view{ display:none }
     :root:has(:target#ing)  #v-ing,
     :root:has(:target#alta) #v-alta,
@@ -89,9 +98,6 @@
     :root:has(:target#util) #v-util { display:block }
 
     .footer {display:flex; gap:8px; align-items:center; justify-content:center; padding:10px; color:#a8b3c7; font-size:12px; border-top:1px solid var(--bd); background:#0f172a;}
-    /* Botón instalar con espacio reservado (sin CLS) */
-    #btnInstall{visibility:hidden;opacity:0;transition:opacity .2s;width:96px}
-    #btnInstall.shown{visibility:visible;opacity:1}
   </style>
 </head>
 
@@ -109,14 +115,14 @@
   <main id="main" class="wrap" role="main">
     <article class="card" aria-label="Aplicación HSM v7 Móvil">
       <header class="app">
-        <!-- Logo con espacio reservado (evita CLS) -->
+        <!-- Logo con espacio reservado (sin CLS) -->
         <img id="logo" class="logo" alt="Logo de la institución"
              src="/panel-html-msm/icons/icon-512.png"
-             decoding="async" width="44" height="44">
+             decoding="async" fetchpriority="low">
         <h1 class="title" style="margin:0;font-size:16px">HSM v7 • Móvil</h1>
         <span id="online" class="badge off" aria-live="polite" title="Estado de red">Offline</span>
         <span class="sp"></span>
-        <button id="btnInstall" class="btn sec" style="">Instalar</button>
+        <button id="btnInstall" class="btn sec" style="display:inline-block">Instalar</button>
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
@@ -359,19 +365,8 @@
 
   /* ===== PWA: SW + instalar ===== */
   let _deferredPrompt=null;
-  addEventListener('beforeinstallprompt',e=>{
-    e.preventDefault();
-    _deferredPrompt=e;
-    const b=document.getElementById('btnInstall');
-    if(b) b.classList.add('shown'); // sin CLS
-  });
-  document.getElementById('btnInstall')?.addEventListener('click',async()=>{
-    if(!_deferredPrompt)return;
-    _deferredPrompt.prompt();
-    try{await _deferredPrompt.userChoice}catch(_){}
-    _deferredPrompt=null;
-  });
-
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;$('#btnInstall').classList.add('shown');});
+  $('#btnInstall')?.addEventListener('click',async()=>{if(!_deferredPrompt)return;_deferredPrompt.prompt();try{await _deferredPrompt.userChoice}catch(_){} _deferredPrompt=null;});
   if('serviceWorker' in navigator){
     addEventListener('load', ()=>{
       navigator.serviceWorker.register('/panel-html-msm/sw.js',{scope:'/panel-html-msm/'})
@@ -380,19 +375,8 @@
           if('sync' in reg){try{await reg.sync.register('flush-pend');}catch(_){ }}
         }).catch(()=>{});
     },{once:true});
-
-    // Evitar toast en primera instalación (reduce LCP aparente)
-    const SW_VER_KEY='HSM_SW_VERSION';
     navigator.serviceWorker.addEventListener('message',ev=>{
-      if(ev.data?.type==='SW_READY'){
-        const prev=localStorage.getItem(SW_VER_KEY);
-        const cur =ev.data.version||'';
-        if(prev && prev!==cur){
-          toast('Nueva versión disponible. Recargando…',1800);
-          setTimeout(()=>location.reload(),1500);
-        }
-        localStorage.setItem(SW_VER_KEY,cur);
-      }
+      if(ev.data?.type==='SW_ACTIVATED'){toast('Nueva versión disponible. Recargando…',1800); setTimeout(()=>location.reload(),1500);}
       if(ev.data?.type==='TRY_FLUSH_PEND' && document.visibilityState==='visible'){ safeFlushPend(); }
     });
   }
@@ -415,7 +399,9 @@
       });
     });
     const wanted=(['ing','alta','pend','util'].includes(location.hash.slice(1)))?location.hash.slice(1):'ing';
-    switchTab(wanted);
+    // Si CSS ya mostró la vista correcta, no fuerces otro cambio
+    const already = wanted && $('#v-'+wanted) && getComputedStyle($('#v-'+wanted)).display==='block';
+    if(!already) switchTab(wanted);
   }
   addEventListener('hashchange',()=>{const v=location.hash.slice(1); if(['ing','alta','pend','util'].includes(v)) switchTab(v);});
 
@@ -501,35 +487,18 @@
   });
   $('#altaShare')?.addEventListener('click',()=>{const txt=lastReceipt?`HSM • ${lastReceipt.kind} DNI ${lastReceipt.dni} • ${new Date(lastReceipt.ts).toLocaleString()}`:'HSM • Alta registrada'; if(navigator.share) navigator.share({text:txt}).catch(()=>{}); else navigator.clipboard.writeText(txt).then(()=>toast('Copiado'));});
 
-  /* ===== CIE10 (on demand para bajar payload del arranque) ===== */
-  (function(){
-    const CK='CIE_CACHE',TS='CIE_TS';
-    async function load(){
-      try{
-        const now=Date.now();
-        let list=LS.get(CK,null), t=+LS.get(TS,0);
-        if(!list||(now-t)>600000){const j=await API.cie10(); list=(j&&j.ok&&j.list)||[]; LS.set(CK,list); LS.set(TS,now);}
-        const dl=document.getElementById('cie-list'); if(!dl) return;
-        dl.innerHTML='';
-        (LS.get(CK,[])).slice(0,2000).forEach(x=>{
-          const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o);
-        });
-      }catch(_){}
-    }
-    document.getElementById('i_cie')?.addEventListener('focus', load, { once:true });
-  })();
+  /* ===== CIE10 (cache 10 min) ===== */
+  (function(){const CK='CIE_CACHE',TS='CIE_TS'; async function load(){try{const now=Date.now(); let list=LS.get(CK,null), t=+LS.get(TS,0); if(!list||(now-t)>600000){const j=await API.cie10(); list=(j&&j.ok&&j.list)||[]; LS.set(CK,list); LS.set(TS,now);} const dl=$('#cie-list'); if(!dl)return; dl.innerHTML=''; LS.get(CK,[]).slice(0,2000).forEach(x=>{const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o);}); }catch(_){}} if('requestIdleCallback'in window) requestIdleCallback(load,{timeout:3000}); else setTimeout(load,800); })();
 
-  /* ===== Config (logo sin CLS) ===== */
+  /* ===== Prefill por query ===== */
+  (function(){const q=new URLSearchParams(location.search); if(q.get('dni')) $('#i_dni').value=q.get('dni'); if(q.get('sexo')) $('#i_sexo').value=(q.get('sexo')||'').toUpperCase(); if(q.get('fi')) $('#i_fi').value=q.get('fi');})();
+
+  /* ===== Config (logo aplicado lo antes posible) ===== */
   function applyLogo(){
-    const url = LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png');
-    const el  = $('#logo');
-    if (!el) return;
-    if (!url) { el.style.visibility='hidden'; el.style.opacity='0'; return; }
-    const show = () => { el.style.visibility='visible'; el.style.opacity='1'; };
-    el.loading  = 'lazy';
-    el.decoding = 'async';
-    if (el.src !== url) el.src = url;
-    if (el.complete) show(); else el.addEventListener('load', show, { once:true });
+    const url=LS.get('HSM_LOGO_URL','/panel-html-msm/icons/icon-512.png');
+    const el=$('#logo'); if(!el) return;
+    if(url){ el.decoding='async'; el.src=url; el.addEventListener('load',()=>{el.style.visibility='visible'; el.style.opacity='1';},{once:true}); }
+    else { el.style.visibility='visible'; el.style.opacity='1'; }
   }
 
   $('#btnCfg')?.addEventListener('click',()=>{$('#cfg_url').value=API.url()||''; $('#cfg_key').value=API.key()||''; $('#cfg_logo').value=LS.get('HSM_LOGO_URL','')||''; $('#cfg').showModal();});
@@ -575,3 +544,4 @@
   </script>
 </body>
 </html>
+
