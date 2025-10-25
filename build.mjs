@@ -16,19 +16,19 @@ async function ensureOut() {
 const z = (n) => String(n).padStart(2, "0");
 function stamp() {
   const d = new Date();
-  return (
-    d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes())
-  );
+  return d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + z(d.getHours()) + z(d.getMinutes());
 }
-const TAG = "v1.5.2-" + stamp(); // usado en todo el build
+const TAG = "v1.5.4-" + stamp(); // usado en todo el build
 
 function withIconBustInHTML(html) {
-  // agrega ?v=TAG a los href de iconos conocidos
+  // agrega ?v=TAG a íconos linkeados desde index
   return html
     .replace(/href="\/panel-html-msm\/icons\/apple-touch-icon\.png"/g,
              `href="/panel-html-msm/icons/apple-touch-icon.png?v=${TAG}"`)
-    .replace(/href="\/panel-html-msm\/icons\/favicon\.png"/g,
-             `href="/panel-html-msm/icons/favicon.png?v=${TAG}"`);
+    .replace(/href="\/panel-html-msm\/icons\/favicon-16\.png"/g,
+             `href="/panel-html-msm/icons/favicon-16.png?v=${TAG}"`)
+    .replace(/href="\/panel-html-msm\/icons\/favicon-32\.png"/g,
+             `href="/panel-html-msm/icons/favicon-32.png?v=${TAG}"`);
 }
 
 async function buildHTML() {
@@ -72,24 +72,17 @@ async function buildSW() {
 }
 
 async function copyManifest() {
-  // manifest fuente del repo
   const raw = await readFile(join(SRC, "manifest.json"), "utf8");
   const j = JSON.parse(raw);
 
-  // cache-bust en cada icon.src y screenshot.src
   const bust = (s) => (s?.includes("?v=") ? s : `${s}?v=${TAG}`);
 
-  if (Array.isArray(j.icons)) {
-    j.icons = j.icons.map((it) => ({ ...it, src: bust(it.src) }));
-  }
-  if (Array.isArray(j.screenshots)) {
-    j.screenshots = j.screenshots.map((it) => ({ ...it, src: bust(it.src) }));
-  }
-  // bust al start_url para forzar update del shell
+  if (Array.isArray(j.icons))       j.icons       = j.icons.map((it) => ({ ...it, src: bust(it.src) }));
+  if (Array.isArray(j.screenshots)) j.screenshots = j.screenshots.map((it) => ({ ...it, src: bust(it.src) }));
+
   if (typeof j.start_url === "string" && !j.start_url.includes("?v=")) {
     j.start_url = `${j.start_url}${j.start_url.includes("?") ? "&" : "?"}v=${TAG}`;
   }
-
   await writeFile(join(OUT, "manifest.json"), JSON.stringify(j));
   console.log("✓ manifest.json (+ cache-bust íconos/screenshots)");
 }
@@ -108,7 +101,4 @@ async function run() {
   console.log("\nBuild OK → dist/");
 }
 
-run().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+run().catch((e) => { console.error(e); process.exit(1); });
