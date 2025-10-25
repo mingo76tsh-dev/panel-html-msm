@@ -1,10 +1,10 @@
 /* sw.js — HSM v7 móvil (prod) */
 const SCOPE = '/panel-html-msm/';
-const VERSION = 'v7.7';                    // bump para forzar update
+const VERSION = 'v7.6';                    // bump para forzar update
 const STATIC_CACHE  = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
-// Precache mínimo con tus íconos reales
+// Precache mínimo (sin screenshots)
 const PRECACHE = [
   `${SCOPE}`,
   `${SCOPE}index.html`,
@@ -44,7 +44,7 @@ self.addEventListener('activate', (event) => {
     await self.clients.claim();
     try {
       const cs = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
-      cs.forEach(c => c.postMessage({ type: 'SW_READY', version: VERSION }));
+      cs.forEach(c => c.postMessage({ type: 'SW_ACTIVATED', version: VERSION }));
     } catch (_) {}
     try {
       self.registration.active && self.registration.active.postMessage({ type: 'WARMUP' });
@@ -93,8 +93,8 @@ self.addEventListener('fetch', (event) => {
 
   // Estáticos del scope (sin screenshots) -> cache-first con revalidate
   const isScreenshot =
-    url.pathname.includes('screen-1080x1920') ||
-    url.pathname.includes('screen-1920x1080');
+    url.pathname.includes('screen-1080x1920.png') ||
+    url.pathname.includes('screen-1920x1080.png');
 
   const isOurStatic =
     url.pathname.startsWith(SCOPE) &&
