@@ -11,7 +11,7 @@
   "icons": [
     { "src": "/panel-html-msm/icons/icon-192.png",         "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "/panel-html-msm/icons/icon-512.png",         "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/panel-html-msm/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/panel-html-msm/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png"  },
     { "src": "/panel-html-msm/icons/maskable-192.png",     "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/panel-html-msm/icons/maskable-512.png",     "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
