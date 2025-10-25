@@ -22,14 +22,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Limpieza y normalización de icons/ (genera apple-touch, borra basura, etc.)
+      # Limpieza y normalización de icons/
       - name: Clean & normalize icons
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y imagemagick -qq
           bash clean-icons.sh
 
-      # Validación estricta de tamaños
+      # Validación estricta de tamaños (incluye favicons 16/32)
       - name: Verify PWA icons and screenshots
         run: |
           sudo apt-get update >/dev/null
@@ -40,10 +40,12 @@ jobs:
           test -f icons/maskable-192.png      && check icons/maskable-192.png      192x192
           test -f icons/maskable-512.png      && check icons/maskable-512.png      512x512
           test -f icons/apple-touch-icon.png  && check icons/apple-touch-icon.png  180x180
+          test -f icons/favicon-16.png        && check icons/favicon-16.png        16x16
+          test -f icons/favicon-32.png        && check icons/favicon-32.png        32x32
           test -f icons/screen-1080x1920.png  && check icons/screen-1080x1920.png  1080x1920
           test -f icons/screen-1920x1080.png  && check icons/screen-1920x1080.png  1920x1080
 
-      # Optimización sin pérdidas
+      # Optimización sin pérdidas (PNG)
       - name: Optimize PNGs (lossless)
         uses: kirillt/oxipng-action@v1
         with:
@@ -51,7 +53,6 @@ jobs:
           strip: safe
           optimize: 3
 
-      # Build estático
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -81,10 +82,8 @@ jobs:
         with:
           name: dist
           path: dist
-
       - name: Install static server
         run: npm i -g http-server
-
       - name: Lighthouse CI
         id: lhci
         uses: treosh/lighthouse-ci-action@v11
@@ -94,14 +93,12 @@ jobs:
           temporaryPublicStorage: true
           runs: |
             http-server dist -p 4173 -s &
-
       - name: Publicar reportes como artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-report
           path: ".lighthouseci"
-
       - name: Resumen en el job
         if: always()
         run: |
@@ -129,15 +126,12 @@ jobs:
         with:
           name: dist
           path: dist
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
