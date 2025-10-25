@@ -1,10 +1,10 @@
 /* sw.js — HSM v7 móvil (prod) */
 const SCOPE = '/panel-html-msm/';
-const VERSION = 'v7.6';                    // bump para forzar update
+const VERSION = 'v7.8';                    // bump para forzar update
 const STATIC_CACHE  = `static-${VERSION}`;
 const RUNTIME_CACHE = `runtime-${VERSION}`;
 
-// Precache mínimo (sin screenshots)
+// Precache mínimo (sin screenshots; favicons incluidos)
 const PRECACHE = [
   `${SCOPE}`,
   `${SCOPE}index.html`,
@@ -93,8 +93,8 @@ self.addEventListener('fetch', (event) => {
 
   // Estáticos del scope (sin screenshots) -> cache-first con revalidate
   const isScreenshot =
-    url.pathname.includes('screen-1080x1920.png') ||
-    url.pathname.includes('screen-1920x1080.png');
+    url.pathname.includes('screen-1080x1920') ||
+    url.pathname.includes('screen-1920x1080');
 
   const isOurStatic =
     url.pathname.startsWith(SCOPE) &&
@@ -130,9 +130,4 @@ self.addEventListener('sync', (event) => {
       cs.forEach((c) => c.postMessage({ type: 'TRY_FLUSH_PEND' }));
     })());
   }
-});
-
-// Mensajes utilitarios
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
