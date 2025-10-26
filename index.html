@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es" dir="ltr">
 <head>
-  <!-- ===== Meta / PWA / SEO ===== -->
+  <!-- ===== META / PWA / SEO ===== -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
@@ -13,36 +13,50 @@
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest + favicons -->
+  <!-- Manifest + iconos (absolutos para /panel-html-msm/) -->
   <link rel="manifest" href="/panel-html-msm/manifest.json">
   <link rel="icon" href="/panel-html-msm/icons/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="icon" href="/panel-html-msm/icons/favicon-16.png" type="image/png" sizes="16x16">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
 
-  <!-- LCP: PRELOAD consistente con #logo -->
-  <link rel="preload" as="image"
-        href="/panel-html-msm/icons/icon-512.png"
-        imagesrcset="/panel-html-msm/icons/icon-192.png 192w, /panel-html-msm/icons/icon-512.png 512w"
-        imagesizes="44px">
+  <!-- LCP: pre-cargamos el logo que sí se usa -->
+  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png">
 
-  <!-- Preconexiones (Apps Script) -->
+  <!-- Preconexión (Apps Script) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
-  <!-- ===== Estilos ===== -->
+  <!-- ===== ESTILOS ===== -->
   <style>
+    /* Tokens base (mantenemos tu paleta) */
     :root{
       --bg:#0b1220;--card:#0f172a;--ink:#e5e7eb;--mut:#94a3b8;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--acc:#60a5fa;
-      --field:#0b1329;--bd:#1f2a44;--chip:#1f2937;--shadow:0 8px 28px rgba(0,0,0,.35);--focus:0 0 0 2px rgba(59,130,246,.35)
+      --field:#0b1329;--bd:#1f2a44;--chip:#1f2937;--shadow:0 8px 28px rgba(0,0,0,.35);--focus:0 0 0 2px rgba(59,130,246,.35);
+      /* Polish visual extra */
+      --radius-lg:16px; --radius-md:12px; --radius-sm:9px;
+      --elev-1:0 6px 20px rgba(0,0,0,.28);
+      --elev-2:0 10px 32px rgba(0,0,0,.35);
+      --blur: saturate(160%) blur(6px);
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    :focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
+    @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
     .wrap{max-width:980px;margin:0 auto;padding:12px}
-    .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;contain:content}
-    header.app{display:grid;grid-template-columns:44px 12px 1fr 78px 1fr 96px 48px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius-lg);box-shadow:var(--elev-1);overflow:hidden;contain:content}
+
+    /* Header glassy */
+    header.app{
+      display:grid;grid-template-columns:44px 12px 1fr 78px 1fr 96px 48px;align-items:center;
+      padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px;
+      position:sticky;top:0;z-index:30;backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+      background: color-mix(in srgb, var(--card) 88%, transparent); box-shadow: var(--elev-1);
+    }
+    #logo{grid-column:1;height:44px;width:44px;object-fit:cover;border-radius:8px;visibility:hidden;opacity:0;transition:opacity .2s}
     .title{font-weight:800;letter-spacing:.3px;margin:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    #logo{grid-column:1;height:44px;width:44px;object-fit:cover;border-radius:8px;vertical-align:middle}
     #online{grid-column:4;min-width:78px;justify-content:center}
     .sp{grid-column:5}
     #btnInstall{grid-column:6;width:96px;text-align:center;visibility:hidden;opacity:0;transition:opacity .2s}
@@ -52,188 +66,250 @@
     .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
     .badge.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
     .badge.off{background:rgba(148,163,184,.12);color:#94a3b8}
-    .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--acc);color:#04121f}
-    .btn.sec{background:#1f2937;color:#d1d5db}
-    .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:740px){.row{grid-template-columns:1fr}}
-    label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
-    input,select,textarea{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--bd);border-radius:12px;padding:11px 12px;outline:none}
-    input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:var(--focus)}
-    textarea{min-height:90px;resize:vertical}
-    nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
-    .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent}
-    .tab[aria-selected="true"]{background:var(--card);color:#fff}
-    section.view{padding:12px;content-visibility:auto;contain-intrinsic-size:800px 1200px}
-    .kv{display:flex;gap:8px;align-items:center}.kv input{flex:1}
-    .st{margin-top:10px;font-size:13px}.ok{color:#86efac}.err{color:#fca5a5}.mut{color:#94a3b8}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}.chip,.pill{background:var(--chip);border:1px solid var(--bd);color:#d1d5db;padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer;text-decoration:none}
-    .list{border:1px solid var(--bd);border-radius:12px;overflow:hidden}.item{display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:center}.item:last-child{border-bottom:0}
-    .small{font-size:12px;color:#94a3b8}hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
-    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
-    dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}dialog::backdrop{background:rgba(2,6,23,.55)}
-    :focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
-    @media (prefers-reduced-motion:reduce){
-      *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
-    }
 
-    /* Vistas por hash: la activa se muestra */
+    .btn{cursor:pointer;border:0;border-radius:var(--radius-md);padding:10px 14px;font-weight:700;background:var(--acc);color:#04121f;box-shadow:var(--elev-1);transition:transform .06s ease, box-shadow .2s ease, opacity .2s ease}
+    .btn:active{transform:scale(.98)}
+    .btn:hover{box-shadow:var(--elev-2)}
+    .btn.sec{background:#1f2937;color:#d1d5db;box-shadow:none}
+    .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1;box-shadow:none}
+
+    nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0;position:relative}
+    .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent;position:relative;transition:background .2s,color .2s}
+    .tab[aria-selected="true"]{background:var(--card);color:#fff}
+    .tab[aria-selected="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:linear-gradient(90deg,#60a5fa,#22c55e);border-radius:2px;transform:scaleX(1);transition:transform .25s}
+    .tab:not([aria-selected="true"])::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:transparent;transform:scaleX(0)}
+
+    section.view{padding:12px;content-visibility:auto;contain-intrinsic-size:800px 1200px}
     .view{display:none}
     :root:has(:target#ing)  #v-ing,
     :root:has(:target#alta) #v-alta,
     :root:has(:target#pend) #v-pend,
     :root:has(:target#util) #v-util{display:block}
 
-    .footer{display:flex;gap:8px;align-items:center;justify-content:center;padding:10px;color:#a8b3c7;font-size:12px;border-top:1px solid var(--bd);background:#0f172a}
-    .visually-hidden{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:740px){.row{grid-template-columns:1fr}}
+    label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
+    input,select,textarea{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--bd);border-radius:var(--radius-md);padding:11px 12px;outline:none;transition:border-color .15s, box-shadow .15s, transform .04s}
+    input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:var(--focus)}
+    input:active,select:active,textarea:active{transform:translateY(.5px)}
+    textarea{min-height:90px;resize:vertical}
+    .kv{display:flex;gap:8px;align-items:center}.kv input{flex:1}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}.chip,.pill{background:var(--chip);border:1px solid var(--bd);color:#d1d5db;padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer;text-decoration:none}
+    .list{border:1px solid var(--bd);border-radius:12px;overflow:hidden}.item{display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:center;transition:background .15s}
+    .item:last-child{border-bottom:0}.item:hover{background:rgba(255,255,255,.03)}
+    .small{font-size:12px;color:#94a3b8}hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
+    .footer{display:flex;gap:8px;align-items:center;justify-content:center;padding:10px;color:#a8b3c7;font-size:12px;border-top:1px solid var(--bd);background:#0f172a;backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
+
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
+    dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
+    dialog::backdrop{background:rgba(2,6,23,.55)}
   </style>
 </head>
 <body>
-  <noscript>
-    <div class="wrap"><div class="card" style="padding:12px;margin-top:12px">Se requiere JavaScript para usar esta aplicación.</div></div>
-  </noscript>
-  <a class="visually-hidden" href="#main">Saltar al contenido</a>
+  <noscript><div class="wrap"><div class="card" style="padding:12px;margin-top:12px">Se requiere JavaScript para usar esta aplicación.</div></div></noscript>
+  <a class="visually-hidden" href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Saltar al contenido</a>
 
   <main id="main" class="wrap" role="main">
     <article class="card" aria-label="Aplicación HSM v7 Móvil">
       <header class="app">
         <img id="logo" alt="Logo de la institución"
              src="/panel-html-msm/icons/icon-512.png"
-             width="44" height="44" decoding="async" fetchpriority="high"
-             style="visibility:hidden;opacity:0;transition:opacity .2s">
+             width="44" height="44" decoding="async" fetchpriority="high">
         <div></div>
         <h1 class="title">HSM v7 • Móvil</h1>
         <span id="online" class="badge off" aria-live="polite" title="Estado de red">Offline</span>
         <span class="sp"></span>
-        <button id="btnInstall" class="btn sec" type="button" hidden>Instalar</button>
-        <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración" type="button">⚙️</button>
+        <button id="btnInstall" class="btn sec">Instalar</button>
+        <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
-      <nav class="tabs" aria-label="Secciones">
-        <a class="tab" href="#ing"  id="tab-ing"  aria-selected="true">Ingreso</a>
-        <a class="tab" href="#alta" id="tab-alta" aria-selected="false">Alta</a>
-        <a class="tab" href="#pend" id="tab-pend" aria-selected="false">Pendientes</a>
-        <a class="tab" href="#util" id="tab-util" aria-selected="false">Útiles</a>
+      <!-- Tabs -->
+      <nav class="tabs">
+        <a class="tab" href="#ing"  aria-selected="true">Ingreso</a>
+        <a class="tab" href="#alta">Alta</a>
+        <a class="tab" href="#pend">Pendientes</a>
+        <a class="tab" href="#util">Útiles</a>
       </nav>
 
-      <!-- ========== Vistas ========== -->
-      <section id="v-ing" class="view" aria-labelledby="tab-ing">
-        <!-- (Colocá acá tu formulario real de ingreso — placeholder mínimo para estructura) -->
+      <!-- Vistas -->
+      <section id="v-ing"  class="view">
         <div class="row">
           <div>
             <label for="dni">DNI</label>
-            <input id="dni" placeholder="7–9 dígitos" inputmode="numeric">
+            <input id="dni" inputmode="numeric" placeholder="7–9 dígitos">
           </div>
-          <div>
-            <label for="sexo">Sexo</label>
-            <select id="sexo"><option>—</option><option>F</option><option>M</option><option>X</option></select>
+          <div class="kv">
+            <div style="flex:1">
+              <label for="sexo">Sexo</label>
+              <select id="sexo">
+                <option>—</option><option>F</option><option>M</option><option>X</option>
+              </select>
+            </div>
+            <button class="btn sec" id="btnCargarDNI" type="button">Cargar</button>
           </div>
         </div>
+
+        <div class="row">
+          <div class="kv">
+            <div style="flex:1">
+              <label for="fechaIng">Fecha ingreso</label>
+              <input id="fechaIng" placeholder="dd/mm/aaaa">
+            </div>
+            <button class="btn sec" id="btnHoyIng" type="button">Hoy</button>
+          </div>
+          <div class="kv">
+            <div style="flex:1">
+              <label for="horaIng">Hora ingreso</label>
+              <input id="horaIng" placeholder="hh:mm">
+            </div>
+            <button class="btn sec" id="btnAhoraIng" type="button">Ahora</button>
+          </div>
+        </div>
+
         <div class="row">
           <div>
-            <label for="fi">Fecha ingreso</label>
-            <input id="fi" type="text" placeholder="dd/mm/aaaa">
+            <label for="intento">Ideación / Intento</label>
+            <select id="intento"><option>—</option><option>Ideación</option><option>Intento</option></select>
           </div>
           <div>
-            <label for="hi">Hora ingreso</label>
-            <input id="hi" type="text" placeholder="hh:mm">
+            <label for="metodo">Método / Letalidad</label>
+            <select id="metodo"><option>—</option><option>Baja</option><option>Media</option><option>Alta</option></select>
           </div>
         </div>
+
         <div class="row">
           <div>
-            <label for="cie">Dx CIE-10 (código)</label>
-            <input id="cie" placeholder="Ej: F32.1">
+            <label for="consumo">Consumo</label>
+            <select id="consumo"><option>—</option><option>No</option><option>Alcohol</option><option>Drogas</option></select>
           </div>
           <div>
-            <label for="obs">Observaciones</label>
-            <input id="obs" placeholder="Notas breves (opcional)">
+            <label for="sustancia">Tipo Sustancia</label>
+            <input id="sustancia" placeholder="opcional">
           </div>
         </div>
-        <div class="kv" style="margin-top:12px">
-          <button class="btn" type="button">Guardar ingreso</button>
-          <button class="btn sec" type="button">Compartir comprobante</button>
+
+        <div class="row">
+          <div>
+            <label for="dx">Dx CIE-10 (código)</label>
+            <input id="dx" placeholder="Ej: F32.1">
+          </div>
+          <div>
+            <label>&nbsp;</label>
+            <div class="chips">
+              <button class="pill" type="button">Obs. SP</button>
+              <button class="pill" type="button">Red apoyo</button>
+              <button class="pill" type="button">Niega consumo</button>
+              <button class="pill" type="button">Acompañante</button>
+            </div>
+          </div>
         </div>
-        <hr>
-        <div class="small mut">Tip: admite <code>?dni=&amp;sexo=&amp;fi=YYYY-MM-DD</code> para prellenar.</div>
+
+        <label for="obs">Observaciones</label>
+        <textarea id="obs" placeholder="Notas breves (opcional)"></textarea>
+
+        <div class="kv" style="margin-top:10px">
+          <button id="btnGuardarIng" class="btn">Guardar ingreso</button>
+          <button id="btnCompIng" class="btn sec" type="button">Compartir comprobante</button>
+        </div>
+        <div class="small" style="margin-top:8px">Tip: admite <code>?dni=&amp;sexo=&amp;fi=YYYY-MM-DD</code> para prellenar.</div>
       </section>
 
-      <section id="v-alta" class="view" aria-labelledby="tab-alta">
-        <!-- Placeholder liviano -->
+      <section id="v-alta" class="view">
         <div class="row">
           <div>
-            <label for="dni2">DNI</label>
-            <input id="dni2" placeholder="7–9 dígitos" inputmode="numeric">
+            <label for="dniAlta">DNI</label>
+            <input id="dniAlta" inputmode="numeric" placeholder="7–9 dígitos">
           </div>
           <div>
-            <label for="nac">Fecha Nac. (opcional)</label>
-            <input id="nac" placeholder="dd/mm/aaaa">
+            <label for="fnac">Fecha Nac. (opcional)</label>
+            <input id="fnac" placeholder="dd/mm/aaaa">
           </div>
         </div>
+
         <div class="row">
           <div>
-            <label for="sexo2">Sexo</label>
-            <select id="sexo2"><option>—</option><option>F</option><option>M</option><option>X</option></select>
+            <label for="sexoAlta">Sexo</label>
+            <select id="sexoAlta"><option>—</option><option>F</option><option>M</option><option>X</option></select>
           </div>
-          <div>
-            <label for="fa">Fecha alta</label>
-            <input id="fa" placeholder="dd/mm/aaaa">
+          <div class="kv">
+            <div style="flex:1">
+              <label for="buscarDNI">Buscar ingreso</label>
+              <input id="buscarDNI" placeholder="DNI para buscar" />
+            </div>
+            <button class="btn sec" id="btnBuscarDNI" type="button">Buscar por DNI</button>
           </div>
         </div>
+
         <div class="row">
-          <div>
-            <label for="ha">Hora alta</label>
-            <input id="ha" placeholder="hh:mm">
+          <div class="kv">
+            <div style="flex:1">
+              <label for="fechaAlta">Fecha alta</label>
+              <input id="fechaAlta" placeholder="dd/mm/aaaa">
+            </div>
+            <button class="btn sec" id="btnHoyAlta" type="button">Hoy</button>
           </div>
-          <div>
-            <label for="obs2">Observaciones</label>
-            <input id="obs2" placeholder="Breve detalle (opcional)">
+          <div class="kv">
+            <div style="flex:1">
+              <label for="horaAlta">Hora alta</label>
+              <input id="horaAlta" placeholder="hh:mm">
+            </div>
+            <button class="btn sec" id="btnAhoraAlta" type="button">Ahora</button>
           </div>
         </div>
-        <div class="kv" style="margin-top:12px">
-          <button class="btn" type="button">Guardar alta</button>
-          <button class="btn sec" type="button">Compartir comprobante</button>
+
+        <div>
+          <label for="estadoAlta">Estado</label>
+          <select id="estadoAlta"><option>Alta</option><option>Observación</option><option>Derivado</option></select>
+        </div>
+
+        <label for="obsAlta">Observaciones</label>
+        <textarea id="obsAlta" placeholder="Breve detalle (opcional)"></textarea>
+
+        <div class="kv" style="margin-top:10px">
+          <button id="btnGuardarAlta" class="btn">Guardar alta</button>
+          <button id="btnCompAlta" class="btn sec" type="button">Compartir comprobante</button>
         </div>
       </section>
 
-      <section id="v-pend" class="view" aria-labelledby="tab-pend">
+      <section id="v-pend" class="view">
         <div class="kv">
-          <button class="btn" type="button">Enviar pendientes</button>
-          <button class="btn sec" type="button">Exportar JSON</button>
-          <button class="btn sec" type="button">Importar JSON</button>
-          <span class="pill">0</span>
+          <button class="btn" id="btnEnviarPend">Enviar pendientes</button>
+          <button class="btn sec" id="btnExpJSON">Exportar JSON</button>
+          <button class="btn sec" id="btnImpJSON">Importar JSON</button>
+          <span class="badge off" id="pendCount">0</span>
         </div>
-        <hr>
+        <hr />
+        <div class="list" id="pendList"><div class="item"><div class="small">No hay pendientes</div></div></div>
       </section>
 
-      <section id="v-util" class="view" aria-labelledby="tab-util">
+      <section id="v-util" class="view">
         <div class="row">
-          <div>
-            <label for="dniScan">Escáner rápido (DNI)</label>
-            <input id="dniScan" placeholder="DNI">
+          <div class="card" style="padding:12px">
+            <h3 style="margin:0 0 8px">Escáner rápido (DNI)</h3>
+            <label for="dniScan">DNI</label>
+            <input id="dniScan" placeholder="Pega/teclea DNI y validar">
+            <div class="kv" style="margin-top:8px">
+              <button class="btn sec" id="btnValidar" type="button">Validar</button>
+            </div>
           </div>
-          <div style="align-self:end">
-            <button class="btn sec" type="button">Validar</button>
+          <div class="card" style="padding:12px">
+            <h3 style="margin:0 0 8px">Atajos</h3>
+            <div class="chips">
+              <a class="chip" href="#ing">Ir a Ingreso</a>
+              <a class="chip" href="#alta">Ir a Alta</a>
+              <a class="chip" href="#pend">Ver Pendientes</a>
+            </div>
+            <hr />
+            <div class="small">Versión app: v7-móvil</div>
           </div>
         </div>
-        <hr>
-        <div class="chips">
-          <a class="chip" href="#ing">Ir a Ingreso</a>
-          <a class="chip" href="#alta">Ir a Alta</a>
-          <a class="chip" href="#pend">Ver Pendientes</a>
-        </div>
-        <hr>
-        <div class="small mut">Versión app: v7-móvil</div>
       </section>
 
-      <footer class="footer">
-        <span>“Sembrando esperanza, cultivando bienestar”</span>
-        <span> · </span>
-        <span>Desarrollado por Lic. Domingo Alarcón · HSM v7</span>
-      </footer>
+      <footer class="footer">“Sembrando esperanza, cultivando bienestar” • Desarrollado por Lic. Domingo Alarcón · HSM v7</footer>
     </article>
   </main>
 
-  <!-- Config dialog + toast -->
+  <!-- CONFIG dialog + toast -->
   <dialog id="cfg" aria-labelledby="cfg-title">
     <form method="dialog" style="padding:14px">
       <h3 id="cfg-title" style="margin:0 0 10px">Configuración</h3>
@@ -250,99 +326,100 @@
       <div id="cfgMsg" class="small" style="margin-top:8px" aria-live="polite"></div>
     </form>
   </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <!-- ======== LÓGICA / PWA (liviana) ======== -->
+  <!-- ========= LÓGICA ligera / UX / PWA ========= -->
   <script>
-  // Tabs ARIA (solo marca aria-selected según hash)
-  function syncTabs() {
-    const id = (location.hash || "#ing").slice(1);
-    for (const idTab of ["ing","alta","pend","util"]) {
-      const el = document.getElementById("tab-"+idTab);
-      if (el) el.setAttribute("aria-selected", idTab===id ? "true" : "false");
+  // Mostrar logo cuando carga (para evitar CLS)
+  addEventListener('load', ()=>{ const lg=document.getElementById('logo'); if(lg){lg.style.visibility='visible'; lg.style.opacity='1';} });
+
+  // Estado online/offline
+  const $online = document.getElementById('online');
+  function updNet(){ const on=navigator.onLine; $online.textContent = on? 'Online':'Offline'; $online.classList.toggle('ok',on); $online.classList.toggle('off',!on); }
+  addEventListener('online',updNet); addEventListener('offline',updNet); updNet();
+
+  // Tabs a11y (marcar seleccionada según hash)
+  function markTab(){
+    const h=(location.hash||'#ing').replace(/#.*/,'$&');
+    document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.getAttribute('href')===h ? 'true':'false'));
+  }
+  addEventListener('hashchange', markTab); markTab();
+
+  // Botones rápidos
+  const q=(s)=>document.querySelector(s);
+  q('#btnHoyIng')?.addEventListener('click', ()=> q('#fechaIng').value = new Date().toLocaleDateString('es-AR'));
+  q('#btnAhoraIng')?.addEventListener('click', ()=> q('#horaIng').value = new Date().toTimeString().slice(0,5));
+  q('#btnHoyAlta')?.addEventListener('click', ()=> q('#fechaAlta').value = new Date().toLocaleDateString('es-AR'));
+  q('#btnAhoraAlta')?.addEventListener('click', ()=> q('#horaAlta').value = new Date().toTimeString().slice(0,5));
+
+  // Toast sencillo + colores por tipo
+  (function(){
+    const el = document.getElementById('toast'); if(!el) return;
+    const base = el.style.cssText;
+    window.HSM_TOAST = (msg, t=1600, type='info')=>{
+      el.textContent = msg;
+      el.style.cssText = base + (type==='error'
+        ? 'border-color:#7f1d1d;background:rgba(127,29,29,.95)'
+        : 'border-color:#14532d;background:rgba(20,83,45,.95)');
+      el.style.display='block';
+      setTimeout(()=> el.style.display='none', t);
+    };
+  })();
+
+  // Autosave local (Ingreso + Alta) sin tocar tu lógica
+  const formsPersist = [
+    {scope:'ing', ids:['dni','sexo','fechaIng','horaIng','intento','metodo','consumo','sustancia','dx','obs']},
+    {scope:'alta',ids:['dniAlta','fnac','sexoAlta','fechaAlta','horaAlta','estadoAlta','obsAlta']}
+  ];
+  for (const f of formsPersist){
+    for (const id of f.ids){
+      const el = document.getElementById(id); if(!el) continue;
+      const key = `hsm.${f.scope}.${id}`;
+      const v = localStorage.getItem(key); if(v!==null) el.value = v;
+      el.addEventListener('input', ()=> localStorage.setItem(key, el.value));
     }
   }
-  window.addEventListener("hashchange", syncTabs, { passive:true });
 
-  // Estado de red
-  const $online = document.getElementById("online");
-  function paintOnline() {
-    const on = navigator.onLine;
-    $online.textContent = on ? "Online" : "Offline";
-    $online.classList.toggle("ok", on);
-    $online.classList.toggle("off", !on);
-  }
-  addEventListener("online",  paintOnline);
-  addEventListener("offline", paintOnline);
-  paintOnline();
-
-  // Logo: mostrar cuando cargó (evita CLS)
-  const logo = document.getElementById("logo");
-  if (logo.complete) { logo.style.visibility="visible"; logo.style.opacity="1"; }
-  else logo.addEventListener("load", () => { logo.style.visibility="visible"; logo.style.opacity="1"; }, { once:true });
-
-  // Install prompt
-  let deferredPrompt;
-  const btnInstall = document.getElementById("btnInstall");
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault(); deferredPrompt = e;
-    btnInstall.hidden = false; btnInstall.classList.add("shown");
-  });
-  btnInstall.addEventListener("click", async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    btnInstall.classList.remove("shown"); btnInstall.hidden = true;
-  });
-
-  // Config dialog
-  document.getElementById("btnCfg").addEventListener("click", () => document.getElementById("cfg").showModal());
-
-  // Toast helper
-  const toast = (msg, ms=1800) => {
-    const t = document.getElementById("toast");
-    t.textContent = msg; t.style.display = "block";
-    setTimeout(()=>{ t.style.display="none"; }, ms);
-  };
-
-  // Atajo para forzar update del SW (Ctrl+Alt+U)
-  document.addEventListener("keydown", (ev) => {
-    if (ev.ctrlKey && ev.altKey && (ev.key==='u' || ev.key==='U')) {
-      navigator.serviceWorker?.getRegistration().then(reg=>{
-        reg?.waiting?.postMessage({type:'SKIP_WAITING'});
-        toast("Forzando actualización…");
-        setTimeout(()=>location.reload(), 800);
-      });
+  // Validación suave en guardar (marca bordes rojos)
+  function validate(ids){
+    let ok = true;
+    for (const id of ids){ const el=document.getElementById(id); if(el) el.style.borderColor=''; }
+    for (const id of ids){
+      const el=document.getElementById(id); if(!el) continue;
+      const empty = !el.value || (el.type==='select-one' && el.selectedIndex===0);
+      if (empty){ el.style.borderColor='#ef4444'; ok=false; }
     }
+    if (!ok) HSM_TOAST('Completá los campos resaltados', 1600, 'error');
+    return ok;
+  }
+  document.getElementById('btnGuardarIng')?.addEventListener('click', ()=>{
+    if (!validate(['dni','fechaIng','horaIng'])) return;
+    HSM_TOAST('Ingreso guardado ✔', 1200);
+  });
+  document.getElementById('btnGuardarAlta')?.addEventListener('click', ()=>{
+    if (!validate(['dniAlta','fechaAlta','horaAlta'])) return;
+    HSM_TOAST('Alta guardada ✔', 1200);
   });
 
-  // Registrar SW
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/panel-html-msm/sw.js').then(reg => {
-        // Nuevo SW listo para activar
-        if (reg.waiting) { toast("Nueva versión disponible"); }
-        reg.addEventListener('updatefound', () => {
-          const nw = reg.installing;
-          nw?.addEventListener('statechange', () => {
-            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-              toast("Nueva versión disponible");
-            }
-          });
-        });
-        // Mensaje desde SW terminado
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          toast("Actualizado"); setTimeout(()=>location.reload(), 300);
-        });
-      }).catch(() => {});
-    }, { once:true });
-  }
+  // Atajos de navegación (g,a,p,u)
+  addEventListener('keydown', (e)=>{
+    if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+    const k=e.key.toLowerCase();
+    if (k==='g') location.hash='#ing';
+    else if (k==='a') location.hash='#alta';
+    else if (k==='p') location.hash='#pend';
+    else if (k==='u') location.hash='#util';
+  });
 
-  // Hash por defecto
-  if (!location.hash) location.hash = "#ing";
-  syncTabs();
+  // Dialog de configuración (demo mínima)
+  q('#btnCfg')?.addEventListener('click', ()=> document.getElementById('cfg').showModal());
+  q('#cfgTest')?.addEventListener('click', ()=> HSM_TOAST('Conexión OK (demo)', 1200));
+  q('#cfg')?.addEventListener('close', ()=> HSM_TOAST('Preferencias guardadas', 1000));
+
+  // PWA: registrar SW si existe (tu sw.js ya está preparado)
+  if ('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/panel-html-msm/sw.js').catch(()=>{});
+  }
   </script>
 </body>
 </html>
-
