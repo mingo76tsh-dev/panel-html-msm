@@ -1,12 +1,14 @@
 {
-  "name": "panel-html-msm",
+  "name": "hsm-v7-movil",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "serve": "npx http-server dist -p 4173 -s"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",
-    "terser": "^5.36.0"
+    "terser": "^5.36.0",
+    "http-server": "^14.1.1"
   }
 }
