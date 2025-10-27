@@ -1,4 +1,5 @@
-name: Build, Lighthouse (móvil) & Deploy to Pages
+- name: Build
+  run: npm run build
 
 on:
   push:
