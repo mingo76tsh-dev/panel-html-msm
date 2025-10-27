@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es" dir="ltr">
 <head>
-  <!-- ===== META / PWA / SEO ===== -->
+  <!-- ===== META + PWA ===== -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
@@ -19,94 +19,124 @@
   <link rel="icon" href="/panel-html-msm/icons/favicon-16.png" type="image/png" sizes="16x16">
   <link rel="apple-touch-icon" href="/panel-html-msm/icons/apple-touch-icon.png" sizes="180x180" />
 
-  <!-- LCP: pre-cargamos el logo que sí se usa -->
-  <link rel="preload" as="image" href="/panel-html-msm/icons/icon-512.png">
+  <!-- LCP: logo (preload 512 con srcset 192/512) -->
+  <link rel="preload" as="image"
+        href="/panel-html-msm/icons/icon-512.png"
+        imagesrcset="/panel-html-msm/icons/icon-192.png 192w, /panel-html-msm/icons/icon-512.png 512w"
+        imagesizes="44px">
 
-  <!-- Preconexión (Apps Script) -->
+  <!-- Preconexión Apps Script (si aplica) -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="preconnect" href="https://script.googleapis.com" crossorigin>
 
-  <!-- ===== ESTILOS ===== -->
+  <!-- ===== Estilos (micro-motion + accesibilidad) ===== -->
   <style>
-    /* Tokens base (mantenemos tu paleta) */
     :root{
-      --bg:#0b1220;--card:#0f172a;--ink:#e5e7eb;--mut:#94a3b8;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--acc:#60a5fa;
-      --field:#0b1329;--bd:#1f2a44;--chip:#1f2937;--shadow:0 8px 28px rgba(0,0,0,.35);--focus:0 0 0 2px rgba(59,130,246,.35);
-      /* Polish visual extra */
-      --radius-lg:16px; --radius-md:12px; --radius-sm:9px;
-      --elev-1:0 6px 20px rgba(0,0,0,.28);
-      --elev-2:0 10px 32px rgba(0,0,0,.35);
-      --blur: saturate(160%) blur(6px);
+      --bg:#0b1220;--card:#0f172a;--ink:#e5e7eb;--mut:#94a3b8;
+      --ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--acc:#60a5fa;
+      --field:#0b1329;--bd:#1f2a44;--chip:#1f2937;
+      --shadow:0 8px 28px rgba(0,0,0,.35);
+      --focus:0 0 0 2px rgba(59,130,246,.35);
+      --radius:16px; --radius-lg:20px; --gap:12px;
+      --e-in: cubic-bezier(.2,.9,.2,1);   /* entrada suave */
+      --e-out:cubic-bezier(.33,1,.68,1);  /* salida suave  */
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    :focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
-    @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-
-    .wrap{max-width:980px;margin:0 auto;padding:12px}
-    .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius-lg);box-shadow:var(--elev-1);overflow:hidden;contain:content}
-
-    /* Header glassy */
-    header.app{
-      display:grid;grid-template-columns:44px 12px 1fr 78px 1fr 96px 48px;align-items:center;
-      padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px;
-      position:sticky;top:0;z-index:30;backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-      background: color-mix(in srgb, var(--card) 88%, transparent); box-shadow: var(--elev-1);
+    body{
+      margin:0;background:var(--bg);color:var(--ink);
+      font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
-    #logo{grid-column:1;height:44px;width:44px;object-fit:cover;border-radius:8px;visibility:hidden;opacity:0;transition:opacity .2s}
+    .wrap{max-width:980px;margin:0 auto;padding:12px}
+    .card{
+      background:var(--card);border:1px solid var(--bd);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;contain:content
+    }
+
+    /* Header */
+    header.app{
+      display:grid;grid-template-columns:44px 12px 1fr 78px 1fr 96px 48px;
+      align-items:center;padding:10px 12px;border-bottom:1px solid var(--bd);min-height:64px
+    }
     .title{font-weight:800;letter-spacing:.3px;margin:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #logo{grid-column:1;height:44px;width:44px;object-fit:cover;border-radius:8px;transform:scale(.96);opacity:0;visibility:hidden;transition:opacity .18s var(--e-out), transform .18s var(--e-out)}
+    #logo.ready{opacity:1;visibility:visible;transform:none}
     #online{grid-column:4;min-width:78px;justify-content:center}
     .sp{grid-column:5}
     #btnInstall{grid-column:6;width:96px;text-align:center;visibility:hidden;opacity:0;transition:opacity .2s}
     #btnInstall.shown{visibility:visible;opacity:1}
     #btnCfg{grid-column:7;width:48px;text-align:center}
 
+    /* Badges & botones */
     .badge{display:inline-flex;gap:6px;align-items:center;padding:3px 8px;border-radius:999px;font-size:12px;background:rgba(148,163,184,.16);color:#cbd5e1;border:1px solid var(--bd)}
     .badge.ok{background:rgba(34,197,94,.12);color:#86efac;border-color:#14532d}
     .badge.off{background:rgba(148,163,184,.12);color:#94a3b8}
+    .btn{cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--acc);color:#04121f;transition:transform .14s var(--e-in), filter .14s var(--e-in)}
+    .btn:hover{filter:brightness(1.05)}
+    .btn:active{transform:translateY(1px) scale(.99)}
+    .btn.sec{background:#1f2937;color:#d1d5db}
+    .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1}
 
-    .btn{cursor:pointer;border:0;border-radius:var(--radius-md);padding:10px 14px;font-weight:700;background:var(--acc);color:#04121f;box-shadow:var(--elev-1);transition:transform .06s ease, box-shadow .2s ease, opacity .2s ease}
-    .btn:active{transform:scale(.98)}
-    .btn:hover{box-shadow:var(--elev-2)}
-    .btn.sec{background:#1f2937;color:#d1d5db;box-shadow:none}
-    .btn.ghost{background:transparent;border:1px solid var(--bd);color:#cbd5e1;box-shadow:none}
-
-    nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0;position:relative}
-    .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent;position:relative;transition:background .2s,color .2s}
+    /* Tabs */
+    nav.tabs{display:flex;gap:6px;border-bottom:1px solid var(--bd);padding:10px 10px 0}
+    .tab{padding:8px 12px;border-radius:9px 9px 0 0;background:#111a2c;border:1px solid var(--bd);border-bottom:0;color:#cbd5e1;cursor:pointer;font-weight:700;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:background .15s var(--e-out), transform .18s var(--e-out)}
+    .tab:hover{transform:translateY(-1px)}
     .tab[aria-selected="true"]{background:var(--card);color:#fff}
-    .tab[aria-selected="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:linear-gradient(90deg,#60a5fa,#22c55e);border-radius:2px;transform:scaleX(1);transition:transform .25s}
-    .tab:not([aria-selected="true"])::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:transparent;transform:scaleX(0)}
 
-    section.view{padding:12px;content-visibility:auto;contain-intrinsic-size:800px 1200px}
-    .view{display:none}
-    :root:has(:target#ing)  #v-ing,
-    :root:has(:target#alta) #v-alta,
-    :root:has(:target#pend) #v-pend,
-    :root:has(:target#util) #v-util{display:block}
-
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    /* Formularios */
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
     @media (max-width:740px){.row{grid-template-columns:1fr}}
     label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
-    input,select,textarea{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--bd);border-radius:var(--radius-md);padding:11px 12px;outline:none;transition:border-color .15s, box-shadow .15s, transform .04s}
+    input,select,textarea{
+      width:100%;background:var(--field);color:var(--ink);border:1px solid var(--bd);
+      border-radius:12px;padding:11px 12px;outline:none;transition:border-color .12s var(--e-in), box-shadow .12s var(--e-in)
+    }
     input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:var(--focus)}
-    input:active,select:active,textarea:active{transform:translateY(.5px)}
     textarea{min-height:90px;resize:vertical}
-    .kv{display:flex;gap:8px;align-items:center}.kv input{flex:1}
-    .chips{display:flex;flex-wrap:wrap;gap:8px}.chip,.pill{background:var(--chip);border:1px solid var(--bd);color:#d1d5db;padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer;text-decoration:none}
-    .list{border:1px solid var(--bd);border-radius:12px;overflow:hidden}.item{display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:center;transition:background .15s}
-    .item:last-child{border-bottom:0}.item:hover{background:rgba(255,255,255,.03)}
-    .small{font-size:12px;color:#94a3b8}hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
-    .footer{display:flex;gap:8px;align-items:center;justify-content:center;padding:10px;color:#a8b3c7;font-size:12px;border-top:1px solid var(--bd);background:#0f172a;backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
+    .kv{display:flex;gap:8px;align-items:center}
+    .st{margin-top:8px;font-size:13px}.ok{color:#86efac}.err{color:#fca5a5}.mut{color:#94a3b8}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip,.pill{background:var(--chip);border:1px solid var(--bd);color:#d1d5db;padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer;text-decoration:none;transition:filter .12s var(--e-in)}
+    .chip:hover,.pill:hover{filter:brightness(1.08)}
+    .list{border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+    .item{display:flex;gap:12px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:center}
+    .item:last-child{border-bottom:0}
+    .small{font-size:12px;color:#94a3b8}
+    hr{border:0;border-top:1px solid var(--bd);margin:14px 0}
 
-    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none}
-    dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
-    dialog::backdrop{background:rgba(2,6,23,.55)}
+    /* Vistas + micro-motion */
+    section.view{padding:12px;content-visibility:auto;contain-intrinsic-size:800px 1200px;animation:fadeIn .2s var(--e-out)}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+    /* Fallback cuando no hay :has(:target) */
+    .js .view{display:none}
+    .js .view.shown{display:block}
+
+    /* Progresos */
+    .pulse{box-shadow:0 0 0 0 rgba(96,165,250,.5);animation:pulse 1.5s var(--e-out) infinite}
+    @keyframes pulse{to{box-shadow:0 0 0 12px rgba(96,165,250,0)}}
+
+    /* Toast */
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(15,23,42,.96);color:#e5e7eb;border:1px solid var(--bd);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);z-index:9999;display:none;max-width:min(92%,640px)}
+    .toast.show{display:block;animation:toastIn .18s var(--e-out)}
+    @keyframes toastIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translate(-50%,0)}}
+
+    /* Accesibilidad */
+    :focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
+    @media (prefers-reduced-motion:reduce){
+      *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    }
+
+    /* Pie */
+    .footer{display:flex;gap:8px;align-items:center;justify-content:center;padding:10px;color:#a8b3c7;font-size:12px;border-top:1px solid var(--bd);background:#0f172a}
   </style>
 </head>
 <body>
-  <noscript><div class="wrap"><div class="card" style="padding:12px;margin-top:12px">Se requiere JavaScript para usar esta aplicación.</div></div></noscript>
+  <noscript>
+    <div class="wrap"><div class="card" style="padding:12px;margin-top:12px">
+      Se requiere JavaScript para usar esta aplicación.
+    </div></div>
+  </noscript>
   <a class="visually-hidden" href="#main" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Saltar al contenido</a>
 
   <main id="main" class="wrap" role="main">
@@ -123,193 +153,201 @@
         <button id="btnCfg" class="btn sec" aria-haspopup="dialog" aria-controls="cfg" title="Configuración">⚙️</button>
       </header>
 
-      <!-- Tabs -->
-      <nav class="tabs">
-        <a class="tab" href="#ing"  aria-selected="true">Ingreso</a>
-        <a class="tab" href="#alta">Alta</a>
-        <a class="tab" href="#pend">Pendientes</a>
-        <a class="tab" href="#util">Útiles</a>
+      <nav class="tabs" role="tablist">
+        <a class="tab" href="#ing"  role="tab" aria-selected="true">Ingreso</a>
+        <a class="tab" href="#alta" role="tab" aria-selected="false">Alta</a>
+        <a class="tab" href="#pend" role="tab" aria-selected="false">Pendientes</a>
+        <a class="tab" href="#util" role="tab" aria-selected="false">Útiles</a>
       </nav>
 
-      <!-- Vistas -->
-      <section id="v-ing"  class="view">
+      <!-- ====== VISTA: INGRESO ====== -->
+      <section id="v-ing" class="view" role="tabpanel" aria-labelledby="tab-ing">
         <div class="row">
           <div>
-            <label for="dni">DNI</label>
-            <input id="dni" inputmode="numeric" placeholder="7–9 dígitos">
-          </div>
-          <div class="kv">
-            <div style="flex:1">
-              <label for="sexo">Sexo</label>
-              <select id="sexo">
-                <option>—</option><option>F</option><option>M</option><option>X</option>
-              </select>
+            <label for="ing_dni">DNI</label>
+            <div class="kv">
+              <input id="ing_dni" inputmode="numeric" autocomplete="off" placeholder="7–9 dígitos" />
+              <button class="btn sec" id="ing_cargar" type="button">Cargar</button>
             </div>
-            <button class="btn sec" id="btnCargarDNI" type="button">Cargar</button>
+            <div id="ing_dni_err" class="st err" style="display:none">DNI inválido.</div>
           </div>
-        </div>
+          <div>
+            <label for="ing_sexo">Sexo</label>
+            <select id="ing_sexo">
+              <option>—</option><option>F</option><option>M</option><option>X</option>
+            </select>
+          </div>
 
-        <div class="row">
-          <div class="kv">
-            <div style="flex:1">
-              <label for="fechaIng">Fecha ingreso</label>
-              <input id="fechaIng" placeholder="dd/mm/aaaa">
+          <div>
+            <label for="ing_fecha">Fecha ingreso</label>
+            <div class="kv">
+              <input id="ing_fecha" type="date">
+              <button class="btn sec" id="ing_hoy" type="button">Ahora</button>
             </div>
-            <button class="btn sec" id="btnHoyIng" type="button">Hoy</button>
           </div>
-          <div class="kv">
-            <div style="flex:1">
-              <label for="horaIng">Hora ingreso</label>
-              <input id="horaIng" placeholder="hh:mm">
+          <div>
+            <label for="ing_hora">Hora ingreso</label>
+            <div class="kv">
+              <input id="ing_hora" type="time" step="60">
+              <button class="btn sec" id="ing_ahora" type="button">Ahora</button>
             </div>
-            <button class="btn sec" id="btnAhoraIng" type="button">Ahora</button>
+          </div>
+
+          <div>
+            <label for="ing_idea">Ideación / Intento</label>
+            <select id="ing_idea">
+              <option>—</option>
+              <option>Ideación</option>
+              <option>Intento</option>
+              <option>Plan activo</option>
+            </select>
+          </div>
+          <div>
+            <label for="ing_met">Método / Letalidad</label>
+            <select id="ing_met">
+              <option>—</option><option>Baja</option><option>Media</option><option>Alta</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="ing_consumo">Consumo</label>
+            <select id="ing_consumo">
+              <option>—</option>
+              <option>Alcohol</option><option>Psicoactivos</option><option>Mixto</option>
+            </select>
+          </div>
+          <div>
+            <label for="ing_sust">Tipo Sustancia</label>
+            <select id="ing_sust">
+              <option>—</option>
+              <option>Alcohol</option><option>Cannabis</option><option>Cocaína</option><option>Otro</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="ing_cie">Dx CIE-10 (código)</label>
+            <input id="ing_cie" placeholder="Ej: F32.1">
+          </div>
+          <div></div>
+
+          <div style="grid-column:1/-1">
+            <label for="ing_obs">Observaciones</label>
+            <textarea id="ing_obs" placeholder="Notas breves (opcional)"></textarea>
           </div>
         </div>
 
-        <div class="row">
-          <div>
-            <label for="intento">Ideación / Intento</label>
-            <select id="intento"><option>—</option><option>Ideación</option><option>Intento</option></select>
-          </div>
-          <div>
-            <label for="metodo">Método / Letalidad</label>
-            <select id="metodo"><option>—</option><option>Baja</option><option>Media</option><option>Alta</option></select>
-          </div>
+        <div class="chips" style="margin-top:10px">
+          <button class="pill" type="button" data-tag="obs-sp">Obs. SP</button>
+          <button class="pill" type="button" data-tag="apoyo">Red apoyo ✓</button>
+          <button class="pill" type="button" data-tag="niega">Niega consumo</button>
+          <button class="pill" type="button" data-tag="acom">Acompañante</button>
         </div>
 
-        <div class="row">
-          <div>
-            <label for="consumo">Consumo</label>
-            <select id="consumo"><option>—</option><option>No</option><option>Alcohol</option><option>Drogas</option></select>
-          </div>
-          <div>
-            <label for="sustancia">Tipo Sustancia</label>
-            <input id="sustancia" placeholder="opcional">
-          </div>
+        <div class="kv" style="margin-top:12px">
+          <button class="btn" id="ing_guardar">Guardar ingreso</button>
+          <button class="btn sec" id="ing_comp">Compartir comprobante</button>
         </div>
 
+        <p class="small mut" style="margin-top:10px">
+          Tip: admite <code>?dni=…&sexo=…&fi=YYYY-MM-DD</code> para prellenar.
+        </p>
+      </section>
+
+      <!-- ====== VISTA: ALTA ====== -->
+      <section id="v-alta" class="view" role="tabpanel" aria-labelledby="tab-alta">
         <div class="row">
           <div>
-            <label for="dx">Dx CIE-10 (código)</label>
-            <input id="dx" placeholder="Ej: F32.1">
+            <label for="alta_dni">DNI</label>
+            <input id="alta_dni" inputmode="numeric" placeholder="7–9 dígitos">
+          </div>
+          <div>
+            <label for="alta_fnac">Fecha Nac. (opcional)</label>
+            <input id="alta_fnac" type="date">
+          </div>
+
+          <div>
+            <label for="alta_sexo">Sexo</label>
+            <select id="alta_sexo"><option>—</option><option>F</option><option>M</option><option>X</option></select>
           </div>
           <div>
             <label>&nbsp;</label>
-            <div class="chips">
-              <button class="pill" type="button">Obs. SP</button>
-              <button class="pill" type="button">Red apoyo</button>
-              <button class="pill" type="button">Niega consumo</button>
-              <button class="pill" type="button">Acompañante</button>
-            </div>
+            <button class="btn sec" id="alta_buscar" type="button">Buscar por DNI</button>
           </div>
-        </div>
 
-        <label for="obs">Observaciones</label>
-        <textarea id="obs" placeholder="Notas breves (opcional)"></textarea>
-
-        <div class="kv" style="margin-top:10px">
-          <button id="btnGuardarIng" class="btn">Guardar ingreso</button>
-          <button id="btnCompIng" class="btn sec" type="button">Compartir comprobante</button>
-        </div>
-        <div class="small" style="margin-top:8px">Tip: admite <code>?dni=&amp;sexo=&amp;fi=YYYY-MM-DD</code> para prellenar.</div>
-      </section>
-
-      <section id="v-alta" class="view">
-        <div class="row">
           <div>
-            <label for="dniAlta">DNI</label>
-            <input id="dniAlta" inputmode="numeric" placeholder="7–9 dígitos">
+            <label for="alta_fecha">Fecha alta</label>
+            <div class="kv">
+              <input id="alta_fecha" type="date">
+              <button class="btn sec" id="alta_hoy" type="button">Ahora</button>
+            </div>
           </div>
           <div>
-            <label for="fnac">Fecha Nac. (opcional)</label>
-            <input id="fnac" placeholder="dd/mm/aaaa">
+            <label for="alta_hora">Hora alta</label>
+            <input id="alta_hora" type="time" step="60">
           </div>
-        </div>
 
-        <div class="row">
           <div>
-            <label for="sexoAlta">Sexo</label>
-            <select id="sexoAlta"><option>—</option><option>F</option><option>M</option><option>X</option></select>
+            <label for="alta_estado">Estado</label>
+            <select id="alta_estado">
+              <option selected>Alta</option><option>Derivación</option><option>Observación</option>
+            </select>
           </div>
-          <div class="kv">
-            <div style="flex:1">
-              <label for="buscarDNI">Buscar ingreso</label>
-              <input id="buscarDNI" placeholder="DNI para buscar" />
-            </div>
-            <button class="btn sec" id="btnBuscarDNI" type="button">Buscar por DNI</button>
-          </div>
-        </div>
+          <div></div>
 
-        <div class="row">
-          <div class="kv">
-            <div style="flex:1">
-              <label for="fechaAlta">Fecha alta</label>
-              <input id="fechaAlta" placeholder="dd/mm/aaaa">
-            </div>
-            <button class="btn sec" id="btnHoyAlta" type="button">Hoy</button>
-          </div>
-          <div class="kv">
-            <div style="flex:1">
-              <label for="horaAlta">Hora alta</label>
-              <input id="horaAlta" placeholder="hh:mm">
-            </div>
-            <button class="btn sec" id="btnAhoraAlta" type="button">Ahora</button>
+          <div style="grid-column:1/-1">
+            <label for="alta_obs">Observaciones</label>
+            <textarea id="alta_obs" placeholder="Breve detalle (opcional)"></textarea>
           </div>
         </div>
 
-        <div>
-          <label for="estadoAlta">Estado</label>
-          <select id="estadoAlta"><option>Alta</option><option>Observación</option><option>Derivado</option></select>
-        </div>
-
-        <label for="obsAlta">Observaciones</label>
-        <textarea id="obsAlta" placeholder="Breve detalle (opcional)"></textarea>
-
-        <div class="kv" style="margin-top:10px">
-          <button id="btnGuardarAlta" class="btn">Guardar alta</button>
-          <button id="btnCompAlta" class="btn sec" type="button">Compartir comprobante</button>
+        <div class="kv" style="margin-top:12px">
+          <button class="btn" id="alta_guardar">Guardar alta</button>
+          <button class="btn sec" id="alta_comp">Compartir comprobante</button>
         </div>
       </section>
 
-      <section id="v-pend" class="view">
-        <div class="kv">
-          <button class="btn" id="btnEnviarPend">Enviar pendientes</button>
-          <button class="btn sec" id="btnExpJSON">Exportar JSON</button>
-          <button class="btn sec" id="btnImpJSON">Importar JSON</button>
-          <span class="badge off" id="pendCount">0</span>
+      <!-- ====== VISTA: PENDIENTES ====== -->
+      <section id="v-pend" class="view" role="tabpanel" aria-labelledby="tab-pend">
+        <div class="kv" style="margin-top:6px">
+          <button class="btn" id="pend_enviar">Enviar pendientes</button>
+          <button class="btn sec" id="pend_exp">Exportar JSON</button>
+          <button class="btn sec" id="pend_imp">Importar JSON</button>
+          <span class="badge off" id="pend_count">0</span>
         </div>
-        <hr />
-        <div class="list" id="pendList"><div class="item"><div class="small">No hay pendientes</div></div></div>
+        <hr>
+        <div id="pend_list" class="list" aria-live="polite"></div>
       </section>
 
-      <section id="v-util" class="view">
+      <!-- ====== VISTA: ÚTILES ====== -->
+      <section id="v-util" class="view" role="tabpanel" aria-labelledby="tab-util">
         <div class="row">
           <div class="card" style="padding:12px">
             <h3 style="margin:0 0 8px">Escáner rápido (DNI)</h3>
-            <label for="dniScan">DNI</label>
-            <input id="dniScan" placeholder="Pega/teclea DNI y validar">
-            <div class="kv" style="margin-top:8px">
-              <button class="btn sec" id="btnValidar" type="button">Validar</button>
+            <div class="kv">
+              <input id="util_dni" placeholder="DNI">
+              <button class="btn sec" id="util_validar">Validar</button>
             </div>
           </div>
           <div class="card" style="padding:12px">
             <h3 style="margin:0 0 8px">Atajos</h3>
             <div class="chips">
-              <a class="chip" href="#ing">Ir a Ingreso</a>
-              <a class="chip" href="#alta">Ir a Alta</a>
-              <a class="chip" href="#pend">Ver Pendientes</a>
+              <a class="pill" href="#ing">Ir a Ingreso</a>
+              <a class="pill" href="#alta">Ir a Alta</a>
+              <a class="pill" href="#pend">Ver Pendientes</a>
             </div>
-            <hr />
-            <div class="small">Versión app: v7-móvil</div>
+            <hr>
+            <div class="small mut">Versión app: v7-móvil</div>
           </div>
         </div>
       </section>
 
-      <footer class="footer">“Sembrando esperanza, cultivando bienestar” • Desarrollado por Lic. Domingo Alarcón · HSM v7</footer>
+      <footer class="footer">
+        “Sembrando esperanza, cultivando bienestar” · Desarrollado por Lic. Domingo Alarcón · HSM v7
+      </footer>
     </article>
   </main>
 
-  <!-- CONFIG dialog + toast -->
+  <!-- Diálogo de configuración -->
   <dialog id="cfg" aria-labelledby="cfg-title">
     <form method="dialog" style="padding:14px">
       <h3 id="cfg-title" style="margin:0 0 10px">Configuración</h3>
@@ -328,98 +366,177 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <!-- ========= LÓGICA ligera / UX / PWA ========= -->
+  <!-- ========= LÓGICA / PWA ========= -->
   <script>
-  // Mostrar logo cuando carga (para evitar CLS)
-  addEventListener('load', ()=>{ const lg=document.getElementById('logo'); if(lg){lg.style.visibility='visible'; lg.style.opacity='1';} });
-
-  // Estado online/offline
-  const $online = document.getElementById('online');
-  function updNet(){ const on=navigator.onLine; $online.textContent = on? 'Online':'Offline'; $online.classList.toggle('ok',on); $online.classList.toggle('off',!on); }
-  addEventListener('online',updNet); addEventListener('offline',updNet); updNet();
-
-  // Tabs a11y (marcar seleccionada según hash)
-  function markTab(){
-    const h=(location.hash||'#ing').replace(/#.*/,'$&');
-    document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.getAttribute('href')===h ? 'true':'false'));
-  }
-  addEventListener('hashchange', markTab); markTab();
-
-  // Botones rápidos
-  const q=(s)=>document.querySelector(s);
-  q('#btnHoyIng')?.addEventListener('click', ()=> q('#fechaIng').value = new Date().toLocaleDateString('es-AR'));
-  q('#btnAhoraIng')?.addEventListener('click', ()=> q('#horaIng').value = new Date().toTimeString().slice(0,5));
-  q('#btnHoyAlta')?.addEventListener('click', ()=> q('#fechaAlta').value = new Date().toLocaleDateString('es-AR'));
-  q('#btnAhoraAlta')?.addEventListener('click', ()=> q('#horaAlta').value = new Date().toTimeString().slice(0,5));
-
-  // Toast sencillo + colores por tipo
-  (function(){
-    const el = document.getElementById('toast'); if(!el) return;
-    const base = el.style.cssText;
-    window.HSM_TOAST = (msg, t=1600, type='info')=>{
-      el.textContent = msg;
-      el.style.cssText = base + (type==='error'
-        ? 'border-color:#7f1d1d;background:rgba(127,29,29,.95)'
-        : 'border-color:#14532d;background:rgba(20,83,45,.95)');
-      el.style.display='block';
-      setTimeout(()=> el.style.display='none', t);
+  (function () {
+    // ========= Helpers =========
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+    const toast = (msg, kind='info') => {
+      const t = $('#toast');
+      t.textContent = msg;
+      t.className = 'toast show';
+      t.style.borderColor = kind==='err' ? '#7f1d1d' : 'var(--bd)';
+      clearTimeout(t._h); t._h = setTimeout(()=> t.className='toast', 2200);
     };
+    const nowDate = () => new Date().toISOString().slice(0,10);
+    const nowTime = () => { const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+
+    // ========= Navegación (fallback sin :has) =========
+    document.documentElement.classList.add('js');
+    function showView() {
+      const id = (location.hash || '#ing').slice(1);
+      $$('.view').forEach(v => v.classList.toggle('shown', v.id === 'v-' + id));
+      $$('a.tab').forEach(a => a.setAttribute('aria-selected', a.hash === '#' + id));
+      // scroll suave a top cuando se cambia de pestaña
+      try { window.scrollTo({top:0, behavior:'smooth'}); } catch {}
+    }
+    if (!location.hash) location.replace(location.pathname + location.search + '#ing');
+    window.addEventListener('hashchange', showView);
+    window.addEventListener('DOMContentLoaded', showView);
+
+    // ========= LCP: mostrar logo suave =========
+    const logo = $('#logo');
+    if (logo) logo.addEventListener('load', () => logo.classList.add('ready'), { once:true });
+
+    // ========= Estado de red =========
+    const onlineBadge = $('#online');
+    const setNet = () => {
+      const on = navigator.onLine;
+      onlineBadge.textContent = on ? 'Online' : 'Offline';
+      onlineBadge.classList.toggle('ok', on);
+      onlineBadge.classList.toggle('off', !on);
+    };
+    window.addEventListener('online', setNet);
+    window.addEventListener('offline', setNet);
+    setNet();
+
+    // ========= Service Worker (ya lo tenés en /panel-html-msm/sw.js) =========
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/panel-html-msm/sw.js', {scope:'/panel-html-msm/'}).catch(()=>{});
+      // Si actualiza el SW, recargamos "amable"
+      navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+    }
+
+    // ========= Instalación (PWA) =========
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); deferredPrompt = e;
+      const b = $('#btnInstall'); b.classList.add('shown'); b.onclick = async () => {
+        try { await deferredPrompt.prompt(); } catch {} finally { b.classList.remove('shown'); deferredPrompt=null; }
+      };
+    });
+
+    // ========= Prefill por querystring =========
+    (function prefill() {
+      const p = new URLSearchParams(location.search);
+      const dni = p.get('dni'), sexo = p.get('sexo'), fi = p.get('fi');
+      if (dni) $('#ing_dni').value = dni;
+      if (sexo) $('#ing_sexo').value = sexo.toUpperCase();
+      if (fi)   $('#ing_fecha').value = fi;
+    })();
+
+    // ========= Defaults de fecha/hora =========
+    $('#ing_hoy')?.addEventListener('click', ()=> $('#ing_fecha').value = nowDate());
+    $('#ing_ahora')?.addEventListener('click', ()=> $('#ing_hora').value = nowTime());
+    $('#alta_hoy')?.addEventListener('click', ()=> $('#alta_fecha').value = nowDate());
+
+    // ========= Validaciones mínimas =========
+    const valDNI = (v) => /^\d{7,9}$/.test((v||'').trim());
+    $('#ing_cargar')?.addEventListener('click', ()=>{
+      const ok = valDNI($('#ing_dni').value);
+      $('#ing_dni_err').style.display = ok ? 'none' : '';
+      if (ok) toast('DNI cargado');
+      else { toast('Verificá el DNI', 'err'); $('#ing_dni').focus(); }
+    });
+
+    // ========= Drafts (localStorage) =========
+    const DRAFT_KEYS = {
+      ing: ['ing_dni','ing_sexo','ing_fecha','ing_hora','ing_idea','ing_met','ing_consumo','ing_sust','ing_cie','ing_obs'],
+      alta:['alta_dni','alta_fnac','alta_sexo','alta_fecha','alta_hora','alta_estado','alta_obs']
+    };
+    function saveDraft(form){
+      const obj={}; for(const id of DRAFT_KEYS[form]){ const el = '#'+id; obj[id]= $(el)?.value ?? ''; }
+      localStorage.setItem('draft_'+form, JSON.stringify(obj));
+    }
+    function loadDraft(form){
+      try{
+        const raw = localStorage.getItem('draft_'+form); if(!raw) return;
+        const obj = JSON.parse(raw); for(const k in obj){ const el=$('#'+k); if(el) el.value = obj[k]; }
+      }catch{}
+    }
+    // Auto-save con debounce
+    const deb = (fn,ms=300)=>{let h; return (...a)=>{clearTimeout(h); h=setTimeout(()=>fn(...a),ms);} };
+    $$('#v-ing input, #v-ing select, #v-ing textarea').forEach(el=> el.addEventListener('input', deb(()=>saveDraft('ing'), 300)));
+    $$('#v-alta input, #v-alta select, #v-alta textarea').forEach(el=> el.addEventListener('input', deb(()=>saveDraft('alta'), 300)));
+    loadDraft('ing'); loadDraft('alta');
+
+    // ========= Guardado (simulado) + Pendientes =========
+    const PEND_KEY = 'pendientes_v7';
+    const getPend = () => { try { return JSON.parse(localStorage.getItem(PEND_KEY)||'[]'); } catch { return [];} };
+    const setPend = (a) => { localStorage.setItem(PEND_KEY, JSON.stringify(a)); renderPend(); };
+
+    function renderPend(){
+      const list = $('#pend_list'); const a = getPend(); $('#pend_count').textContent = a.length;
+      list.innerHTML = '';
+      if(!a.length){ list.innerHTML = '<div class="item"><span class="mut">No hay pendientes</span></div>'; return; }
+      a.forEach((it,i)=>{
+        const row = document.createElement('div'); row.className='item';
+        row.innerHTML = `<div class="small mut">#${i+1}</div><div style="flex:1"><b>${it.tipo}</b> — DNI <b>${it.dni||'—'}</b><br><span class="small mut">${new Date(it.t).toLocaleString()}</span></div><button class="btn sec" data-i="${i}">Borrar</button>`;
+        row.querySelector('button').onclick = (e)=>{ const j=+e.target.dataset.i; const arr=getPend(); arr.splice(j,1); setPend(arr); toast('Pendiente eliminado'); };
+        list.appendChild(row);
+      });
+    }
+    renderPend();
+
+    $('#ing_guardar')?.addEventListener('click', ()=>{
+      const dni = $('#ing_dni').value; if(!valDNI(dni)) { $('#ing_dni_err').style.display=''; $('#ing_dni').focus(); toast('DNI inválido','err'); return; }
+      const obj = {}; for(const id of DRAFT_KEYS.ing){ obj[id]=$('#'+id)?.value ?? ''; }
+      const arr = getPend(); arr.push({tipo:'Ingreso', dni, data:obj, t:Date.now()}); setPend(arr);
+      saveDraft('ing'); toast('Ingreso guardado en pendientes'); $('#pend_count').classList.add('pulse'); setTimeout(()=>$('#pend_count').classList.remove('pulse'), 900);
+    });
+    $('#alta_guardar')?.addEventListener('click', ()=>{
+      const dni = $('#alta_dni').value; if(!valDNI(dni)) { $('#alta_dni').focus(); toast('DNI inválido','err'); return; }
+      const obj = {}; for(const id of DRAFT_KEYS.alta){ obj[id]=$('#'+id)?.value ?? ''; }
+      const arr = getPend(); arr.push({tipo:'Alta', dni, data:obj, t:Date.now()}); setPend(arr);
+      saveDraft('alta'); toast('Alta guardada en pendientes'); $('#pend_count').classList.add('pulse'); setTimeout(()=>$('#pend_count').classList.remove('pulse'), 900);
+    });
+
+    $('#pend_enviar')?.addEventListener('click', ()=>{
+      const arr = getPend(); if(!arr.length){ toast('No hay pendientes'); return; }
+      if(!navigator.onLine){ toast('Sin conexión. Intentá cuando estés online','err'); return; }
+      // Aquí llamarías a tu Apps Script; simulamos envío:
+      setTimeout(()=>{ setPend([]); toast('Pendientes enviados'); }, 600);
+    });
+    $('#pend_exp')?.addEventListener('click', ()=>{
+      const blob = new Blob([localStorage.getItem(PEND_KEY)||'[]'], {type:'application/json'});
+      const a = Object.assign(document.createElement('a'), { href:URL.createObjectURL(blob), download:'pendientes.json' });
+      document.body.appendChild(a); a.click(); a.remove(); toast('Exportado JSON');
+    });
+    $('#pend_imp')?.addEventListener('click', ()=>{
+      const inp = Object.assign(document.createElement('input'), {type:'file', accept:'application/json'});
+      inp.onchange = () => {
+        const f = inp.files?.[0]; if(!f) return;
+        const r = new FileReader(); r.onload = () => { try{ const parsed = JSON.parse(r.result); if(Array.isArray(parsed)) setPend(parsed.concat(getPend())); toast('Importado'); } catch { toast('Archivo inválido','err'); } };
+        r.readAsText(f);
+      };
+      inp.click();
+    });
+
+    // ========= Diálogo cfg =========
+    $('#btnCfg')?.addEventListener('click', ()=> $('#cfg').showModal());
+    $('#cfgTest')?.addEventListener('click', ()=>{
+      const url = $('#cfg_url').value.trim();
+      if(!/^https?:\/\//.test(url)) return toast('URL inválida','err');
+      toast('Conexión OK (simulada)');
+    });
+
+    // ========= Útiles =========
+    $('#util_validar')?.addEventListener('click', ()=>{
+      const v = $('#util_dni').value;
+      toast(valDNI(v) ? 'DNI válido' : 'DNI inválido', valDNI(v)?'ok':'err');
+    });
   })();
-
-  // Autosave local (Ingreso + Alta) sin tocar tu lógica
-  const formsPersist = [
-    {scope:'ing', ids:['dni','sexo','fechaIng','horaIng','intento','metodo','consumo','sustancia','dx','obs']},
-    {scope:'alta',ids:['dniAlta','fnac','sexoAlta','fechaAlta','horaAlta','estadoAlta','obsAlta']}
-  ];
-  for (const f of formsPersist){
-    for (const id of f.ids){
-      const el = document.getElementById(id); if(!el) continue;
-      const key = `hsm.${f.scope}.${id}`;
-      const v = localStorage.getItem(key); if(v!==null) el.value = v;
-      el.addEventListener('input', ()=> localStorage.setItem(key, el.value));
-    }
-  }
-
-  // Validación suave en guardar (marca bordes rojos)
-  function validate(ids){
-    let ok = true;
-    for (const id of ids){ const el=document.getElementById(id); if(el) el.style.borderColor=''; }
-    for (const id of ids){
-      const el=document.getElementById(id); if(!el) continue;
-      const empty = !el.value || (el.type==='select-one' && el.selectedIndex===0);
-      if (empty){ el.style.borderColor='#ef4444'; ok=false; }
-    }
-    if (!ok) HSM_TOAST('Completá los campos resaltados', 1600, 'error');
-    return ok;
-  }
-  document.getElementById('btnGuardarIng')?.addEventListener('click', ()=>{
-    if (!validate(['dni','fechaIng','horaIng'])) return;
-    HSM_TOAST('Ingreso guardado ✔', 1200);
-  });
-  document.getElementById('btnGuardarAlta')?.addEventListener('click', ()=>{
-    if (!validate(['dniAlta','fechaAlta','horaAlta'])) return;
-    HSM_TOAST('Alta guardada ✔', 1200);
-  });
-
-  // Atajos de navegación (g,a,p,u)
-  addEventListener('keydown', (e)=>{
-    if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
-    const k=e.key.toLowerCase();
-    if (k==='g') location.hash='#ing';
-    else if (k==='a') location.hash='#alta';
-    else if (k==='p') location.hash='#pend';
-    else if (k==='u') location.hash='#util';
-  });
-
-  // Dialog de configuración (demo mínima)
-  q('#btnCfg')?.addEventListener('click', ()=> document.getElementById('cfg').showModal());
-  q('#cfgTest')?.addEventListener('click', ()=> HSM_TOAST('Conexión OK (demo)', 1200));
-  q('#cfg')?.addEventListener('close', ()=> HSM_TOAST('Preferencias guardadas', 1000));
-
-  // PWA: registrar SW si existe (tu sw.js ya está preparado)
-  if ('serviceWorker' in navigator){
-    navigator.serviceWorker.register('/panel-html-msm/sw.js').catch(()=>{});
-  }
   </script>
 </body>
 </html>
