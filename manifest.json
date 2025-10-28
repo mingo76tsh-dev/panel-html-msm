@@ -1,35 +1,48 @@
 {
-  "name": "HS-V7 — Panel Salud Mental",
-  "short_name": "HS-V7",
-  "description": "Gestión móvil de ingresos y altas con soporte offline — HSM v7",
+  "name": "HSM v7 • Móvil",
+  "short_name": "HSM v7",
+  "lang": "es",
+  "dir": "ltr",
+  "description": "Ingreso y alta rápida con soporte offline y cola de pendientes.",
   "start_url": "/panel-html-msm/#ing",
   "scope": "/panel-html-msm/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
-  "orientation": "portrait",
 
   "icons": [
-    { "src": "/panel-html-msm/icons/icon-96.png",          "sizes": "96x96",   "type": "image/png", "purpose": "any" },
-    { "src": "/panel-html-msm/icons/icon-192.png",         "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/panel-html-msm/icons/icon-512.png",         "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/panel-html-msm/icons/maskable-192.png",     "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/panel-html-msm/icons/maskable-512.png",     "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/panel-html-msm/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+    { "src": "/panel-html-msm/icons/icon-192.png",      "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/panel-html-msm/icons/icon-512.png",      "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/panel-html-msm/icons/maskable-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/panel-html-msm/icons/maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
 
   "screenshots": [
-    { "src": "/panel-html-msm/icons/screen-1080x1920.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow" },
-    { "src": "/panel-html-msm/icons/screen-1920x1080.png", "sizes": "1920x1080", "type": "image/png", "form_factor": "wide" }
+    {
+      "src": "/panel-html-msm/icons/screen-1080x1920.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Ingreso"
+    },
+    {
+      "src": "/panel-html-msm/icons/screen-1920x1080.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Panel"
+    }
   ],
 
   "shortcuts": [
-    { "name": "Nuevo ingreso", "short_name": "Ingreso", "url": "/panel-html-msm/#ing",  "description": "Ir directo a Ingreso" },
-    { "name": "Dar alta",      "short_name": "Alta",    "url": "/panel-html-msm/#alta", "description": "Ir directo a Alta" },
-    { "name": "Pendientes",    "short_name": "Pend.",   "url": "/panel-html-msm/#pend", "description": "Ver pendientes offline" }
+    { "name": "Ir a Ingreso",   "short_name": "Ingreso",   "url": "/panel-html-msm/#ing",  "icons": [{ "src": "/panel-html-msm/icons/icon-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Ir a Alta",      "short_name": "Alta",      "url": "/panel-html-msm/#alta", "icons": [{ "src": "/panel-html-msm/icons/icon-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Ver Pendientes", "short_name": "Pend",      "url": "/panel-html-msm/#pend", "icons": [{ "src": "/panel-html-msm/icons/icon-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Útiles",         "short_name": "Útiles",    "url": "/panel-html-msm/#util", "icons": [{ "src": "/panel-html-msm/icons/icon-96.png", "sizes": "96x96", "type": "image/png" }] }
   ],
 
-  "protocol_handlers": [
-    { "protocol": "web+hsm", "url": "/panel-html-msm/?deeplink=%s" }
-  ]
+  "categories": ["health", "medical", "productivity"],
+  "id": "/panel-html-msm/",
+  "prefer_related_applications": false
 }
