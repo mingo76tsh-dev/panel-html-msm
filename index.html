@@ -12,13 +12,22 @@
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest DEV (rutas relativas). En producción se servirá /panel-html-msm/manifest.json vía build -->
+  <!-- Manifest DEV (rutas relativas). En PRO se reemplaza a manifest.json por build.mjs -->
   <link rel="manifest" href="./manifest.dev.json">
 
   <!-- Favicons / Apple -->
   <link rel="icon" href="./icons/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="icon" href="./icons/favicon-16.png" type="image/png" sizes="16x16">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" sizes="180x180" />
+
+  <!-- === HSM · Config por defecto (editable luego en ⚙️) === -->
+  <script>
+    window.HSM_CFG = {
+      EXEC_URL: "https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec",
+      API_KEY : "HSM2025KEY",
+      LOGO    : ""     // opcional: URL de logo (png/jpg/svg)
+    };
+  </script>
 
   <style>
     :root{
@@ -107,7 +116,7 @@
 
       <!-- =============== INGRESO ================= -->
       <section id="v-ing" class="view" aria-labelledby="h-ing">
-        <h2 id="h-ing" class="visually-hidden" style="position:absolute;left:-9999px">Ingreso</h2>
+        <h2 id="h-ing" class="visualmente-oculto" style="position:absolute;left:-9999px">Ingreso</h2>
         <form id="fIng" autocomplete="off">
           <div class="row">
             <div>
@@ -203,10 +212,9 @@
           </p>
         </form>
       </section>
-
       <!-- ================ ALTA =================== -->
       <section id="v-alta" class="view" aria-labelledby="h-alta">
-        <h2 id="h-alta" class="visually-hidden" style="position:absolute;left:-9999px">Alta</h2>
+        <h2 id="h-alta" class="visualmente-oculto" style="position:absolute;left:-9999px">Alta</h2>
         <form id="fAlta" autocomplete="off">
           <div class="row">
             <div>
@@ -273,7 +281,7 @@
 
       <!-- ============== PENDIENTES ============== -->
       <section id="v-pend" class="view" aria-labelledby="h-pend">
-        <h2 id="h-pend" class="visually-hidden" style="position:absolute;left:-9999px">Pendientes</h2>
+        <h2 id="h-pend" class="visualmente-oculto" style="position:absolute;left:-9999px">Pendientes</h2>
         <div class="list" id="pendList" aria-live="polite"></div>
         <div class="row" style="margin-top:12px">
           <button class="btn" id="btnSendAll" type="button">Enviar pendientes</button>
@@ -287,7 +295,7 @@
 
       <!-- ================= ÚTILES ================= -->
       <section id="v-util" class="view" aria-labelledby="h-util">
-        <h2 id="h-util" class="visually-hidden" style="position:absolute;left:-9999px">Útiles</h2>
+        <h2 id="h-util" class="visualmente-oculto" style="position:absolute;left:-9999px">Útiles</h2>
         <div class="row">
           <div class="card" style="padding:12px">
             <h3 style="margin:0 0 8px">Escáner rápido (DNI)</h3>
@@ -346,13 +354,26 @@
     save(v){ localStorage.setItem(this.k, JSON.stringify(v||{})) },
     pend(){ try{ return JSON.parse(localStorage.getItem(this.p)||'[]') }catch{return []} },
     setPend(arr){ localStorage.setItem(this.p, JSON.stringify(arr||[])) }
-  }
+  };
+
+  /* === Bootstrap de configuración por defecto (primera vez en cada dispositivo) === */
+  (function bootstrapCfgDefault(){
+    try {
+      const DEF = (window.HSM_CFG || {});
+      const cur = store.read();
+      if (!cur.url && DEF.EXEC_URL) {
+        store.save({ url: DEF.EXEC_URL, key: DEF.API_KEY || '', logo: DEF.LOGO || '' });
+        console.log('[HSM] Config inicial aplicada desde HSM_CFG');
+      }
+    } catch(e){}
+  })();
+
   const z2 = n => String(n).padStart(2,'0');
   const fmtDate = d => `${z2(d.getDate())}/${z2(d.getMonth()+1)}/${d.getFullYear()}`;
   const fmtTime = d => `${z2(d.getHours())}:${z2(d.getMinutes())}`;
   const toast = (msg, ms=2200)=>{ const el=qs('#toast'); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none', ms) }
 
-  /* ========= Máscaras fecha / hora (UX móvil real) ========= */
+  /* ========= Máscaras fecha / hora ========= */
   function maskDate(el){
     el.setAttribute('inputmode','numeric'); el.setAttribute('autocomplete','off'); el.maxLength=10;
     el.addEventListener('input', ()=>{ let v=el.value.replace(/\D/g,'').slice(0,8);
@@ -384,13 +405,12 @@
   window.addEventListener('online', onlineBadge);
   window.addEventListener('offline', onlineBadge);
 
-  /* ========= Tabs accesibles ========= */
+  /* ========= Tabs ========= */
   const syncTabs = () => {
     const h = location.hash || '#ing';
     const map = { '#ing':'t-ing', '#alta':'t-alta', '#pend':'t-pend', '#util':'t-util' };
     Object.values(map).forEach(id=>qs('#'+id).setAttribute('aria-selected','false'));
     (qs('#'+(map[h]||'t-ing'))).setAttribute('aria-selected','true');
-    // Fallback si no hay :has() -> mostrar vista seleccionada
     qsa('.view').forEach(v=>v.style.display='none');
     qs('#v-'+h.replace('#','')).style.display='block';
   };
@@ -399,7 +419,7 @@
   /* ========= Logo micro-motion ========= */
   qs('#logo').addEventListener('load',e=>e.target.classList.add('loaded'));
 
-  /* ========= Configuración ========= */
+  /* ========= Configuración (UI) ========= */
   const cfg = store.read();
   const dlg = qs('#cfg');
   qs('#btnCfg').onclick = ()=> {
@@ -422,7 +442,7 @@
     if(!url) return toast('Ingresá la URL /exec');
     try{
       await fetch(url,{method:'OPTIONS',mode:'no-cors'});
-      qs('#cfgMsg').textContent = 'Ping enviado (ver consola del GAS si corresponde).';
+      qs('#cfgMsg').textContent = 'Ping enviado (ver consola del GAS).';
     }catch{ qs('#cfgMsg').textContent = 'No se pudo contactar. Revisá la URL.' }
   };
 
@@ -557,3 +577,4 @@
   </script>
 </body>
 </html>
+
