@@ -12,7 +12,7 @@
   <meta name="description" content="HSM v7 • Móvil — Ingreso y alta rápida con soporte offline y cola de pendientes." />
   <title>HSM v7 • Móvil</title>
 
-  <!-- DEV manifest; en build de PROD tu script ya lo sustituye por /panel-html-msm/manifest.json -->
+  <!-- Manifest DEV (rutas relativas). En producción lo rescribe el build a /panel-html-msm/manifest.json -->
   <link rel="manifest" href="./manifest.dev.json">
 
   <!-- Favicons / Apple -->
@@ -79,6 +79,7 @@
     dialog#cfg{border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%}
     dialog::backdrop{background:rgba(2,6,23,.55)}
     :focus-visible{outline:2px solid #60a5fa;outline-offset:2px}
+
     @keyframes pop { from{transform:scale(.98);opacity:0} to{transform:scale(1);opacity:1} }
   </style>
 </head>
@@ -127,12 +128,12 @@
           <div class="row">
             <div>
               <label for="fi">Fecha ingreso</label>
-              <input id="fi" name="fi" type="date" placeholder="dd/mm/aaaa" autocomplete="off">
+              <input id="fi" name="fi" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" autocomplete="off">
             </div>
             <div>
               <label for="hi">Hora ingreso</label>
               <div class="kv">
-                <input id="hi" name="hi" type="time" placeholder="--:--" autocomplete="off" step="60">
+                <input id="hi" name="hi" type="text" placeholder="--:--" inputmode="numeric" autocomplete="off">
                 <button class="btn sec" type="button" id="btnNowI">Ahora</button>
               </div>
             </div>
@@ -205,7 +206,7 @@
 
       <!-- ================ ALTA =================== -->
       <section id="v-alta" class="view" aria-labelledby="h-alta">
-        <h2 id="h-alta" class="visualmente-oculto" style="position:absolute;left:-9999px">Alta</h2>
+        <h2 id="h-alta" class="visually-hidden" style="position:absolute;left:-9999px">Alta</h2>
         <form id="fAlta" autocomplete="off">
           <div class="row">
             <div>
@@ -214,7 +215,7 @@
             </div>
             <div>
               <label for="fnacA">Fecha Nac. (opcional)</label>
-              <input id="fnacA" name="fnac" type="date" placeholder="dd/mm/aaaa" autocomplete="off">
+              <input id="fnacA" name="fnac" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" autocomplete="off">
             </div>
           </div>
 
@@ -237,12 +238,12 @@
           <div class="row">
             <div>
               <label for="fa">Fecha alta</label>
-              <input id="fa" name="fa" type="date" placeholder="dd/mm/aaaa" autocomplete="off">
+              <input id="fa" name="fa" type="text" placeholder="dd/mm/aaaa" inputmode="numeric" autocomplete="off">
             </div>
             <div>
               <label for="ha">Hora alta</label>
               <div class="kv">
-                <input id="ha" name="ha" type="time" placeholder="--:--" autocomplete="off" step="60">
+                <input id="ha" name="ha" type="text" placeholder="--:--" inputmode="numeric" autocomplete="off">
                 <button class="btn sec" type="button" id="btnNowA">Ahora</button>
               </div>
             </div>
@@ -269,6 +270,7 @@
           </div>
         </form>
       </section>
+
       <!-- ============== PENDIENTES ============== -->
       <section id="v-pend" class="view" aria-labelledby="h-pend">
         <h2 id="h-pend" class="visually-hidden" style="position:absolute;left:-9999px">Pendientes</h2>
@@ -335,7 +337,7 @@
 
   <script>
   /* ========= Utilitarios ========= */
-  const qs = s => document.querySelector(s);
+  const qs  = s => document.querySelector(s);
   const qsa = s => [...document.querySelectorAll(s)];
   const store = {
     get k(){ return 'hsmv7_cfg' },
@@ -345,31 +347,72 @@
     pend(){ try{ return JSON.parse(localStorage.getItem(this.p)||'[]') }catch{return []} },
     setPend(arr){ localStorage.setItem(this.p, JSON.stringify(arr||[])) }
   };
+
+  // Defaults (solo 1ra vez, podés editar a mano en Config)
+  const DEFAULTS = {
+    url: 'https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec',
+    key: 'HSM2025KEY'
+  };
+
   const z2 = n => String(n).padStart(2,'0');
   const fmtDate = d => `${z2(d.getDate())}/${z2(d.getMonth()+1)}/${d.getFullYear()}`;
   const fmtTime = d => `${z2(d.getHours())}:${z2(d.getMinutes())}`;
-  const toast = (msg, ms=2200)=>{ const el=qs('#toast'); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none', ms) };
+  const toast = (msg, ms=2200)=>{ const el=qs('#toast'); el.textContent=msg; el.style.display='block'; setTimeout(()=>el.style.display='none', ms) }
 
-  /* ========= Feature-detect y helpers fecha/hora ========= */
-  const supportsType = (t)=>{ const i=document.createElement('input'); i.setAttribute('type',t); return i.type===t; };
-  const toDMY = (v)=>/^\d{4}-\d{2}-\d{2}$/.test(v)? v.replace(/^(\d{4})-(\d{2})-(\d{2})$/,(m,y,mn,d)=>`${d}/${mn}/${y}`):v;
-  const toHM  = (v)=>/^\d{2}:\d{2}$/.test(v)? v: (v||'').slice(0,5);
-
+  /* ========= Máscaras fecha / hora ========= */
   function maskDate(el){
-    el.type='text'; el.setAttribute('inputmode','numeric'); el.maxLength=10;
+    el.setAttribute('inputmode','numeric'); el.setAttribute('autocomplete','off'); el.maxLength=10;
     el.addEventListener('input', ()=>{ let v=el.value.replace(/\D/g,'').slice(0,8);
       if(v.length>=5) v=v.replace(/^(\d{2})(\d{2})(\d{1,4}).*/, '$1/$2/$3');
       else if(v.length>=3) v=v.replace(/^(\d{2})(\d{1,2}).*/, '$1/$2'); el.value=v; });
+    el.addEventListener('blur', ()=>{ const m=el.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if(!m){ el.setCustomValidity('Fecha inválida'); return; }
+      const dd=+m[1], mm=+m[2], yy=+m[3]; const ok = dd>=1 && dd<=31 && mm>=1 && mm<=12 && yy>=1900 && yy<=2100;
+      el.setCustomValidity(ok?'':''); });
   }
   function maskTime(el){
-    el.type='text'; el.setAttribute('inputmode','numeric'); el.maxLength=5;
+    el.setAttribute('inputmode','numeric'); el.setAttribute('autocomplete','off'); el.maxLength=5;
     el.addEventListener('input', ()=>{ let v=el.value.replace(/\D/g,'').slice(0,4);
       if(v.length>=3) v=v.replace(/^(\d{2})(\d{1,2}).*/, '$1:$2'); el.value=v; });
+    el.addEventListener('blur', ()=>{ const m=el.value.match(/^(\d{2}):(\d{2})$/);
+      if(!m){ el.setCustomValidity('Hora inválida'); return; }
+      const hh=+m[1], mm=+m[2]; el.setCustomValidity(hh>=0&&hh<=23&&mm>=0&&mm<=59?'':''); });
   }
+  ['#fi','#fa','#fnacA'].forEach(s=> maskDate(qs(s)));
+  ['#hi','#ha'].forEach(s=> maskTime(qs(s)));
 
-  // Aplicar fallback si hace falta
-  if(!supportsType('date')) ['#fi','#fa','#fnacA'].forEach(s=> maskDate(qs(s)));
-  if(!supportsType('time')) ['#hi','#ha'].forEach(s=> maskTime(qs(s)));
+  /* ========= Pickers nativos sobre inputs de texto ========= */
+  function attachDatePicker(sel){
+    const txt = qs(sel); if(!txt) return;
+    txt.addEventListener('focus', ()=>{
+      const d = document.createElement('input'); d.type = 'date';
+      d.style.position='fixed'; d.style.left='-9999px';
+      const m = txt.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if(m) d.value = `${m[3]}-${m[2]}-${m[1]}`;
+      document.body.appendChild(d);
+      d.addEventListener('change', ()=>{
+        if(d.value){ const [Y,M,D]=d.value.split('-'); txt.value = `${D}/${M}/${Y}`; txt.dispatchEvent(new Event('input',{bubbles:true})); txt.dispatchEvent(new Event('blur',{bubbles:true})); }
+        d.remove();
+      }, {once:true});
+      d.click();
+    });
+  }
+  function attachTimePicker(sel){
+    const txt = qs(sel); if(!txt) return;
+    txt.addEventListener('focus', ()=>{
+      const t = document.createElement('input'); t.type = 'time';
+      t.style.position='fixed'; t.style.left='-9999px';
+      if(/^\d{2}:\d{2}$/.test(txt.value)) t.value = txt.value;
+      document.body.appendChild(t);
+      t.addEventListener('change', ()=>{
+        if(t.value){ txt.value = t.value.slice(0,5); txt.dispatchEvent(new Event('input',{bubbles:true})); txt.dispatchEvent(new Event('blur',{bubbles:true})); }
+        t.remove();
+      }, {once:true});
+      t.click();
+    });
+  }
+  attachDatePicker('#fi'); attachDatePicker('#fa'); attachDatePicker('#fnacA');
+  attachTimePicker('#hi'); attachTimePicker('#ha');
 
   /* ========= Estado Online/Offline ========= */
   const onlineBadge = () => {
@@ -378,8 +421,8 @@
     el.className = 'badge ' + (on ? 'ok' : 'off');
     el.textContent = on ? 'Online' : 'Offline';
   };
-  addEventListener('online', onlineBadge);
-  addEventListener('offline', onlineBadge);
+  window.addEventListener('online', onlineBadge);
+  window.addEventListener('offline', onlineBadge);
 
   /* ========= Tabs accesibles ========= */
   const syncTabs = () => {
@@ -390,13 +433,13 @@
     qsa('.view').forEach(v=>v.style.display='none');
     qs('#v-'+h.replace('#','')).style.display='block';
   };
-  addEventListener('hashchange', syncTabs);
+  window.addEventListener('hashchange', syncTabs);
 
   /* ========= Logo micro-motion ========= */
   qs('#logo').addEventListener('load',e=>e.target.classList.add('loaded'));
 
   /* ========= Configuración ========= */
-  const cfg = store.read();
+  const cfg = (()=>{ const cur = store.read(); if(!cur.url && DEFAULTS.url){ const n={...DEFAULTS}; store.save(n); return n; } return cur; })();
   const dlg = qs('#cfg');
   qs('#btnCfg').onclick = ()=> {
     qs('#cfg_url').value = cfg.url || '';
@@ -413,27 +456,20 @@
     store.save(n);
     if(n.logo){ qs('#logo').src = n.logo }
   });
+
+  // Probar: usar GET (no-cors) → GAS responde a doGet
   qs('#cfgTest').onclick = async ()=>{
     const url = qs('#cfg_url').value.trim();
     if(!url) return toast('Ingresá la URL /exec');
     try{
-      // GAS no responde a OPTIONS; hacemos GET ?ping=1.
-      await fetch(url + (url.includes('?')?'&':'?') + 'ping=1', { method:'GET', mode:'no-cors' });
-      qs('#cfgMsg').textContent = 'Ping enviado ✓ (si GAS está bien deployado, recibís el hit).';
+      await fetch(url+'?ping=1', {method:'GET', mode:'no-cors'});
+      qs('#cfgMsg').textContent = 'Ping enviado (revisá el deployment de GAS).';
     }catch{ qs('#cfgMsg').textContent = 'No se pudo contactar. Revisá la URL.' }
   };
 
   /* ========= Helpers de formulario ========= */
-  qs('#btnNowI').onclick = ()=>{ const d=new Date(); 
-    const di = qs('#fi'); const hi = qs('#hi');
-    if(di.type==='date') di.valueAsDate = d; else di.value = fmtDate(d);
-    if(hi.type==='time') hi.value = `${z2(d.getHours())}:${z2(d.getMinutes())}`; else hi.value = fmtTime(d);
-  };
-  qs('#btnNowA').onclick = ()=>{ const d=new Date(); 
-    const da = qs('#fa'); const ha = qs('#ha');
-    if(da.type==='date') da.valueAsDate = d; else da.value = fmtDate(d);
-    if(ha.type==='time') ha.value = `${z2(d.getHours())}:${z2(d.getMinutes())}`; else ha.value = fmtTime(d);
-  };
+  qs('#btnNowI').onclick = ()=>{ const d=new Date(); qs('#fi').value=fmtDate(d); qs('#hi').value=fmtTime(d) };
+  qs('#btnNowA').onclick = ()=>{ const d=new Date(); qs('#fa').value=fmtDate(d); qs('#ha').value=fmtTime(d) };
   qsa('.chip').forEach(b=> b.onclick = ()=> {
     const t = qs('#obs');
     t.value = (t.value ? (t.value.trim() + ' · ') : '') + b.dataset.tag;
@@ -487,21 +523,10 @@
   }
 
   /* ========= Formularios submit ========= */
-  function normDates(obj){
-    const out = {...obj};
-    if(out.fi) out.fi = toDMY(out.fi);
-    if(out.fa) out.fa = toDMY(out.fa);
-    if(out.fnac) out.fnac = toDMY(out.fnac);
-    if(out.hi) out.hi = toHM(out.hi);
-    if(out.ha) out.ha = toHM(out.ha);
-    return out;
-  }
-
   qs('#fIng').addEventListener('submit', e=>{
     e.preventDefault();
-    const data = normDates(Object.fromEntries(new FormData(e.target).entries()));
-    if(!data.fi) data.fi = fmtDate(new Date());
-    if(!data.hi) data.hi = fmtTime(new Date());
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    data.fi ||= fmtDate(new Date()); data.hi ||= fmtTime(new Date());
     const item = {tipo:'ING', ts: Date.now(), data};
     const q = store.pend(); q.push(item); store.setPend(q);
     renderPend(); toast('Ingreso guardado en pendientes');
@@ -510,9 +535,8 @@
 
   qs('#fAlta').addEventListener('submit', e=>{
     e.preventDefault();
-    const data = normDates(Object.fromEntries(new FormData(e.target).entries()));
-    if(!data.fa) data.fa = fmtDate(new Date());
-    if(!data.ha) data.ha = fmtTime(new Date());
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    data.fa ||= fmtDate(new Date()); data.ha ||= fmtTime(new Date());
     const item = {tipo:'ALTA', ts: Date.now(), data};
     const q = store.pend(); q.push(item); store.setPend(q);
     renderPend(); toast('Alta guardada en pendientes');
@@ -546,7 +570,7 @@
 
   /* ========= Instalación (PWA) ========= */
   let deferredPrompt=null;
-  addEventListener('beforeinstallprompt', (e)=>{
+  window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault(); deferredPrompt = e;
     const b = qs('#btnInstall'); b.classList.add('shown');
     b.onclick = async ()=>{ deferredPrompt?.prompt(); deferredPrompt = null; b.classList.remove('shown') };
@@ -554,9 +578,9 @@
 
   /* ========= SW registro ========= */
   if('serviceWorker' in navigator){
-    addEventListener('load', ()=>{
-      // En build PROD se reescribe a scope '/panel-html-msm/'
-      navigator.serviceWorker.register('./sw.js', {scope:'./'}).catch(console.error);
+    window.addEventListener('load', ()=>{
+      const scope = './';
+      navigator.serviceWorker.register('./sw.js', {scope}).catch(console.error);
     });
   }
 
@@ -568,10 +592,9 @@
     const params = new URLSearchParams(location.search);
     if(params.get('dni')) qs('#dni').value = params.get('dni');
     if(params.get('sexo')) qs('#sexo').value = params.get('sexo');
-    if(params.get('fi')){ const v=params.get('fi'); const di=qs('#fi'); if(di.type==='date'){ di.value = v } else { di.value = v.split('-').reverse().join('/') } }
+    if(params.get('fi'))   qs('#fi').value = params.get('fi').split('-').reverse().join('/');
     renderPend();
   })();
   </script>
 </body>
 </html>
-
