@@ -10,3 +10,29 @@ App móvil (PWA) para ingreso y alta rápida con soporte offline y cola de pendi
 - **Atajos**: `#/ing`, `#/alta`, `#/pend`, `#/util`
 
 # panel-html-msm
+
+## Configuración inicial
+- La app trae defaults embebidos (EXEC_URL + API_KEY).
+- Podés cambiarlos en ⚙️ (se guardan en `localStorage`).
+
+## Atajos
+- `#/ing`, `#/alta`, `#/pend`, `#/util`
+
+## Desarrollo local
+```bash
+npm ci
+node build.mjs --dev
+npx http-server dist -p 4173 -s
+# abrir http://localhost:4173/
+node build.mjs --prod
+# genera dist/ listo para GitHub Pages
+
+---
+
+# 🧪 Cómo probar rápido
+
+1) **Local**  
+```bash
+npm ci
+node build.mjs --dev
+npx http-server dist -p 4173 -s
