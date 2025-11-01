@@ -1,25 +1,19 @@
 {
   "name": "HSM v7 • Móvil",
-  "short_name": "HSM v7",
-  "description": "Ingreso y alta rápida con soporte offline y cola de pendientes.",
-  "lang": "es-AR",
-  "dir": "ltr",
-  "start_url": "/panel-html-msm/#ing",
+  "short_name": "HSM",
+  "start_url": "/panel-html-msm/",
   "scope": "/panel-html-msm/",
   "display": "standalone",
-  "theme_color": "#0b1220",
   "background_color": "#0b1220",
-  "orientation": "portrait-primary",
+  "theme_color": "#0b1220",
   "icons": [
-    { "src": "/panel-html-msm/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/panel-html-msm/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/panel-html-msm/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/panel-html-msm/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/panel-html-msm/icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+    { "src": "/panel-html-msm/icons/icon-192.png",      "sizes": "192x192", "type": "image/png" },
+    { "src": "/panel-html-msm/icons/icon-512.png",      "sizes": "512x512", "type": "image/png" },
+    { "src": "/panel-html-msm/icons/maskable-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/panel-html-msm/icons/maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "screenshots": [
-    { "src": "/panel-html-msm/icons/screen-1080x1920.webp", "sizes": "1080x1920", "type": "image/webp", "form_factor": "narrow", "label": "Ingreso" },
-    { "src": "/panel-html-msm/icons/screen-1920x1080.webp", "sizes": "1920x1080", "type": "image/webp", "form_factor": "wide",   "label": "Panel" }
-  ],
-  "categories": ["medical", "productivity", "utilities"]
+    { "src": "/panel-html-msm/icons/screen-1080x1920.webp", "type": "image/webp", "sizes": "1080x1920" },
+    { "src": "/panel-html-msm/icons/screen-1920x1080.webp", "type": "image/webp", "sizes": "1920x1080" }
+  ]
 }
