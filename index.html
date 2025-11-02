@@ -1,499 +1,300 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HSM v7 · Móvil</title>
-  <meta name="color-scheme" content="dark light" />
-  <style>
-    :root{
-      --bg:#0d1321; --panel:#141a2a; --chip:#2b3550; --ok:#22dd8f; --warn:#f59e0b; --err:#ef4444;
-      --txt:#e9f1ff; --muted:#bdcff7; --ph:#afc2f5; --gap:14px; --radius:14px; --shadow:0 6px 18px rgba(0,0,0,.25);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";}
-    header{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(0deg,rgba(255,255,255,.02),rgba(255,255,255,.04));position:sticky;top:0;z-index:5}
-    .app{display:flex;align-items:center;gap:10px;font-weight:700}
-    .pill{padding:6px 10px;border-radius:999px;background:var(--chip);color:#cfe3ff;font-weight:600}
-    .ok{background:rgba(34,221,143,.15);color:#bfffe8;border:1px solid rgba(34,221,143,.35)}
-    .btn{border:0;background:#1e2742;color:#dbe8ff;padding:10px 14px;border-radius:10px;cursor:pointer;box-shadow:var(--shadow)}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-    .btn-warn{background:#3a2b06;color:#ffd88a;border:1px solid rgba(245,158,11,.45)}
-    .btn-danger{background:#35151a;color:#ffc7c7;border:1px solid rgba(239,68,68,.45)}
-    .row{display:grid;gap:var(--gap)}
-    .grid{display:grid;gap:var(--gap)}
-    @media(min-width:980px){ .grid{grid-template-columns:repeat(3,1fr);} }
-    main{padding:16px}
-    section{background:var(--panel);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
-    label{display:block;margin:6px 0 4px;color:#cfe3ff}
-    input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#0f1627;color:var(--txt)}
-    input::placeholder,textarea::placeholder{color:var(--ph)}
-    .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .chips .chip{background:var(--chip);border:1px solid rgba(189,207,247,.25);color:#cfe3ff;padding:6px 10px;border-radius:999px;cursor:pointer}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.06)}
-    .muted{color:var(--muted);font-size:.9rem}
-    .hint{font-size:.82rem;color:#a9bde8}
-    nav.tabs{display:flex;gap:8px;margin:0 0 12px 0}
-    nav .tab{background:#192240;border:1px solid rgba(255,255,255,.08);padding:8px 12px;border-radius:999px;cursor:pointer}
-    nav .tab.active{background:#263158}
-    dialog{border:0;border-radius:14px;background:#0f1627;color:var(--txt);padding:0;max-width:520px;width:96%}
-    dialog header{position:unset;box-shadow:none;border-radius:14px 14px 0 0}
-    dialog .content{padding:16px}
-    .foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid rgba(255,255,255,.06)}
-    .right{margin-left:auto}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HSM v7 • Móvil</title>
+<meta name="description" content="Carga de ingresos - HSM v7 móvil" />
+<style>
+  :root{
+    --bg:#0d1321; --panel:#141a2a; --chip:#2b3550;
+    --txt:#e9f1ff; --muted:#bfd1ff; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+    --field:#1b2135; --accent:#3381ff; --accent-2:#1e40af;
+    --radius:12px; --gap:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,Ubuntu,Arial}
+  header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:linear-gradient(180deg,#0f162a,#0c1324)}
+  header .badge{background:#0f2a18;color:#9ff4c7;border-radius:999px;padding:3px 10px;font-size:12px}
+  main{padding:16px}
+  .card{background:var(--panel);border-radius:var(--radius);padding:16px;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+  .row{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gap)}
+  .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-12{grid-column:span 12}
+  @media (max-width:900px){ .col-3,.col-4,.col-6{grid-column:span 12} }
+
+  label{display:block;margin:6px 2px 6px 4px;color:var(--muted);font-size:12px}
+  input,select,textarea{
+    width:100%;background:var(--field);border:1px solid #223; color:var(--txt);
+    border-radius:10px;padding:12px 12px;outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(51,129,255,.2)}
+  .btn{background:#1c2a4a;border:1px solid #24345d;color:#dfe9ff;border-radius:999px;padding:10px 14px;cursor:pointer}
+  .btn.primary{background:#2152d9;border-color:#2c5cff}
+  .btn.warn{background:#64410a;border-color:#7a520c}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .chip{background:var(--chip);border-radius:999px;padding:8px 12px;font-size:13px}
+  .hint{color:#9fb3ff;font-size:12px;margin-top:6px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #26304a;font-size:14px}
+  th{text-align:left;color:#b9c8ff}
+  .tag{padding:2px 8px;border-radius:999px;font-size:12px}
+  .tag.pend{background:#3a2b08;color:#ffd27a}
+  .tag.ok{background:#09321b;color:#86f3b8}
+  .right{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+</style>
 </head>
 <body>
-  <header>
-    <div class="app">📊 HSM v7 · Móvil</div>
-    <span id="badgeNet" class="pill ok">Online</span>
-    <nav class="tabs right" role="tablist" aria-label="Secciones">
-      <button class="tab active" id="t-ing">Ingreso</button>
-      <button class="tab" id="t-alta">Alta</button>
-      <button class="tab" id="t-pend">Pendientes <span id="cntPend" class="pill" style="margin-left:6px">0</span></button>
-      <button class="tab" id="t-util">Útiles</button>
-    </nav>
-    <button id="btnCfg" class="btn" aria-label="Config">⚙</button>
-  </header>
+<header>
+  <strong>📊 HSM v7 • Móvil</strong>
+  <span id="net" class="badge">Online</span>
+  <div class="right" style="margin-left:auto">
+    <button id="btnCfg" class="btn">⚙️</button>
+  </div>
+</header>
 
-  <main class="row">
-    <!-- Ingreso -->
-    <section id="sec-ing">
-      <h3>Ingreso</h3>
-      <div class="grid">
-        <div>
-          <label for="dni">DNI</label>
-          <input id="dni" inputmode="numeric" pattern="[0-9]*" placeholder="7–9 dígitos" />
-          <div class="hint">Solo números (sin puntos)</div>
-        </div>
+<main class="card">
+  <form id="frm" autocomplete="off">
+    <div class="row">
+      <div class="col-3">
+        <label for="dni">DNI</label>
+        <input id="dni" name="dni" inputmode="numeric" pattern="[0-9]{7,9}" placeholder="7–9 dígitos" required />
+        <div class="hint">Solo números (sin puntos)</div>
+      </div>
 
-        <div>
-          <label for="sexo">Sexo</label>
-          <select id="sexo">
-            <option value="">—</option>
-            <option>F</option><option>M</option><option>X</option>
-          </select>
-        </div>
+      <div class="col-3">
+        <label for="sexo">Sexo</label>
+        <select id="sexo" name="sexo">
+          <option value="F">F</option><option value="M">M</option><option value="X">X</option>
+        </select>
+      </div>
 
-        <div>
-          <label for="fecIng">Fecha ingreso</label>
-          <div class="inline">
-            <input id="fecIng" type="date" />
-            <button id="btnHoyIng" class="btn">Hoy</button>
-          </div>
-          <div class="hint">Formato enviado: yyyy-mm-dd</div>
-        </div>
+      <div class="col-3">
+        <label for="fec">Fecha ingreso</label>
+        <input id="fec" name="fec" type="date" />
+        <div class="hint">Formato enviado: yyyy-mm-dd</div>
+      </div>
+      <div class="col-3" style="display:flex;gap:8px;align-items:end">
+        <button class="btn" type="button" id="btnHoy">Hoy</button>
+        <div style="flex:1"></div>
+      </div>
 
-        <div>
-          <label for="horIng">Hora ingreso</label>
-          <div class="inline">
-            <input id="horIng" type="time" step="60"/>
-            <button id="btnAhoraIng" class="btn">Ahora</button>
-          </div>
-        </div>
+      <div class="col-3">
+        <label for="hora">Hora ingreso</label>
+        <input id="hora" name="hora" type="time" />
+      </div>
+      <div class="col-3" style="display:flex;gap:8px;align-items:end">
+        <button class="btn" type="button" id="btnAhora">Ahora</button>
+      </div>
 
-        <div>
-          <label for="idea">Ideación / Intento</label>
-          <select id="idea">
-            <option value="">—</option>
-            <option>Ideación</option>
-            <option>Intento</option>
-          </select>
-        </div>
+      <div class="col-3">
+        <label for="ide">Ideación / Intento</label>
+        <select id="ide"><option>Ideación</option><option selected>Intento</option></select>
+      </div>
 
-        <div>
-          <label for="metodo">Método / Letalidad</label>
-          <select id="metodo">
-            <option value="">—</option>
-            <option>Intoxicación</option>
-            <option>Corte</option>
-            <option>Colgamiento</option>
-            <option>Arma de fuego</option>
-            <option>Arrojo</option>
-            <option>Otro</option>
-          </select>
-        </div>
+      <div class="col-3">
+        <label for="met">Método / Letalidad</label>
+        <select id="met">
+          <option>—</option>
+          <option>Intoxicación</option>
+          <option>Corte</option>
+          <option>Colgamiento</option>
+          <option>Arma de fuego</option>
+          <option>Arrojo</option>
+          <option>Otro</option>
+        </select>
+      </div>
 
-        <div>
-          <label for="consumo">Consumo</label>
-          <select id="consumo">
-            <option>Niega</option>
-            <option>Ocasional</option>
-            <option>Semanal</option>
-            <option>Diaria</option>
-          </select>
-        </div>
+      <div class="col-3">
+        <label for="cons">Consumo</label>
+        <select id="cons">
+          <option>Niega</option><option>Alcohol</option><option>Drogas</option><option>Mixto</option>
+        </select>
+      </div>
 
-        <div>
-          <label for="freq">Frecuencia</label>
-          <select id="freq">
-            <option value="">—</option>
-            <option>Ocasional</option>
-            <option>Semanal</option>
-            <option>Diaria</option>
-          </select>
-        </div>
+      <div class="col-3">
+        <label for="freq">Frecuencia</label>
+        <select id="freq">
+          <option>—</option><option>Diaria</option><option>Semanal</option><option>Ocasional</option>
+        </select>
+      </div>
 
-        <div class="grid" style="grid-template-columns:1fr 2fr">
-          <div>
-            <label for="dx">Dx CIE-10 (código)</label>
-            <input id="dx" placeholder="Ej: F32.1"/>
-          </div>
-          <div>
-            <label>&nbsp;</label>
-            <div class="chips inline">
-              <span data-obs="Obs. SP" class="chip">Obs. SP</span>
-              <span data-obs="Red apoyo ✓" class="chip">Red apoyo ✓</span>
-              <span data-obs="Niega consumo" class="chip">Niega consumo</span>
-              <span data-obs="Acompañante" class="chip">Acompañante</span>
-            </div>
-          </div>
-        </div>
+      <div class="col-6">
+        <label for="dx">Dx CIE-10 (código)</label>
+        <input id="dx" placeholder="Ej: F32.1" />
+      </div>
 
-        <div style="grid-column:1/-1">
-          <label for="obs">Observaciones</label>
-          <textarea id="obs" rows="4" placeholder=""></textarea>
+      <div class="col-12">
+        <label for="obs">Observaciones</label>
+        <textarea id="obs" rows="4" placeholder="Notas…"></textarea>
+        <div class="chips">
+          <button class="btn chip" type="button" data-ins="Obs. SP">Obs. SP</button>
+          <button class="btn chip" type="button" data-ins="Red apoyo ✓">Red apoyo ✓</button>
+          <button class="btn chip" type="button" data-ins="Niega consumo">Niega consumo</button>
+          <button class="btn chip" type="button" data-ins="Acompañante">Acompañante</button>
         </div>
       </div>
 
-      <div class="inline" style="margin-top:12px">
-        <button id="btnSendIng" class="btn">Guardar ingreso</button>
-        <span class="pill" id="badgePendIng">Pend: 0</span>
-        <span id="msgIng" class="muted"></span>
+      <div class="col-12 right">
+        <button class="btn primary" id="btnSave" type="submit">Guardar ingreso</button>
+        <span id="pend" class="chip">Pend: 0</span>
       </div>
-    </section>
-
-    <!-- Alta -->
-    <section id="sec-alta" hidden>
-      <h3>Alta</h3>
-      <div class="grid">
-        <div>
-          <label for="dniA">DNI</label>
-          <input id="dniA" inputmode="numeric" pattern="[0-9]*" placeholder="7–9 dígitos" />
-        </div>
-        <div>
-          <label for="fecAlta">Fecha alta</label>
-          <div class="inline">
-            <input id="fecAlta" type="date"/>
-            <button id="btnHoyAlta" class="btn">Hoy</button>
-          </div>
-          <div class="hint">Formato enviado: yyyy-mm-dd</div>
-        </div>
-        <div>
-          <label for="horAlta">Hora alta</label>
-          <div class="inline">
-            <input id="horAlta" type="time" step="60"/>
-            <button id="btnAhoraAlta" class="btn">Ahora</button>
-          </div>
-        </div>
-        <div style="grid-column:1/-1">
-          <label for="obsAlta">Observaciones (alta, derivación, indicaciones)</label>
-          <textarea id="obsAlta" rows="4"></textarea>
-        </div>
-      </div>
-      <div class="inline" style="margin-top:12px">
-        <button id="btnSendAlta" class="btn">Guardar alta</button>
-        <span id="msgAlta" class="muted"></span>
-      </div>
-    </section>
-
-    <!-- Pendientes -->
-    <section id="sec-pend" hidden>
-      <h3>Pendientes</h3>
-      <div class="inline" style="margin-bottom:8px">
-        <span class="muted">Se evita duplicar por <b>DUPE_KEY = tipo | DNI | Fecha | Hora</b></span>
-        <span class="right"></span>
-        <button id="btnRetryAll" class="btn">Reintentar todos</button>
-        <button id="btnClear" class="btn btn-warn">Vaciar cola</button>
-      </div>
-      <div style="overflow:auto">
-        <table id="tblPend">
-          <thead><tr><th>#</th><th>Tipo</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Útiles -->
-    <section id="sec-util" hidden>
-      <h3>Útiles</h3>
-      <p class="muted">Atajos rápidos, exportaciones y diagnósticos.</p>
-      <div class="inline">
-        <button id="btnPing" class="btn">Probar WebApp</button>
-        <span id="msgPing" class="muted"></span>
-      </div>
-    </section>
-  </main>
-
-  <!-- Configuración -->
-  <dialog id="dlgCfg" aria-labelledby="cfg-title">
-    <header>
-      <div id="cfg-title" class="app">Configuración</div>
-    </header>
-    <div class="content">
-      <label>WebApp URL (/exec)</label>
-      <input id="cfgUrl" placeholder="https://script.google.com/macros/s/.../exec" />
-      <label>API Key</label>
-      <input id="cfgKey" placeholder="HSM2025KEY" />
-      <label>Logo URL (opcional)</label>
-      <input id="cfgLogo" placeholder="https://.../logo.png" />
-      <p class="muted">El ping usa <code>GET</code>. Los envíos usan <code>POST</code> sin headers (sin preflight).</p>
     </div>
-    <div class="foot">
-      <button class="btn" id="btnCfgPing">Probar</button>
-      <span class="right"></span>
-      <button class="btn" id="btnCfgClose">Cerrar</button>
-      <button class="btn ok" id="btnCfgSave">Guardar</button>
-    </div>
-  </dialog>
+  </form>
 
-  <script>
-  /************* CONFIG LOCAL *************/
-  const LS = {
-    URL: 'HSM_URL',
-    KEY: 'HSM_KEY',
-    LOGO: 'HSM_LOGO',
-    QUEUE: 'HSM_QUEUE_V1'
-  };
-  // Defaults (se pueden cambiar luego en ⚙)
-  const DEFAULTS = {
-    url: 'https://script.google.com/macros/s/AKfycbw8396BPSyjySmmV5efuei721ET6YJamCNDFW3X3R7EaBHLOCFn_l1-ik2eGQyOalq66g/exec',
-    key: 'HSM2025KEY'
-  };
+  <hr style="border:0;border-top:1px solid #27314a;margin:18px 0">
 
-  function getCfg(){
-    return {
-      url: localStorage.getItem(LS.URL) || DEFAULTS.url,
-      key: localStorage.getItem(LS.KEY) || DEFAULTS.key,
-      logo: localStorage.getItem(LS.LOGO) || ''
-    };
+  <div class="right" style="margin-bottom:8px">
+    <span class="hint">Se evita duplicar por DUPE_KEY = DNI | Fecha | Hora</span>
+    <button id="btnRetry" class="btn">Reintentar todos</button>
+    <button id="btnEmpty" class="btn warn">Vaciar cola</button>
+  </div>
+
+  <table id="tbl">
+    <thead><tr><th>#</th><th>Tipo</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<script>
+/* ====== CONFIG ====== */
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw8396BPSyjySmmV5efuei721ET6YJamCNDFW3X3R7EaBHLOCFn_l1-ik2eGQyOalq66g/exec';
+const API_KEY    = 'HSM2025KEY';
+const APP_VER    = 'v7-móvil';
+const STORE_KEY  = 'HSMv7_QUEUE';
+
+const $ = s => document.querySelector(s);
+const fmt = n => String(n).padStart(2,'0');
+
+function today(){ const d=new Date(); return `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}`; }
+function now(){ const d=new Date(); return `${fmt(d.getHours())}:${fmt(d.getMinutes())}`; }
+
+function loadQ(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); }catch(_){ return []; } }
+function saveQ(q){ localStorage.setItem(STORE_KEY, JSON.stringify(q)); paintQ(q); }
+
+function dupeKey(dni, f, h){ return [String(dni||'').trim(), f, h].join('|'); }
+
+function paintQ(q){
+  $('#pend').textContent = 'Pend: ' + q.length;
+  const tb = $('#tbl tbody'); tb.innerHTML = '';
+  q.forEach((it,i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i+1}</td><td>${it.tipo}</td><td>${it.DNI}</td><td>${it.fecha}</td><td>${it.hora}</td>
+      <td><span class="tag pend">pend</span></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function pushUnique(item){
+  const q = loadQ();
+  if (!q.find(x => x.DUPE_KEY === item.DUPE_KEY)) {
+    q.push(item); saveQ(q);
   }
-  function setCfg({url,key,logo}){
-    if (url) localStorage.setItem(LS.URL,url);
-    if (key) localStorage.setItem(LS.KEY,key);
-    if (logo!==undefined) localStorage.setItem(LS.LOGO,logo);
-    paintCfg();
+}
+
+async function sendOne(item){
+  // Request SIMPLE: form-urlencoded (evita preflight/CORS)
+  const data = new URLSearchParams();
+  data.set('key', API_KEY);
+  data.set('data', JSON.stringify(item));   // servidor parsea e.parameter.data
+
+  const res = await fetch(WEBAPP_URL, {
+    method: 'POST',
+    headers: {'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+    body: data.toString(),
+    redirect: 'follow',
+    cache: 'no-cache'
+  }).catch(()=>null);
+
+  if (!res) throw new Error('sin_respuesta');
+  if (!res.ok) throw new Error('http_'+res.status);
+
+  // Apps Script devuelve JSON (TextOutput)
+  const txt = await res.text();
+  try { const j = JSON.parse(txt); if (!j.ok) throw new Error(j.error||'srv'); } catch(_){}
+  return true;
+}
+
+async function retryAll(){
+  let q = loadQ();
+  const left = [];
+  for (const it of q){
+    try { await sendOne(it); }
+    catch(e){ left.push(it); }
   }
-  function paintCfg(){
-    const {url,key,logo} = getCfg();
-    qs('#cfgUrl').value = url;
-    qs('#cfgKey').value = key;
-    qs('#cfgLogo').value = logo;
-  }
+  saveQ(left);
+}
 
-  /************* UI BÁSICA *************/
-  const q  = (s,el=document)=>el.querySelector(s);
-  const qa = (s,el=document)=>el.querySelectorAll(s);
-  const qs = q;
+function setOnline(v){ $('#net').textContent = v ? 'Online' : 'Offline'; }
 
-  // Tabs
-  function show(id){
-    for (const sec of ['sec-ing','sec-alta','sec-pend','sec-util']) q('#'+sec).hidden = true;
-    q('#'+id).hidden = false;
-    qa('nav .tab').forEach(b=>b.classList.remove('active'));
-    if (id==='sec-ing') q('#t-ing').classList.add('active');
-    if (id==='sec-alta') q('#t-alta').classList.add('active');
-    if (id==='sec-pend') q('#t-pend').classList.add('active');
-    if (id==='sec-util') q('#t-util').classList.add('active');
-  }
-  q('#t-ing').onclick = ()=>show('sec-ing');
-  q('#t-alta').onclick = ()=>show('sec-alta');
-  q('#t-pend').onclick = ()=>{ refreshQueueTable(); show('sec-pend'); };
-  q('#t-util').onclick = ()=>show('sec-util');
+/* ====== UI wiring ====== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Defaults
+  $('#fec').value  = today();
+  $('#hora').value = now();
+  paintQ(loadQ());
+  setOnline(navigator.onLine);
 
-  // Hoy/Ahora
-  const today = ()=> new Date().toISOString().slice(0,10);
-  const nowHM = ()=> { const d=new Date(); return d.toTimeString().slice(0,5); };
+  $('#btnHoy').onclick = ()=> $('#fec').value = today();
+  $('#btnAhora').onclick = ()=> $('#hora').value = now();
 
-  q('#btnHoyIng').onclick  = ()=> q('#fecIng').value  = today();
-  q('#btnAhoraIng').onclick= ()=> q('#horIng').value  = nowHM();
-  q('#btnHoyAlta').onclick = ()=> q('#fecAlta').value = today();
-  q('#btnAhoraAlta').onclick=()=> q('#horAlta').value = nowHM();
-
-  // Chips de Observaciones
-  qa('.chips .chip').forEach(c=>c.onclick = ()=> {
-    const val = c.getAttribute('data-obs') || c.textContent.trim();
-    const ta  = q('#obs');
-    ta.value = (ta.value? (ta.value.trim()+' · '):'') + val;
+  // Chips → insertan texto
+  document.querySelectorAll('[data-ins]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const t = $('#obs');
+      t.value = (t.value ? (t.value.trim() + ' • ') : '') + b.dataset.ins;
+    });
   });
 
-  // Estado de red
-  function paintNet(){ const b=q('#badgeNet'); b.textContent = navigator.onLine ? 'Online' : 'Offline'; b.className = 'pill ' + (navigator.onLine?'ok':''); }
-  window.addEventListener('online', paintNet);
-  window.addEventListener('offline', paintNet);
-  paintNet();
+  $('#btnRetry').onclick = ()=> retryAll();
+  $('#btnEmpty').onclick = ()=> saveQ([]);
 
-  /************* COLA CON DEDUPE *************/
-  function loadQ(){ try{ return JSON.parse(localStorage.getItem(LS.QUEUE)||'[]'); }catch(_){ return []; } }
-  function saveQ(a){ localStorage.setItem(LS.QUEUE, JSON.stringify(a)); paintPendCount(); }
-  function dupeKeyFrom(tipo,p){ return [tipo, p.DNI, (p.FechaIngresoManual||p.FechaAltaManual||''), (p.HoraIngresoManual||p.HoraAltaManual||'')].join('|'); }
-  function upsertQ(item){
-    const a = loadQ();
-    const i = a.findIndex(x=>x.dupeKey===item.dupeKey);
-    if (i>=0) a[i]=item; else a.push(item);
-    saveQ(a);
-  }
-  function delQ(dupeKey){ saveQ(loadQ().filter(x=>x.dupeKey!==dupeKey)); }
-  function paintPendCount(){ const n=loadQ().length; q('#cntPend').textContent = n; q('#badgePendIng').textContent='Pend: '+n; }
+  // Cola automática al recuperar conexión
+  window.addEventListener('online', ()=>{ setOnline(true); retryAll(); });
+  window.addEventListener('offline', ()=> setOnline(false) );
 
-  function refreshQueueTable(){
-    const tb = q('#tblPend tbody'); tb.innerHTML='';
-    loadQ().forEach((x,i)=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${x.tipo}</td><td>${x.DNI||''}</td><td>${x.fecha||''}</td><td>${x.hora||''}</td><td>${x.estado||'pend'}</td>`;
-      tb.appendChild(tr);
-    });
-  }
-  paintPendCount();
+  // Submit
+  $('#frm').addEventListener('submit', async (ev)=>{
+    ev.preventDefault();
+    const btn = $('#btnSave'); btn.disabled = true;
 
-  /************* API (sin preflight) *************/
-  async function apiPing(){
-    const {url} = getCfg();
-    const r = await fetch(url, { method:'GET' }); // doGet ping
-    return r.json();
-  }
-  async function apiSend(tipo, payload){
-    const {url,key} = getCfg();
-    // ⚠️ Sin headers, sin Content-Type. API key en el body.
-    const r = await fetch(url, {
-      method: 'POST',
-      body: JSON.stringify({ apiKey: key, origin: location.origin, type: tipo, payload })
-    });
-    // Si el preflight no existe, doPost responde JSON
-    return r.json();
-  }
+    const dni   = $('#dni').value.trim();
+    const fecha = $('#fec').value;
+    const hora  = $('#hora').value;
 
-  /************* LECTURA FORM *************/
-  function readIngreso(){
-    return {
-      DNI: (q('#dni').value||'').trim(),
-      Sexo: q('#sexo').value,
-      FechaIngresoManual: q('#fecIng').value,
-      HoraIngresoManual: q('#horIng').value,
-      IdeacionIntento: q('#idea').value,
-      MetodoLetalidad: q('#metodo').value,
-      Consumo: q('#consumo').value,
-      Frecuencia: q('#freq').value,
-      DxCIE10: (q('#dx').value||'').trim(),
-      Observaciones: (q('#obs').value||'').trim(),
-      AppVersion: 'v7-móvil'
+    const item = {
+      tipo:'ing',
+      DNI:dni,
+      Sexo:$('#sexo').value,
+      FechaIngresoManual:fecha,
+      HoraIngresoManual:hora,
+      IdeacionIntento:$('#ide').value,
+      MetodoLetalidad:$('#met').value,
+      Consumo:$('#cons').value,
+      Frecuencia:$('#freq').value,
+      DxCIE10:$('#dx').value.trim(),
+      Observaciones:$('#obs').value.trim(),
+      AppVersion:APP_VER,
+      DUPE_KEY: dupeKey(dni, fecha || today(), hora || now())
     };
-  }
-  function readAlta(){
-    return {
-      DNI: (q('#dniA').value||'').trim(),
-      FechaAltaManual: q('#fecAlta').value,
-      HoraAltaManual: q('#horAlta').value,
-      Observaciones: (q('#obsAlta').value||'').trim(),
-      AppVersion: 'v7-móvil'
-    };
-  }
-  function basicValidate(p, campos){
-    for (const c of campos){
-      const v = (p[c]||'').trim();
-      if (!v) throw new Error('falta_'+c);
+
+    // Evitar duplicado por error humano (multi-click)
+    pushUnique(item);
+
+    try {
+      await sendOne(item);
+      // si fue OK, sacar de cola
+      const q = loadQ().filter(x => x.DUPE_KEY !== item.DUPE_KEY);
+      saveQ(q);
+    } catch(_) {
+      // queda en pendientes; el banner informativo es la tabla
+    } finally {
+      btn.disabled = false;
     }
-  }
-
-  /************* ENVÍOS con bloqueo y DEDUPE *************/
-  let inFlightIng = false, inFlightAlta = false;
-
-  q('#btnSendIng').onclick = async ()=>{
-    if (inFlightIng) return;
-    const btn = q('#btnSendIng'); const msg = q('#msgIng'); msg.textContent='';
-    try{
-      const p = readIngreso();
-      basicValidate(p, ['DNI','FechaIngresoManual','HoraIngresoManual']);
-      const item = {
-        tipo:'ing', DNI:p.DNI, fecha:p.FechaIngresoManual, hora:p.HoraIngresoManual,
-        dupeKey: dupeKeyFrom('ing', p), estado:'pend', payload:p
-      };
-      upsertQ(item); refreshQueueTable();
-
-      inFlightIng = true; btn.disabled = true;
-      const res = await apiSend('ing', p);
-      if (!res || !res.ok) throw new Error(res && res.error || 'api_error');
-      delQ(item.dupeKey); refreshQueueTable();
-      msg.textContent = 'Ingreso enviado ✔'; msg.style.color='#bfffe8';
-    }catch(e){
-      msg.textContent = 'Sin conexión o error: quedó en pendientes';
-      msg.style.color = '#ffd88a';
-    }finally{
-      inFlightIng = false; btn.disabled = false; paintPendCount();
-    }
-  };
-
-  q('#btnSendAlta').onclick = async ()=>{
-    if (inFlightAlta) return;
-    const btn = q('#btnSendAlta'); const msg = q('#msgAlta'); msg.textContent='';
-    try{
-      const p = readAlta();
-      basicValidate(p, ['DNI','FechaAltaManual','HoraAltaManual']);
-      const item = {
-        tipo:'alta', DNI:p.DNI, fecha:p.FechaAltaManual, hora:p.HoraAltaManual,
-        dupeKey: dupeKeyFrom('alta', p), estado:'pend', payload:p
-      };
-      upsertQ(item); refreshQueueTable();
-
-      inFlightAlta = true; btn.disabled = true;
-      const res = await apiSend('alta', p);
-      if (!res || !res.ok) throw new Error(res && res.error || 'api_error');
-      delQ(item.dupeKey); refreshQueueTable();
-      msg.textContent = 'Alta enviada ✔'; msg.style.color='#bfffe8';
-    }catch(e){
-      msg.textContent = 'Sin conexión o error: quedó en pendientes';
-      msg.style.color = '#ffd88a';
-    }finally{
-      inFlightAlta = false; btn.disabled = false; paintPendCount();
-    }
-  };
-
-  // Reintentar y Vaciar
-  q('#btnRetryAll').onclick = async ()=>{
-    const arr = loadQ();
-    for (const it of arr.slice()){
-      try{
-        const p = it.payload;
-        const res = await apiSend(it.tipo, p);
-        if (res && res.ok) delQ(it.dupeKey);
-      }catch(_){}
-    }
-    refreshQueueTable(); paintPendCount();
-  };
-  q('#btnClear').onclick = ()=>{
-    if (!confirm('¿Vaciar cola pendiente?')) return;
-    saveQ([]); refreshQueueTable(); paintPendCount();
-  };
-
-  /************* CONFIG / PING *************/
-  const dlg = q('#dlgCfg');
-  q('#btnCfg').onclick = ()=>{ paintCfg(); dlg.showModal(); };
-  q('#btnCfgClose').onclick = ()=> dlg.close();
-  q('#btnCfgSave').onclick = ()=>{
-    setCfg({ url: q('#cfgUrl').value.trim(), key: q('#cfgKey').value.trim(), logo: q('#cfgLogo').value.trim() });
-    dlg.close();
-  };
-  q('#btnCfgPing').onclick = async ()=>{
-    const el = q('#cfgUrl'); const url = el.value.trim(); if (!url) return;
-    try{
-      const r = await fetch(url, {method:'GET'}); const j = await r.json();
-      alert('PING OK: '+JSON.stringify(j));
-    }catch(e){ alert('PING ERROR: '+e); }
-  };
-
-  q('#btnPing').onclick = async ()=>{
-    const span = q('#msgPing'); span.textContent='…';
-    try{ const j = await apiPing(); span.textContent = 'Ping OK: '+(j && j.ok ? 'ok:true' : 'respuesta inválida'); }
-    catch(e){ span.textContent = 'Ping ERROR (ver URL en ⚙)'; }
-  };
-
-  /************* VALORES POR DEFECTO *************/
-  // Pre-cargar fecha y hora
-  q('#fecIng').value = today();  q('#horIng').value = nowHM();
-  q('#fecAlta').value = today(); q('#horAlta').value = nowHM();
-  paintCfg();
-  </script>
+  });
+});
+</script>
 </body>
 </html>
+
