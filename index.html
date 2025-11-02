@@ -1,482 +1,502 @@
+
 <!doctype html>
-<html lang="es" dir="ltr">
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b1220">
-  <title>HSM v7 • Móvil</title>
+  <meta name="description" content="HSM v7 • Móvil: ingreso y alta rápida con soporte offline, cola de pendientes con reintentos, y envío directo a Google Sheets.">
 
-  <!-- PROD: rutas absolutas bajo /panel-html-msm/ -->
-  <link rel="manifest" href="/panel-html-msm/manifest.json?v=1">
-  <link rel="icon" type="image/png" sizes="32x32" href="/panel-html-msm/icons/favicon-32.png?v=1">
-  <link rel="icon" type="image/png" sizes="16x16" href="/panel-html-msm/icons/favicon-16.png?v=1">
-  <link rel="apple-touch-icon" sizes="180x180" href="/panel-html-msm/icons/apple-touch-icon.png?v=1">
+  <title>HSM v7 • Móvil</title>
 
   <style>
     :root{
-      --bg:#0b1220; --panel:#111a2e; --muted:#9eb3d8; --fg:#e7ecf7; --brand:#2e8cff; --ok:#2ecc71; --warn:#f39c12; --err:#ff5c5c;
-      --line:#24304a; --chip:#172033; --chip-on:#21406c; --accent:#5a88ff; --radius:14px;
+      --bg:#0b1220; --card:#121a2a; --muted:#99a3b3; --fg:#e6edf7; --acc:#2ecc71; --warn:#f39c12; --err:#e74c3c; --primary:#2d7ef7;
+      --radius:14px;
     }
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;}
     *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-    a.skip{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
-    a.skip:focus{left:14px;top:14px;width:auto;height:auto;background:#000;color:#fff;padding:.5rem .75rem;border-radius:.5rem;z-index:10}
-    header{display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;border-bottom:1px solid var(--line);background:linear-gradient(#0d1528,#0a1221)}
-    header img{width:28px;height:28px;border-radius:6px}
-    .brand{font-weight:700;letter-spacing:.2px}
-    .pill{margin-left:auto;padding:.2rem .55rem;border:1px solid var(--line);border-radius:999px;font-size:.8rem;background:#0f1a32}
-    .wrap{max-width:980px;margin:0 auto;padding:10px}
-
-    .tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.6rem 0 .9rem}
-    .tab{padding:.55rem .8rem;background:var(--chip);border:1px solid var(--line);border-radius:999px;color:var(--muted);cursor:pointer;user-select:none}
-    .tab[aria-selected="true"]{background:var(--chip-on);color:#dff0ff;border-color:#2b4470}
-    .tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-    .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:1rem;margin:.9rem 0}
-    .row{display:grid;grid-template-columns:1fr;gap:.8rem}
-    @media (min-width:720px){ .row-2{grid-template-columns:1fr 1fr} .row-3{grid-template-columns:1fr 1fr 1fr} }
-
-    label{display:block;margin:.25rem 0;color:#aecdff;font-weight:600}
-    .ctrl{width:100%;padding:.75rem .9rem;border-radius:.7rem;border:1px solid var(--line);background:#0f1322;color:var(--fg)}
-    .ctrl::placeholder{color:#6f83a8}
-    select.ctrl{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#92b0ff 50%),linear-gradient(135deg,#92b0ff 50%,transparent 50%);background-position:calc(100% - 18px) calc(1em + 2px),calc(100% - 13px) calc(1em + 2px);background-size:5px 5px,5px 5px;background-repeat:no-repeat}
-    .mini{margin:.35rem 0 .9rem .4rem;padding:.35rem .6rem;font-size:.85rem;border-radius:.5rem;border:1px solid var(--line);background:#172033;color:#cfe;vertical-align:middle}
-
-    .chips{display:flex;flex-wrap:wrap;gap:.35rem}
-    .chip{padding:.35rem .6rem;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:#cfe;cursor:pointer}
-    .chip[data-on="1"]{background:#1e2b4f;border-color:#34528a}
-
-    .actions{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:.6rem}
-    .btn{padding:.75rem 1rem;border-radius:.8rem;border:1px solid var(--line);background:#162445;color:#dff7ff;font-weight:600;cursor:pointer}
-    .btn.ok{background:#063;color:#cffff1;border-color:#185}
-    .btn.warn{background:#3b2a00;border-color:#5b4300;color:#ffd}
-    .btn.sec{background:#0f1a32}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-
-    .meta{display:flex;gap:.6rem;align-items:center;color:#9db3dc}
-    .badge{background:#162447;border:1px solid var(--line);padding:.2rem .5rem;border-radius:999px}
+    a{color:inherit}
+    .wrap{max-width:920px;margin-inline:auto;padding:16px}
+    header{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .chip{background:#0e1526;border:1px solid #1e2a44;color:#bcd0ff;padding:6px 10px;border-radius:999px;font-size:12px}
+    .btn{background:var(--primary);border:none;color:white;border-radius:999px;padding:10px 16px;font-weight:600}
+    .btn[disabled]{opacity:.6;pointer-events:none}
+    .ghost{background:#10192e;border:1px solid #233152}
+    .danger{background:var(--err)}
+    nav.tabs{display:flex;gap:8px;margin:8px 0 16px}
+    nav.tabs .tab{background:#0e1526;border:1px solid #1e2a44;color:#c9d6ff;border-radius:999px;padding:8px 14px;cursor:pointer}
+    nav.tabs .tab[aria-selected="true"]{background:#1a2440;color:white;border-color:#3350a8}
+    .card{background:var(--card);border:1px solid #1b2744;border-radius:var(--radius);padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:720px){.row{grid-template-columns:1fr}}
+    label{display:block;font-size:12px;color:var(--muted);margin:8px 4px}
+    input,select,textarea{
+      width:100%;color:var(--fg);background:#0e1526;border:1px solid #223052;border-radius:12px;padding:12px;
+      outline:none;accent-color:#6cb1ff;font-size:16px
+    }
+    input:focus,select:focus,textarea:focus{border-color:#3b69ff;box-shadow:0 0 0 3px rgba(59,105,255,.15)}
+    textarea{min-height:110px;resize:vertical}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .hint{font-size:12px;color:#97a6c5;margin-top:6px}
+    .badge{background:#0e1526;border:1px solid #27365b;border-radius:999px;padding:4px 10px;font-size:12px}
     .right{margin-left:auto}
-
-    .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#061025;border:1px solid #183058;padding:.6rem .9rem;border-radius:.7rem;color:#cfe;min-width:220px;z-index:50;display:none}
-    .toast.ok{border-color:#0b7a4b;color:#e5fff6}
-    .toast.err{border-color:#8a1b2f;color:#ffd6de}
-    .toast.show{display:block}
-
-    dialog{border:none;border-radius:14px;background:#0f1627;color:#def;max-width:720px;width:96%;padding:0}
-    dialog::backdrop{background:rgba(2,8,20,.6)}
-    .dlg-h{display:flex;align-items:center;gap:.6rem;padding:.9rem 1rem;border-bottom:1px solid var(--line);background:#0b1220}
-    .dlg-b{padding:1rem}
-    .dlg-f{display:flex;gap:.5rem;justify-content:flex-end;padding:1rem;border-top:1px solid var(--line);background:#0b1220}
-
-    .net{font-size:.85rem;padding:.15rem .45rem;border-radius:999px;border:1px solid var(--line);background:#0f1a32}
-    .net[data-on="1"]{background:#093618;border-color:#16753f;color:#caffdf}
-    .net[data-on="0"]{background:#3a0e0e;border-color:#7a2030;color:#ffd8e0}
-
-    table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid var(--line);padding:.55rem .4rem;text-align:left}
-    th{color:#aecdff;font-weight:700}
-    .muted{color:#9eb3d8}
+    .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    table{width:100%;border-collapse:separate;border-spacing:0 8px}
+    th{font-size:12px;color:#9fb0d4;text-align:left;padding:4px 8px}
+    td{background:#0f1728;border:1px solid #1e2c4f;padding:10px;border-radius:10px;font-size:14px}
+    td small{color:#9fb0d4}
+    dialog{border:none;border-radius:16px;background:#0f1728;color:#eaf0ff;max-width:560px;width:92%;padding:0;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+    dialog .hd{padding:14px 16px;border-bottom:1px solid #182648;font-weight:700}
+    dialog .bd{padding:16px}
+    dialog .ft{padding:12px 16px;border-top:1px solid #182648;display:flex;gap:8px;justify-content:flex-end}
+    #toast{position:fixed;left:16px;right:16px;bottom:16px;background:#0f1728;border:1px solid #1d2b4a;border-radius:12px;padding:12px 14px;color:#dfe8ff;display:none}
+    .ok{color:#9effb7}
+    .warn{color:#ffd37a}
+    .err{color:#ff9aa2}
+    .pill{background:#0c1426;border:1px dashed #2a3a63;color:#cfe0ff;border-radius:12px;font-size:12px;padding:6px 10px;cursor:pointer}
+    .kv{display:flex;align-items:center;gap:8px}
+    .kv code{background:#0d1528;border:1px solid #243355;border-radius:8px;padding:4px 6px}
   </style>
 </head>
+
 <body>
-  <a href="#main" class="skip">Saltar al contenido</a>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="chip">HSM v7 • Móvil</div>
+        <span class="badge" id="net-badge">Online</span>
+      </div>
+      <div class="toolbar">
+        <button class="btn ghost" id="btn-install" hidden>Instalar</button>
+        <button class="btn ghost" id="btn-cfg" title="Configuración">⚙️</button>
+      </div>
+    </header>
 
-  <header>
-    <img id="logo" src="/panel-html-msm/icons/icon-512.png?v=1" alt="Logo">
-    <div class="brand">HSM v7 • Móvil</div>
-    <span id="net" class="pill net" data-on="1">Online</span>
-    <button id="btnInstall" class="btn sec" style="margin-left:.6rem">Instalar</button>
-    <button id="btnCfg" class="btn sec" title="Configuración" aria-label="Configuración">⚙️</button>
-  </header>
-
-  <main id="main" class="wrap" role="main" aria-label="Aplicación HSM v7 Móvil">
-    <div class="tabs" role="tablist" aria-label="Secciones">
-      <button class="tab" role="tab" aria-selected="true"  data-tab="ing">Ingreso</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="alta">Alta</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="pend">Pendientes</button>
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab" role="tab" aria-selected="true" data-tab="ing">Ingreso</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="pend">Pendientes <span class="badge" id="pend-count">0</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="util">Útiles</button>
-    </div>
+    </nav>
 
-    <!-- INGRESO -->
-    <section id="tab-ing" class="card" role="tabpanel" aria-labelledby="Ingreso">
-      <div class="row row-2">
-        <div>
-          <label for="dni">DNI</label>
-          <input id="dni" class="ctrl" inputmode="numeric" pattern="\d*" placeholder="7–9 dígitos">
-        </div>
-        <div>
-          <label for="sexo">Sexo</label>
-          <select id="sexo" class="ctrl">
-            <option value="">—</option><option>M</option><option>F</option><option>X</option>
-          </select>
-        </div>
+    <main>
+      <!-- ====== TAB: Ingreso ====== -->
+      <section id="tab-ing" class="card" role="tabpanel">
+        <div class="row">
+          <div>
+            <label for="dni">DNI</label>
+            <input id="dni" type="text" inputmode="numeric" pattern="[0-9]{7,9}" placeholder="7–9 dígitos" autocomplete="off">
+          </div>
+          <div>
+            <label for="sexo">Sexo</label>
+            <select id="sexo">
+              <option value="">—</option>
+              <option>M</option>
+              <option>F</option>
+              <option>X</option>
+            </select>
+          </div>
 
-        <div>
-          <label for="f-ing">Fecha ingreso</label>
-          <input id="f-ing" type="date" class="ctrl">
-          <button type="button" class="mini" data-today="#f-ing">Hoy</button>
-        </div>
-        <div>
-          <label for="h-ing">Hora ingreso</label>
-          <input id="h-ing" type="time" step="60" class="ctrl">
-          <button type="button" class="mini" data-now="#h-ing">Ahora</button>
-        </div>
+          <div>
+            <label for="fec">Fecha ingreso</label>
+            <div class="kv">
+              <input id="fec" type="date">
+              <button class="pill" type="button" id="btn-hoy">Hoy</button>
+            </div>
+            <div class="hint">Formato enviado: <code>yyyy-mm-dd</code></div>
+          </div>
 
-        <div>
-          <label for="ide">Ideación / Intento</label>
-          <select id="ide" class="ctrl">
-            <option value="">—</option><option>Ideación</option><option>Intento</option><option>Otro</option>
-          </select>
-        </div>
-        <div>
-          <label for="met">Método / Letalidad</label>
-          <select id="met" class="ctrl">
-            <option value="">—</option><option>Baja</option><option>Media</option><option>Alta</option>
-          </select>
-        </div>
+          <div>
+            <label for="hor">Hora ingreso</label>
+            <div class="kv">
+              <input id="hor" type="time" step="60">
+              <button class="pill" type="button" id="btn-ahora">Ahora</button>
+            </div>
+          </div>
 
-        <div>
-          <label for="cons">Consumo</label>
-          <select id="cons" class="ctrl">
-            <option value="">—</option>
-            <option>Alcohol</option><option>Cannabis</option><option>Cocaína</option><option>Mix</option><option>Niega</option>
-          </select>
-        </div>
-        <div>
-          <label for="dx">Dx CIE-10 (código)</label>
-          <input id="dx" class="ctrl" placeholder="Ej: F32.1">
-        </div>
+          <div>
+            <label for="ide">Ideación / Intento</label>
+            <select id="ide">
+              <option value="">—</option>
+              <option>Ideación</option>
+              <option>Intento</option>
+            </select>
+          </div>
 
-        <div class="row" style="grid-column:1/-1">
-          <label for="obs">Observaciones</label>
-          <textarea id="obs" class="ctrl" rows="3" placeholder="Notas breves (opcional)"></textarea>
+          <div>
+            <label for="met">Método / Letalidad</label>
+            <select id="met">
+              <option value="">—</option>
+              <option>Intoxicación</option>
+              <option>Corte</option>
+              <option>Colgamiento</option>
+              <option>Arma de fuego</option>
+              <option>Arrojo</option>
+              <option>Otro</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="cons">Consumo</label>
+            <select id="cons">
+              <option>Niega</option>
+              <option>Ocasional</option>
+              <option>Semanal</option>
+              <option>Diario</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="freq">Frecuencia</label>
+            <select id="freq">
+              <option value="">—</option>
+              <option>Diaria</option>
+              <option>Semanal</option>
+              <option>Ocasional</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="dx">Dx CIE-10 (código)</label>
+            <input id="dx" type="text" placeholder="Ej: F32.1" autocapitalize="characters">
+          </div>
+
+          <div>
+            <label for="obs">Observaciones</label>
+            <textarea id="obs" placeholder="Notas breves (opcional)"></textarea>
+            <div class="actions">
+              <button class="pill" type="button" data-obs="Obs. SP">Obs. SP</button>
+              <button class="pill" type="button" data-obs="Red apoyo ✓">Red apoyo ✓</button>
+              <button class="pill" type="button" data-obs="Niega consumo">Niega consumo</button>
+              <button class="pill" type="button" data-obs="Acompañante">Acompañante</button>
+              <span class="right"></span>
+              <button id="btn-guardar" class="btn">Guardar ingreso</button>
+            </div>
+          </div>
         </div>
-      </div>
+        <div class="hint">Los envíos fallidos quedan en <b>Pendientes</b> y se reintentan automáticamente al recuperar conexión.</div>
+      </section>
 
-      <div class="chips" aria-label="Accesos rápidos">
-        <button class="chip" data-chip="Obs. SP">Obs. SP</button>
-        <button class="chip" data-chip="Red apoyo ✓">Red apoyo ✓</button>
-        <button class="chip" data-chip="Niega consumo">Niega consumo</button>
-        <button class="chip" data-chip="Acompañante">Acompañante</button>
-      </div>
-
-      <div class="actions">
-        <button id="btnSave" class="btn ok">Guardar ingreso</button>
-        <button id="btnShare" class="btn sec">Compartir comprobante</button>
-        <span class="meta right">
-          <span class="badge muted">Pend: <span id="qCount">0</span></span>
-        </span>
-      </div>
-    </section>
-
-    <!-- ALTA -->
-    <section id="tab-alta" class="card" role="tabpanel" hidden>
-      <div class="row row-2">
-        <div>
-          <label for="dniA">DNI</label>
-          <input id="dniA" class="ctrl" inputmode="numeric" pattern="\d*" placeholder="7–9 dígitos">
+      <!-- ====== TAB: Pendientes ====== -->
+      <section id="tab-pend" class="card" role="tabpanel" hidden>
+        <div class="actions">
+          <button id="btn-retry" class="btn">Reintentar todos</button>
+          <button id="btn-vaciar" class="btn danger">Vaciar cola</button>
+          <span class="right"></span>
+          <span class="hint">Se evita duplicar por <code>DUPE_KEY = DNI|Fecha|Hora</code></span>
         </div>
-        <div>
-          <label for="sexoA">Sexo</label>
-          <select id="sexoA" class="ctrl">
-            <option value="">—</option><option>M</option><option>F</option><option>X</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="f-alta">Fecha alta</label>
-          <input id="f-alta" type="date" class="ctrl">
-          <button type="button" class="mini" data-today="#f-alta">Hoy</button>
-        </div>
-        <div>
-          <label for="h-alta">Hora alta</label>
-          <input id="h-alta" type="time" step="60" class="ctrl">
-          <button type="button" class="mini" data-now="#h-alta">Ahora</button>
-        </div>
-
-        <div>
-          <label for="condA">Condición de alta</label>
-          <select id="condA" class="ctrl">
-            <option value="">—</option>
-            <option>Alta clínica</option>
-            <option>Derivación</option>
-            <option>Traslado</option>
-            <option>Abandono</option>
-          </select>
-        </div>
-        <div>
-          <label for="destA">Destino</label>
-          <select id="destA" class="ctrl">
-            <option value="">—</option>
-            <option>Domicilio</option>
-            <option>Internación</option>
-            <option>Consultorio</option>
-            <option>Otro</option>
-          </select>
-        </div>
-
-        <div class="row" style="grid-column:1/-1">
-          <label for="obsA">Observaciones de alta</label>
-          <textarea id="obsA" class="ctrl" rows="3" placeholder="Notas (opcional)"></textarea>
-        </div>
-      </div>
-
-      <div class="chips" aria-label="Accesos rápidos">
-        <button class="chip" data-chip="#Alta segura">#Alta segura</button>
-        <button class="chip" data-chip="#Plan acordado">#Plan acordado</button>
-        <button class="chip" data-chip="#Red apoyo">#Red apoyo</button>
-      </div>
-
-      <div class="actions">
-        <button id="btnSaveAlta" class="btn ok">Guardar alta</button>
-        <button id="btnShareAlta" class="btn sec">Compartir comprobante</button>
-      </div>
-    </section>
-
-    <!-- PENDIENTES -->
-    <section id="tab-pend" class="card" role="tabpanel" hidden>
-      <div class="actions">
-        <button id="btnRetry" class="btn ok">Reintentar todos</button>
-        <button id="btnClear" class="btn warn">Vaciar cola</button>
-      </div>
-      <div class="card" style="margin-top:.8rem">
+        <div style="height:8px"></div>
         <table>
-          <thead><tr><th>#</th><th>Tipo</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
-        <tbody id="pendBody"><tr><td colspan="6" class="muted">Sin pendientes</td></tr></tbody>
+          <thead>
+            <tr>
+              <th>#</th><th>Tipo</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="pend-tb"></tbody>
         </table>
-      </div>
-    </section>
+      </section>
 
-    <!-- ÚTILES -->
-    <section id="tab-util" class="card" role="tabpanel" hidden>
-      <ul>
-        <li>Versión app: <span id="ver"></span></li>
-        <li>Almacenamiento local: <span id="st"></span></li>
-        <li>SW: <span id="swst"></span></li>
-      </ul>
-    </section>
-  </main>
+      <!-- ====== TAB: Útiles ====== -->
+      <section id="tab-util" class="card" role="tabpanel" hidden>
+        <div class="row">
+          <div>
+            <div class="kv"><strong>WebApp URL (exec)</strong></div>
+            <div class="hint"><code id="cfg-url-short">—</code></div>
+          </div>
+          <div>
+            <div class="kv"><strong>API Key</strong></div>
+            <div class="hint"><code id="cfg-key-short">—</code></div>
+          </div>
+        </div>
+        <div style="height:8px"></div>
+        <div class="actions">
+          <button class="btn ghost" id="btn-open-cfg">Modificar configuración</button>
+          <button class="btn ghost" id="btn-ping">Probar ping</button>
+        </div>
+        <div id="util-out" class="hint"></div>
+      </section>
+    </main>
+  </div>
 
-  <!-- Configuración -->
-  <dialog id="cfg" aria-labelledby="cfg-title">
-    <div class="dlg-h"><img class="gear" alt="" src="/panel-html-msm/icons/favicon-32.png?v=1"><h3 id="cfg-title" style="margin:0">Configuración</h3></div>
-    <form class="dlg-b" method="dialog">
-      <label>WebApp URL (/exec)</label>
-      <input id="cfg-url" class="ctrl" placeholder="https://script.google.com/.../exec">
-
+  <!-- ====== DIALOG: Config ====== -->
+  <dialog id="dlg">
+    <div class="hd">Configuración</div>
+    <div class="bd">
+      <label>WebApp URL (exec)</label>
+      <input id="cfg-url" type="url" placeholder="https://script.google.com/macros/s/.../exec">
       <label>API Key</label>
-      <input id="cfg-key" class="ctrl" placeholder="HSM2025KEY">
-
-      <label>Logo URL (png/jpg/svg)</label>
-      <input id="cfg-logo" class="ctrl" placeholder="https://.../logo.png">
-
-      <div class="actions" style="margin-top:.6rem">
-        <button id="btnTest" class="btn sec" type="button">Probar</button>
-        <span id="testMsg" class="muted"></span>
-      </div>
-    </form>
-    <div class="dlg-f">
-      <button id="btnCfgCancel" class="btn sec">Cerrar</button>
-      <button id="btnCfgSave" class="btn ok">Guardar</button>
+      <input id="cfg-key" type="text" placeholder="HSM2025KEY">
+      <div class="hint">El envío no usa headers personalizados (evita preflight). La API key viaja en el cuerpo del POST.</div>
+    </div>
+    <div class="ft">
+      <button class="btn ghost" id="cfg-test">Probar</button>
+      <button class="btn" id="cfg-save">Guardar</button>
+      <button class="btn ghost" id="cfg-close">Cerrar</button>
     </div>
   </dialog>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
+  <div id="toast"></div>
   <script>
-  (function(){
-    const BASE = '/panel-html-msm/';
-    const TAG  = 'v7.1.0-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'');
-    const LS   = { url:'HSM_URL', key:'HSM_API_KEY', logo:'HSM_LOGO', q:'HSM_QUEUE' };
+  // =============== CONFIG & STATE ===============
+  const CFG = {
+    url:  localStorage.getItem('hsm.webapp') || 'https://script.google.com/macros/s/AKfycbxdJ8bzevXZ-BBRSekO5ep8ggva0H2TVnp52FP1_lbzkbc0tCeVhoEvBqav969CDEJc0g/exec',
+    apiKey: localStorage.getItem('hsm.apikey') || 'HSM2025KEY'
+  };
 
-    // ------------- helpers UI -------------
-    const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
-    const pad2=n=>String(n).padStart(2,'0');
-    function toast(m,k){ const t=$("#toast"); t.textContent=m; t.className='toast show '+(k||''); setTimeout(()=>t.classList.remove('show'),3000); }
-    function setOnline(on){ const el=$("#net"); el.dataset.on=on?1:0; el.textContent=on?'Online':'Offline'; }
+  function saveCfg(){
+    localStorage.setItem('hsm.webapp', CFG.url);
+    localStorage.setItem('hsm.apikey', CFG.apiKey);
+    paintCfgShort();
+  }
 
-    // tabs
-    $$(".tab").forEach(b=>b.addEventListener("click",()=>{
-      const id=b.dataset.tab;
-      $$(".tab").forEach(x=>x.setAttribute("aria-selected",x===b?"true":"false"));
-      ["ing","alta","pend","util"].forEach(t=>$("#tab-"+t).hidden=(t!==id));
-      if(id==="pend") renderPend();
-    }));
+  // Cola local
+  function qLoad(){ try { return JSON.parse(localStorage.getItem('hsm.queue') || '[]'); } catch(_){ return []; } }
+  function qSave(q){ localStorage.setItem('hsm.queue', JSON.stringify(q)); }
 
-    // chips -> agregan o quitan texto en el textarea de la card activa
-    $$(".chips").forEach(box=>{
-      box.addEventListener("click",(ev)=>{
-        const c=ev.target.closest(".chip"); if(!c) return;
-        c.dataset.on=c.dataset.on==="1"?"0":"1";
-        const ta = box.closest("section").querySelector("textarea");
-        const txt=c.textContent.trim();
-        if(!ta) return;
-        if(c.dataset.on==="1"){ ta.value=(ta.value?ta.value+" • ":"")+txt; }
-        else{ ta.value=ta.value.replace(new RegExp("(?:^|\\s*•\\s*)"+txt.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')),"").trim(); }
-      });
+  // =============== UI HELPERS ===============
+  function $(qs){ return document.querySelector(qs); }
+  function toast(msg, cls){
+    const t = $("#toast");
+    t.textContent = msg;
+    t.className = cls || '';
+    t.style.display = 'block';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=> t.style.display='none', 3500);
+  }
+  function short(s, n=54){ s=String(s||''); return s.length>n? s.slice(0,n-3)+'…' : s; }
+  function paintCfgShort(){
+    $("#cfg-url-short").textContent = short(CFG.url);
+    $("#cfg-key-short").textContent = short(CFG.apiKey);
+  }
+  function setOnline(v){
+    $("#net-badge").textContent = v?'Online':'Offline';
+    $("#net-badge").style.background = v?'#0e2a1c':'#2a1717';
+    $("#net-badge").style.border = v?'1px solid #1c5738':'1px solid #5b2a2a';
+  }
+
+  // =============== TABS ===============
+  document.querySelectorAll('nav.tabs .tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('nav.tabs .tab').forEach(b => b.setAttribute('aria-selected', String(b===btn)));
+      document.querySelectorAll('main > section').forEach(s => s.hidden = (s.id !== 'tab-'+tab));
+      if (tab === 'pend') paintPend();
     });
+  });
 
-    // fallback date/time (si el navegador no soporta)
-    const ymdToDmy=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||"")?(s.slice(8,10)+"/"+s.slice(5,7)+"/"+s.slice(0,4)):"";
-    function maskDate(el){ el.placeholder="dd/mm/aaaa"; el.inputMode="numeric";
-      el.addEventListener("input",()=>{ let v=el.value.replace(/\D/g,"").slice(0,8);
-        if(v.length>=5) v=v.replace(/(\d{2})(\d{2})(\d{1,4})/,"$1/$2/$3"); else if(v.length>=3) v=v.replace(/(\d{2})(\d{1,2})/,"$1/$2"); el.value=v;}); }
-    function maskTime(el){ el.placeholder="hh:mm"; el.inputMode="numeric";
-      el.addEventListener("input",()=>{ let v=el.value.replace(/\D/g,"").slice(0,4);
-        if(v.length>=3) v=v.replace(/(\d{2})(\d{1,2})/,"$1:$2"); el.value=v;}); }
+  // =============== FORM UTILS ===============
+  const btnHoy = $("#btn-hoy");
+  const btnAhora = $("#btn-ahora");
+  const inpFec = $("#fec");
+  const inpHor = $("#hor");
 
-    (function initPickers(){
-      ["#f-ing","#f-alta"].forEach(sel=>{ const f=$(sel); if(!f) return; if(f.type!=="date"){ f.type="text"; maskDate(f);} });
-      ["#h-ing","#h-alta"].forEach(sel=>{ const h=$(sel); if(!h) return; if(h.type!=="time"){ h.type="text"; maskTime(h);} });
-    })();
+  btnHoy.addEventListener('click', ()=>{
+    const d = new Date();
+    const iso = new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+    inpFec.value = iso;
+  });
+  btnAhora.addEventListener('click', ()=>{
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    inpHor.value = `${hh}:${mm}`;
+  });
 
-    document.addEventListener("click",(ev)=>{
-      const t = ev.target.closest("button[data-today]"); if(t){ const el=$(t.dataset.today); if(el){ const d=new Date(); const ymd=`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; el.value=(el.type==='date')?ymd:ymdToDmy(ymd);} }
-      const n = ev.target.closest("button[data-now]"); if(n){ const el=$(n.dataset.now); if(el){ const d=new Date(); el.value=`${pad2(d.getHours())}:${pad2(d.getMinutes())}`; } }
+  // Chips observaciones
+  document.querySelectorAll('[data-obs]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const v = b.getAttribute('data-obs');
+      const t = $("#obs");
+      const sep = t.value && !t.value.endsWith(' ') ? ' ' : '';
+      t.value = (t.value || '') + sep + v;
     });
+  });
 
-    // ------------- configuración -------------
-    function loadCfg(){
-      $("#cfg-url").value  = localStorage.getItem(LS.url)  || "";
-      $("#cfg-key").value  = localStorage.getItem(LS.key)  || "";
-      $("#cfg-logo").value = localStorage.getItem(LS.logo) || "";
-      const L=$("#cfg-logo").value; if(L) $("#logo").src=L;
+  // =============== DUPE KEY ===============
+  function dupeKeyFrom(item){
+    const dni = String(item.DNI||'').trim();
+    const f   = String(item.FechaIngresoManual||'').trim();   // yyyy-mm-dd
+    const h   = String(item.HoraIngresoManual||'').trim();    // HH:mm
+    return `${dni}|${f}|${h}`;
+  }
+
+  // Agregar/actualizar en cola evitando duplicar la misma DUPE_KEY
+  function enqueueOnce(item){
+    const q = qLoad();
+    const key = item.DUPE_KEY || dupeKeyFrom(item);
+    const idx = q.findIndex(x => x.DUPE_KEY === key && x._state !== 'sent');
+    const payload = Object.assign({}, item, { DUPE_KEY:key, _state:'pend', retries:(idx>=0? q[idx].retries:0), ts:Date.now() });
+    if (idx >= 0) q[idx] = payload; else q.push(payload);
+    qSave(q);
+    paintPend(); paintBadge();
+  }
+
+  // =============== SEND (sin headers → sin preflight) ===============
+  async function sendOne(item){
+    const body = JSON.stringify(Object.assign({}, item, { apiKey: CFG.apiKey }));
+    const res  = await fetch(CFG.url, { method:'POST', body }); // sin headers
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error||'API error');
+    return json;
+  }
+
+  // =============== RETRY LOOP ===============
+  async function retryQueue(){
+    const q = qLoad();
+    let changed = false;
+    for (let i=0;i<q.length;i++){
+      const it = q[i];
+      if (it._state==='sent') continue;
+      try{
+        await sendOne(it);
+        it._state='sent'; changed=true;
+      }catch(e){
+        it.retries = (it.retries||0)+1;
+      }
     }
-    $("#btnCfg").onclick=()=>{ loadCfg(); $("#cfg").showModal(); };
-    $("#btnCfgCancel").onclick=()=>$("#cfg").close();
-    $("#btnCfgSave").onclick=()=>{ localStorage.setItem(LS.url,$("#cfg-url").value.trim());
-      localStorage.setItem(LS.key,$("#cfg-key").value.trim());
-      localStorage.setItem(LS.logo,$("#cfg-logo").value.trim()); loadCfg(); $("#cfg").close(); toast("Configuración guardada","ok"); };
-    $("#btnTest").onclick=async()=>{
-      const u=$("#cfg-url").value.trim(); $("#testMsg").textContent="Probando…";
-      try{ const r=await fetch(u,{method:"GET",mode:"cors",credentials:"omit"}); const j=await r.json().catch(()=>({}));
-           $("#testMsg").textContent=(j && j.ok)?"OK ✔":"Ping enviado (ver GAS)"; }
-      catch(_){ $("#testMsg").textContent="No se pudo contactar. Revisá la URL."; }
+    if (changed){
+      // limpia enviados
+      qSave(q.filter(x=>x._state!=='sent'));
+    } else {
+      qSave(q);
+    }
+    paintPend(); paintBadge();
+  }
+
+  // =============== PENDIENTES UI ===============
+  function paintBadge(){
+    const n = qLoad().filter(x=>x._state!=='sent').length;
+    $("#pend-count").textContent = String(n);
+  }
+  function paintPend(){
+    const tb = $("#pend-tb");
+    const q = qLoad();
+    tb.innerHTML = "";
+    let n=0;
+    q.forEach(it=>{
+      if (it._state==='sent') return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${++n}</td>
+        <td>${it.Tipo||'-'}</td>
+        <td>${it.DNI||'-'}</td>
+        <td>${it.FechaIngresoManual||'-'}</td>
+        <td>${it.HoraIngresoManual||'-'}</td>
+        <td><small>${it._state}${it.retries?` · r${it.retries}`:''}</small></td>
+      `;
+      tb.appendChild(tr);
+    });
+  }
+
+  // =============== GUARDAR ===============
+  let saving=false;
+  $("#btn-guardar").addEventListener('click', async ()=>{
+    if (saving) return;
+    saving = true; $("#btn-guardar").disabled = true;
+
+    const item = {
+      Tipo: "ing",
+      DNI: $("#dni").value.trim(),
+      Sexo: $("#sexo").value || '-',
+      FechaIngresoManual: $("#fec").value || '',
+      HoraIngresoManual:  $("#hor").value || '',
+      IdeacionIntento:    $("#ide").value || '-',
+      MetodoLetalidad:    $("#met").value || '-',
+      Consumo:            $("#cons").value || '-',
+      Frecuencia:         $("#freq").value || '',
+      DxCIE10:            $("#dx").value.trim(),
+      Observaciones:      $("#obs").value.trim(),
+      AppVersion: "v7-móvil"
     };
 
-    // ------------- cola offline -------------
-    const getQueue=()=>{ try{ return JSON.parse(localStorage.getItem(LS.q)||"[]"); }catch(_){ return []; } };
-    const setQueue=a=>{ localStorage.setItem(LS.q,JSON.stringify(a||[])); renderPend(); };
-    const pushQueue=it=>{ const q=getQueue(); q.push({...it,ts:Date.now(),st:"pend"}); setQueue(q); };
-
-    function renderPend(){
-      const q=getQueue(); $("#qCount").textContent=q.length; const tb=$("#pendBody"); tb.innerHTML="";
-      if(!q.length){ tb.innerHTML=`<tr><td colspan="6" class="muted">Sin pendientes</td></tr>`; return; }
-      q.forEach((it,i)=>{ const tr=document.createElement("tr");
-        const fecha = it.tipo==='alta' ? (it.FechaAltaManual||"") : (it.FechaIngresoManual||"");
-        const hora  = it.tipo==='alta' ? (it.HoraAltaManual||"")  : (it.HoraIngresoManual||"");
-        tr.innerHTML=`<td>${i+1}</td><td>${it.tipo||''}</td><td>${it.DNI||""}</td><td>${fecha}</td><td>${hora}</td><td>${it.st||"pend"}</td>`;
-        tb.appendChild(tr);
-      });
+    // validación mínima
+    if (!item.DNI || !item.FechaIngresoManual || !item.HoraIngresoManual){
+      toast("Completá DNI, fecha y hora", "warn");
+      saving=false; $("#btn-guardar").disabled=false;
+      return;
     }
 
-    // ------------- envío -------------
-    async function send(item){
-      const url = localStorage.getItem(LS.url)||"", key=localStorage.getItem(LS.key)||"";
-      if(!url || !key) throw new Error("Falta configurar URL/API Key");
-      const r = await fetch(url,{method:"POST",mode:"cors",credentials:"omit",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({...item, apiKey:key})
-      });
-      if(!r.ok) throw new Error("HTTP "+r.status);
-      const j=await r.json().catch(()=>({})); if(j && j.ok!==false) return j;
-      throw new Error(j && j.error ? j.error : "Error remoto");
+    try{
+      await sendOne(item);
+      toast("Ingreso guardado ✔","ok");
+    }catch(_){
+      enqueueOnce(item);
+      toast("Sin conexión o error: quedó en pendientes","warn");
+    }finally{
+      saving=false; $("#btn-guardar").disabled=false;
+      paintBadge();
+      setTimeout(retryQueue, 1500);
     }
+  });
 
-    // INgreso payload
-    function payloadIngreso(){
-      return {
-        tipo:"ing",
-        DNI: $("#dni").value.trim(),
-        Sexo: $("#sexo").value.trim(),
-        FechaIngresoManual: ($("#f-ing").type==='date'? ($("#f-ing").value || "") : $("#f-ing").value).trim(),
-        HoraIngresoManual:  ($("#h-ing").value||"").trim(),
-        IdeacionIntento: $("#ide").value.trim(),
-        Metodo: $("#met").value.trim(),
-        Consumo: $("#cons").value.trim(),
-        DxCIE10: $("#dx").value.trim(),
-        Observaciones: $("#obs").value.trim(),
-        AppVersion: "v7-móvil"
-      };
+  // =============== PENDIENTES: acciones ===============
+  $("#btn-retry").addEventListener('click', retryQueue);
+  $("#btn-vaciar").addEventListener('click', ()=>{
+    qSave([]); paintPend(); paintBadge(); toast("Cola vacía","ok");
+  });
+
+  // =============== CONFIG DIALOG ===============
+  const dlg = $("#dlg");
+  $("#btn-cfg").addEventListener('click', openCfg);
+  $("#btn-open-cfg").addEventListener('click', openCfg);
+  $("#cfg-close").addEventListener('click', ()=> dlg.close());
+  $("#cfg-save").addEventListener('click', ()=>{
+    CFG.url = $("#cfg-url").value.trim() || CFG.url;
+    CFG.apiKey = $("#cfg-key").value.trim() || CFG.apiKey;
+    saveCfg(); dlg.close(); toast("Configuración guardada","ok");
+  });
+  $("#cfg-test").addEventListener('click', async ()=>{
+    try{
+      const r = await fetch(CFG.url+'?ping=1'); // GET simple (sin headers)
+      const j = await r.json().catch(()=> ({}));
+      toast(j && (j.ok||j.ping) ? "Ping OK" : "Ping recibido");
+    }catch(_){ toast("Ping falló","err"); }
+  });
+  function openCfg(){
+    $("#cfg-url").value = CFG.url;
+    $("#cfg-key").value = CFG.apiKey;
+    dlg.showModal();
+  }
+
+  // Accesos rápidos en Útiles
+  $("#btn-ping").addEventListener('click', async ()=>{
+    try{
+      const r = await fetch(CFG.url+'?ping=1');
+      const j = await r.json().catch(()=> ({}));
+      $("#util-out").textContent = "Respuesta: "+JSON.stringify(j);
+      toast("Ping OK","ok");
+    }catch(e){
+      $("#util-out").textContent = "Error: "+String(e);
+      toast("Ping falló","err");
     }
+  });
 
-    // Alta payload
-    function payloadAlta(){
-      return {
-        tipo:"alta",
-        DNI: $("#dniA").value.trim(),
-        Sexo: $("#sexoA").value.trim(),
-        FechaAltaManual: ($("#f-alta").type==='date'? ($("#f-alta").value || "") : $("#f-alta").value).trim(),
-        HoraAltaManual:  ($("#h-alta").value||"").trim(),
-        CondicionAlta: $("#condA").value.trim(),
-        DestinoAlta: $("#destA").value.trim(),
-        ObservacionesAlta: $("#obsA").value.trim(),
-        AppVersion: "v7-móvil"
-      };
-    }
+  // =============== INSTALL (PWA opcional) ===============
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',(e)=>{ e.preventDefault(); deferredPrompt=e; $("#btn-install").hidden=false; });
+  $("#btn-install").addEventListener('click', async ()=>{
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice.catch(()=>{});
+    deferredPrompt=null; $("#btn-install").hidden=true;
+  });
 
-    async function saveIngreso(){
-      const it=payloadIngreso();
-      if(!it.DNI){ toast("Ingresá DNI","err"); $("#dni").focus(); return; }
-      if(!it.FechaIngresoManual){ toast("Ingresá Fecha","err"); $("#f-ing").focus(); return; }
-      if(!it.HoraIngresoManual){ toast("Ingresá Hora","err"); $("#h-ing").focus(); return; }
-      if(!navigator.onLine){ pushQueue(it); toast("Guardado en pendientes (offline)","warn"); return; }
-      try{ $("#btnSave").disabled=true; await send(it); toast("Ingreso guardado ✔","ok"); $("#obs").value=""; }
-      catch(_){ pushQueue(it); toast("Sin conexión o error: a pendientes","warn"); }
-      finally{ $("#btnSave").disabled=false; }
-    }
-    async function saveAlta(){
-      const it=payloadAlta();
-      if(!it.DNI){ toast("Ingresá DNI","err"); $("#dniA").focus(); return; }
-      if(!it.FechaAltaManual){ toast("Ingresá Fecha","err"); $("#f-alta").focus(); return; }
-      if(!it.HoraAltaManual){ toast("Ingresá Hora","err"); $("#h-alta").focus(); return; }
-      if(!navigator.onLine){ pushQueue(it); toast("Guardado en pendientes (offline)","warn"); return; }
-      try{ $("#btnSaveAlta").disabled=true; await send(it); toast("Alta guardada ✔","ok"); $("#obsA").value=""; }
-      catch(_){ pushQueue(it); toast("Sin conexión o error: a pendientes","warn"); }
-      finally{ $("#btnSaveAlta").disabled=false; }
-    }
-    $("#btnSave").onclick=saveIngreso;
-    $("#btnSaveAlta").onclick=saveAlta;
-
-    // compartir
-    $("#btnShare").onclick=async()=>{
-      const it=payloadIngreso();
-      const txt=`HSM • Comprobante ingreso\nDNI: ${it.DNI}\nFecha: ${it.FechaIngresoManual} ${it.HoraIngresoManual}\nMétodo: ${it.Metodo||"-"}\nConsumo: ${it.Consumo||"-"}`;
-      if(navigator.share){ try{ await navigator.share({text:txt}); }catch(_){}} else { await navigator.clipboard.writeText(txt); toast("Copiado al portapapeles","ok"); }
-    };
-    $("#btnShareAlta").onclick=async()=>{
-      const it=payloadAlta();
-      const txt=`HSM • Comprobante alta\nDNI: ${it.DNI}\nFecha: ${it.FechaAltaManual} ${it.HoraAltaManual}\nCondición: ${it.CondicionAlta||"-"}\nDestino: ${it.DestinoAlta||"-"}`;
-      if(navigator.share){ try{ await navigator.share({text:txt}); }catch(_){}} else { await navigator.clipboard.writeText(txt); toast("Copiado al portapapeles","ok"); }
-    };
-
-    // reintento
-    async function retryAll(){
-      const q=getQueue(); if(!q.length) return toast("Sin pendientes");
-      if(!navigator.onLine) return toast("Estás offline","err");
-      $("#btnRetry").disabled=true;
-      const out=[]; for(const it of q){ try{ await send(it);}catch(_){ out.push(it);} }
-      setQueue(out); toast(out.length?("Quedan "+out.length):"Todo enviado ✔", out.length?"warn":"ok"); $("#btnRetry").disabled=false;
-    }
-    $("#btnRetry").onclick=retryAll; $("#btnClear").onclick=()=>{ setQueue([]); toast("Cola vaciada"); };
-
-    // red / pwa
-    setOnline(navigator.onLine); addEventListener("online",()=>setOnline(true)); addEventListener("offline",()=>setOnline(false));
-    let deferredPrompt=null; addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferredPrompt=e; $("#btnInstall").disabled=false; });
-    $("#btnInstall").onclick=async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt=null; };
-
-    if("serviceWorker" in navigator){
-      navigator.serviceWorker.register(BASE+'sw.js?v='+TAG,{scope:BASE})
-        .then(()=>{$("#swst").textContent="OK";})
-        .catch(()=>{$("#swst").textContent="—";});
-    }
-
-    // estado inicial
-    $("#ver").textContent=TAG;
-    $("#st").textContent=(navigator.storage && navigator.storage.estimate)?"OK":"—";
-    renderPend(); loadCfg();
-  })();
+  // =============== INIT ===============
+  function initDefaults(){
+    // precargar hoy/ahora
+    $("#btn-hoy").click(); $("#btn-ahora").click();
+    // estado conexión
+    setOnline(navigator.onLine);
+    window.addEventListener('online', ()=>{ setOnline(true); retryQueue(); });
+    window.addEventListener('offline',()=> setOnline(false));
+    // pintar
+    paintCfgShort(); paintBadge(); paintPend();
+    // reintentos periódicos
+    setInterval(retryQueue, 15000);
+  }
+  initDefaults();
   </script>
 </body>
 </html>
