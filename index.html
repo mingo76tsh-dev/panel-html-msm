@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b1220">
   <title>HSM v7 • Móvil</title>
 
-  <!-- Manifest y favicons (PROD: rutas absolutas bajo /panel-html-msm/) -->
+  <!-- PROD: rutas absolutas bajo /panel-html-msm/ -->
   <link rel="manifest" href="/panel-html-msm/manifest.json?v=1">
   <link rel="icon" type="image/png" sizes="32x32" href="/panel-html-msm/icons/favicon-32.png?v=1">
   <link rel="icon" type="image/png" sizes="16x16" href="/panel-html-msm/icons/favicon-16.png?v=1">
@@ -114,12 +114,12 @@
 
         <div>
           <label for="f-ing">Fecha ingreso</label>
-          <input id="f-ing" type="date" class="ctrl" data-fallback="ddmmyyyy">
+          <input id="f-ing" type="date" class="ctrl">
           <button type="button" class="mini" data-today="#f-ing">Hoy</button>
         </div>
         <div>
           <label for="h-ing">Hora ingreso</label>
-          <input id="h-ing" type="time" step="60" class="ctrl" data-fallback="hhmm">
+          <input id="h-ing" type="time" step="60" class="ctrl">
           <button type="button" class="mini" data-now="#h-ing">Ahora</button>
         </div>
 
@@ -172,7 +172,66 @@
 
     <!-- ALTA -->
     <section id="tab-alta" class="card" role="tabpanel" hidden>
-      <p class="muted">Próxima iteración: formulario de Alta con el mismo picker y accesos. (De momento, enfoque en Ingresos).</p>
+      <div class="row row-2">
+        <div>
+          <label for="dniA">DNI</label>
+          <input id="dniA" class="ctrl" inputmode="numeric" pattern="\d*" placeholder="7–9 dígitos">
+        </div>
+        <div>
+          <label for="sexoA">Sexo</label>
+          <select id="sexoA" class="ctrl">
+            <option value="">—</option><option>M</option><option>F</option><option>X</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="f-alta">Fecha alta</label>
+          <input id="f-alta" type="date" class="ctrl">
+          <button type="button" class="mini" data-today="#f-alta">Hoy</button>
+        </div>
+        <div>
+          <label for="h-alta">Hora alta</label>
+          <input id="h-alta" type="time" step="60" class="ctrl">
+          <button type="button" class="mini" data-now="#h-alta">Ahora</button>
+        </div>
+
+        <div>
+          <label for="condA">Condición de alta</label>
+          <select id="condA" class="ctrl">
+            <option value="">—</option>
+            <option>Alta clínica</option>
+            <option>Derivación</option>
+            <option>Traslado</option>
+            <option>Abandono</option>
+          </select>
+        </div>
+        <div>
+          <label for="destA">Destino</label>
+          <select id="destA" class="ctrl">
+            <option value="">—</option>
+            <option>Domicilio</option>
+            <option>Internación</option>
+            <option>Consultorio</option>
+            <option>Otro</option>
+          </select>
+        </div>
+
+        <div class="row" style="grid-column:1/-1">
+          <label for="obsA">Observaciones de alta</label>
+          <textarea id="obsA" class="ctrl" rows="3" placeholder="Notas (opcional)"></textarea>
+        </div>
+      </div>
+
+      <div class="chips" aria-label="Accesos rápidos">
+        <button class="chip" data-chip="#Alta segura">#Alta segura</button>
+        <button class="chip" data-chip="#Plan acordado">#Plan acordado</button>
+        <button class="chip" data-chip="#Red apoyo">#Red apoyo</button>
+      </div>
+
+      <div class="actions">
+        <button id="btnSaveAlta" class="btn ok">Guardar alta</button>
+        <button id="btnShareAlta" class="btn sec">Compartir comprobante</button>
+      </div>
     </section>
 
     <!-- PENDIENTES -->
@@ -183,8 +242,8 @@
       </div>
       <div class="card" style="margin-top:.8rem">
         <table>
-          <thead><tr><th>#</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
-          <tbody id="pendBody"><tr><td colspan="5" class="muted">Sin pendientes</td></tr></tbody>
+          <thead><tr><th>#</th><th>Tipo</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
+        <tbody id="pendBody"><tr><td colspan="6" class="muted">Sin pendientes</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -225,20 +284,19 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- App -->
   <script>
   (function(){
     const BASE = '/panel-html-msm/';
-    const TAG  = 'v7.0.0-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'');
-    const LS = { url:'HSM_URL', key:'HSM_API_KEY', logo:'HSM_LOGO', q:'HSM_QUEUE' };
+    const TAG  = 'v7.1.0-' + new Date().toISOString().slice(0,16).replace(/[:T]/g,'');
+    const LS   = { url:'HSM_URL', key:'HSM_API_KEY', logo:'HSM_LOGO', q:'HSM_QUEUE' };
 
-    // Helpers
+    // ------------- helpers UI -------------
     const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
     const pad2=n=>String(n).padStart(2,'0');
     function toast(m,k){ const t=$("#toast"); t.textContent=m; t.className='toast show '+(k||''); setTimeout(()=>t.classList.remove('show'),3000); }
     function setOnline(on){ const el=$("#net"); el.dataset.on=on?1:0; el.textContent=on?'Online':'Offline'; }
 
-    // Tabs
+    // tabs
     $$(".tab").forEach(b=>b.addEventListener("click",()=>{
       const id=b.dataset.tab;
       $$(".tab").forEach(x=>x.setAttribute("aria-selected",x===b?"true":"false"));
@@ -246,39 +304,39 @@
       if(id==="pend") renderPend();
     }));
 
-    // Chips
-    $$(".chip").forEach(c=>c.addEventListener("click",()=>{
-      c.dataset.on=c.dataset.on==="1"?"0":"1";
-      const txt=c.textContent.trim(), a=$("#obs");
-      if(c.dataset.on==="1"){ a.value=(a.value?a.value+" • ":"")+txt; }
-      else{ a.value=a.value.replace(new RegExp("(?:^|\\s*•\\s*)"+txt.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')),"").trim(); }
-    }));
+    // chips -> agregan o quitan texto en el textarea de la card activa
+    $$(".chips").forEach(box=>{
+      box.addEventListener("click",(ev)=>{
+        const c=ev.target.closest(".chip"); if(!c) return;
+        c.dataset.on=c.dataset.on==="1"?"0":"1";
+        const ta = box.closest("section").querySelector("textarea");
+        const txt=c.textContent.trim();
+        if(!ta) return;
+        if(c.dataset.on==="1"){ ta.value=(ta.value?ta.value+" • ":"")+txt; }
+        else{ ta.value=ta.value.replace(new RegExp("(?:^|\\s*•\\s*)"+txt.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')),"").trim(); }
+      });
+    });
 
-    // Fecha/Hora pro con fallback
+    // fallback date/time (si el navegador no soporta)
     const ymdToDmy=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||"")?(s.slice(8,10)+"/"+s.slice(5,7)+"/"+s.slice(0,4)):"";
     function maskDate(el){ el.placeholder="dd/mm/aaaa"; el.inputMode="numeric";
       el.addEventListener("input",()=>{ let v=el.value.replace(/\D/g,"").slice(0,8);
-        if(v.length>=5) v=v.replace(/(\d{2})(\d{2})(\d{1,4})/,"$1/$2/$3"); else if(v.length>=3) v=v.replace(/(\d{2})(\d{1,2})/,"$1/$2"); el.value=v;});
-    }
+        if(v.length>=5) v=v.replace(/(\d{2})(\d{2})(\d{1,4})/,"$1/$2/$3"); else if(v.length>=3) v=v.replace(/(\d{2})(\d{1,2})/,"$1/$2"); el.value=v;}); }
     function maskTime(el){ el.placeholder="hh:mm"; el.inputMode="numeric";
       el.addEventListener("input",()=>{ let v=el.value.replace(/\D/g,"").slice(0,4);
-        if(v.length>=3) v=v.replace(/(\d{2})(\d{1,2})/,"$1:$2"); el.value=v;});
-    }
+        if(v.length>=3) v=v.replace(/(\d{2})(\d{1,2})/,"$1:$2"); el.value=v;}); }
+
     (function initPickers(){
-      const f=$("#f-ing"), h=$("#h-ing");
-      if(f && f.type!=="date"){ f.type="text"; maskDate(f); }
-      if(h && h.type!=="time"){ h.type="text"; maskTime(h); }
+      ["#f-ing","#f-alta"].forEach(sel=>{ const f=$(sel); if(!f) return; if(f.type!=="date"){ f.type="text"; maskDate(f);} });
+      ["#h-ing","#h-alta"].forEach(sel=>{ const h=$(sel); if(!h) return; if(h.type!=="time"){ h.type="text"; maskTime(h);} });
     })();
+
     document.addEventListener("click",(ev)=>{
       const t = ev.target.closest("button[data-today]"); if(t){ const el=$(t.dataset.today); if(el){ const d=new Date(); const ymd=`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; el.value=(el.type==='date')?ymd:ymdToDmy(ymd);} }
       const n = ev.target.closest("button[data-now]"); if(n){ const el=$(n.dataset.now); if(el){ const d=new Date(); el.value=`${pad2(d.getHours())}:${pad2(d.getMinutes())}`; } }
     });
-    const HSMDate = {
-      getFecha(){ const f=$("#f-ing"); return f.type==='date'? ymdToDmy(f.value) : f.value.trim(); },
-      getHora(){  return ($("#h-ing").value||'').trim(); }
-    };
 
-    // Config
+    // ------------- configuración -------------
     function loadCfg(){
       $("#cfg-url").value  = localStorage.getItem(LS.url)  || "";
       $("#cfg-key").value  = localStorage.getItem(LS.key)  || "";
@@ -297,32 +355,23 @@
       catch(_){ $("#testMsg").textContent="No se pudo contactar. Revisá la URL."; }
     };
 
-    // Cola offline
+    // ------------- cola offline -------------
     const getQueue=()=>{ try{ return JSON.parse(localStorage.getItem(LS.q)||"[]"); }catch(_){ return []; } };
     const setQueue=a=>{ localStorage.setItem(LS.q,JSON.stringify(a||[])); renderPend(); };
     const pushQueue=it=>{ const q=getQueue(); q.push({...it,ts:Date.now(),st:"pend"}); setQueue(q); };
+
     function renderPend(){
       const q=getQueue(); $("#qCount").textContent=q.length; const tb=$("#pendBody"); tb.innerHTML="";
-      if(!q.length){ tb.innerHTML=`<tr><td colspan="5" class="muted">Sin pendientes</td></tr>`; return; }
+      if(!q.length){ tb.innerHTML=`<tr><td colspan="6" class="muted">Sin pendientes</td></tr>`; return; }
       q.forEach((it,i)=>{ const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${i+1}</td><td>${it.DNI||""}</td><td>${it.FechaIngresoManual||""}</td><td>${it.HoraIngresoManual||""}</td><td>${it.st||"pend"}</td>`; tb.appendChild(tr); });
+        const fecha = it.tipo==='alta' ? (it.FechaAltaManual||"") : (it.FechaIngresoManual||"");
+        const hora  = it.tipo==='alta' ? (it.HoraAltaManual||"")  : (it.HoraIngresoManual||"");
+        tr.innerHTML=`<td>${i+1}</td><td>${it.tipo||''}</td><td>${it.DNI||""}</td><td>${fecha}</td><td>${hora}</td><td>${it.st||"pend"}</td>`;
+        tb.appendChild(tr);
+      });
     }
 
-    // Payload + envío
-    function payloadFromUI(){
-      return {
-        DNI: $("#dni").value.trim(),
-        Sexo: $("#sexo").value.trim(),
-        FechaIngresoManual: HSMDate.getFecha(),
-        HoraIngresoManual:  HSMDate.getHora(),
-        IdeacionIntento: $("#ide").value.trim(),
-        Metodo: $("#met").value.trim(),
-        Consumo: $("#cons").value.trim(),
-        DxCIE10: $("#dx").value.trim(),
-        Observaciones: $("#obs").value.trim(),
-        AppVersion: "v7-móvil"
-      };
-    }
+    // ------------- envío -------------
     async function send(item){
       const url = localStorage.getItem(LS.url)||"", key=localStorage.getItem(LS.key)||"";
       if(!url || !key) throw new Error("Falta configurar URL/API Key");
@@ -334,18 +383,75 @@
       const j=await r.json().catch(()=>({})); if(j && j.ok!==false) return j;
       throw new Error(j && j.error ? j.error : "Error remoto");
     }
-    async function save(){
-      const item=payloadFromUI();
-      if(!item.DNI){ toast("Ingresá DNI","err"); $("#dni").focus(); return; }
-      if(!item.FechaIngresoManual){ toast("Ingresá Fecha","err"); $("#f-ing").focus(); return; }
-      if(!item.HoraIngresoManual){ toast("Ingresá Hora","err"); $("#h-ing").focus(); return; }
-      if(!navigator.onLine){ pushQueue(item); toast("Guardado en pendientes (offline)","warn"); return; }
-      try{ $("#btnSave").disabled=true; await send(item); toast("Ingreso guardado ✔","ok"); $("#obs").value=""; }
-      catch(_){ pushQueue(item); toast("Sin conexión o error: a pendientes","warn"); }
+
+    // INgreso payload
+    function payloadIngreso(){
+      return {
+        tipo:"ing",
+        DNI: $("#dni").value.trim(),
+        Sexo: $("#sexo").value.trim(),
+        FechaIngresoManual: ($("#f-ing").type==='date'? ($("#f-ing").value || "") : $("#f-ing").value).trim(),
+        HoraIngresoManual:  ($("#h-ing").value||"").trim(),
+        IdeacionIntento: $("#ide").value.trim(),
+        Metodo: $("#met").value.trim(),
+        Consumo: $("#cons").value.trim(),
+        DxCIE10: $("#dx").value.trim(),
+        Observaciones: $("#obs").value.trim(),
+        AppVersion: "v7-móvil"
+      };
+    }
+
+    // Alta payload
+    function payloadAlta(){
+      return {
+        tipo:"alta",
+        DNI: $("#dniA").value.trim(),
+        Sexo: $("#sexoA").value.trim(),
+        FechaAltaManual: ($("#f-alta").type==='date'? ($("#f-alta").value || "") : $("#f-alta").value).trim(),
+        HoraAltaManual:  ($("#h-alta").value||"").trim(),
+        CondicionAlta: $("#condA").value.trim(),
+        DestinoAlta: $("#destA").value.trim(),
+        ObservacionesAlta: $("#obsA").value.trim(),
+        AppVersion: "v7-móvil"
+      };
+    }
+
+    async function saveIngreso(){
+      const it=payloadIngreso();
+      if(!it.DNI){ toast("Ingresá DNI","err"); $("#dni").focus(); return; }
+      if(!it.FechaIngresoManual){ toast("Ingresá Fecha","err"); $("#f-ing").focus(); return; }
+      if(!it.HoraIngresoManual){ toast("Ingresá Hora","err"); $("#h-ing").focus(); return; }
+      if(!navigator.onLine){ pushQueue(it); toast("Guardado en pendientes (offline)","warn"); return; }
+      try{ $("#btnSave").disabled=true; await send(it); toast("Ingreso guardado ✔","ok"); $("#obs").value=""; }
+      catch(_){ pushQueue(it); toast("Sin conexión o error: a pendientes","warn"); }
       finally{ $("#btnSave").disabled=false; }
     }
-    $("#btnSave").onclick=save;
+    async function saveAlta(){
+      const it=payloadAlta();
+      if(!it.DNI){ toast("Ingresá DNI","err"); $("#dniA").focus(); return; }
+      if(!it.FechaAltaManual){ toast("Ingresá Fecha","err"); $("#f-alta").focus(); return; }
+      if(!it.HoraAltaManual){ toast("Ingresá Hora","err"); $("#h-alta").focus(); return; }
+      if(!navigator.onLine){ pushQueue(it); toast("Guardado en pendientes (offline)","warn"); return; }
+      try{ $("#btnSaveAlta").disabled=true; await send(it); toast("Alta guardada ✔","ok"); $("#obsA").value=""; }
+      catch(_){ pushQueue(it); toast("Sin conexión o error: a pendientes","warn"); }
+      finally{ $("#btnSaveAlta").disabled=false; }
+    }
+    $("#btnSave").onclick=saveIngreso;
+    $("#btnSaveAlta").onclick=saveAlta;
 
+    // compartir
+    $("#btnShare").onclick=async()=>{
+      const it=payloadIngreso();
+      const txt=`HSM • Comprobante ingreso\nDNI: ${it.DNI}\nFecha: ${it.FechaIngresoManual} ${it.HoraIngresoManual}\nMétodo: ${it.Metodo||"-"}\nConsumo: ${it.Consumo||"-"}`;
+      if(navigator.share){ try{ await navigator.share({text:txt}); }catch(_){}} else { await navigator.clipboard.writeText(txt); toast("Copiado al portapapeles","ok"); }
+    };
+    $("#btnShareAlta").onclick=async()=>{
+      const it=payloadAlta();
+      const txt=`HSM • Comprobante alta\nDNI: ${it.DNI}\nFecha: ${it.FechaAltaManual} ${it.HoraAltaManual}\nCondición: ${it.CondicionAlta||"-"}\nDestino: ${it.DestinoAlta||"-"}`;
+      if(navigator.share){ try{ await navigator.share({text:txt}); }catch(_){}} else { await navigator.clipboard.writeText(txt); toast("Copiado al portapapeles","ok"); }
+    };
+
+    // reintento
     async function retryAll(){
       const q=getQueue(); if(!q.length) return toast("Sin pendientes");
       if(!navigator.onLine) return toast("Estás offline","err");
@@ -355,13 +461,7 @@
     }
     $("#btnRetry").onclick=retryAll; $("#btnClear").onclick=()=>{ setQueue([]); toast("Cola vaciada"); };
 
-    // Compartir
-    $("#btnShare").onclick=async()=>{
-      const it=payloadFromUI(); const txt=`HSM • Comprobante ingreso\nDNI: ${it.DNI}\nFecha: ${it.FechaIngresoManual} ${it.HoraIngresoManual}\nMetodo: ${it.Metodo||"-"}\nConsumo: ${it.Consumo||"-"}`;
-      if(navigator.share){ try{ await navigator.share({text:txt}); }catch(_){}} else { await navigator.clipboard.writeText(txt); toast("Copiado al portapapeles","ok"); }
-    };
-
-    // Red / SW / PWA
+    // red / pwa
     setOnline(navigator.onLine); addEventListener("online",()=>setOnline(true)); addEventListener("offline",()=>setOnline(false));
     let deferredPrompt=null; addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferredPrompt=e; $("#btnInstall").disabled=false; });
     $("#btnInstall").onclick=async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt=null; };
@@ -372,7 +472,7 @@
         .catch(()=>{$("#swst").textContent="—";});
     }
 
-    // Estado inicial
+    // estado inicial
     $("#ver").textContent=TAG;
     $("#st").textContent=(navigator.storage && navigator.storage.estimate)?"OK":"—";
     renderPend(); loadCfg();
