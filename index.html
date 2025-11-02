@@ -1,299 +1,479 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>HSM v7 • Móvil</title>
-<meta name="description" content="Carga de ingresos - HSM v7 móvil" />
-<style>
-  :root{
-    --bg:#0d1321; --panel:#141a2a; --chip:#2b3550;
-    --txt:#e9f1ff; --muted:#bfd1ff; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
-    --field:#1b2135; --accent:#3381ff; --accent-2:#1e40af;
-    --radius:12px; --gap:12px;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,Ubuntu,Arial}
-  header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:linear-gradient(180deg,#0f162a,#0c1324)}
-  header .badge{background:#0f2a18;color:#9ff4c7;border-radius:999px;padding:3px 10px;font-size:12px}
-  main{padding:16px}
-  .card{background:var(--panel);border-radius:var(--radius);padding:16px;box-shadow:0 8px 28px rgba(0,0,0,.28)}
-  .row{display:grid;grid-template-columns:repeat(12,1fr);gap:var(--gap)}
-  .col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-6{grid-column:span 6}.col-12{grid-column:span 12}
-  @media (max-width:900px){ .col-3,.col-4,.col-6{grid-column:span 12} }
-
-  label{display:block;margin:6px 2px 6px 4px;color:var(--muted);font-size:12px}
-  input,select,textarea{
-    width:100%;background:var(--field);border:1px solid #223; color:var(--txt);
-    border-radius:10px;padding:12px 12px;outline:none;
-  }
-  input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(51,129,255,.2)}
-  .btn{background:#1c2a4a;border:1px solid #24345d;color:#dfe9ff;border-radius:999px;padding:10px 14px;cursor:pointer}
-  .btn.primary{background:#2152d9;border-color:#2c5cff}
-  .btn.warn{background:#64410a;border-color:#7a520c}
-  .btn:disabled{opacity:.6;cursor:not-allowed}
-  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .chip{background:var(--chip);border-radius:999px;padding:8px 12px;font-size:13px}
-  .hint{color:#9fb3ff;font-size:12px;margin-top:6px}
-  table{width:100%;border-collapse:collapse}
-  th,td{padding:10px;border-bottom:1px solid #26304a;font-size:14px}
-  th{text-align:left;color:#b9c8ff}
-  .tag{padding:2px 8px;border-radius:999px;font-size:12px}
-  .tag.pend{background:#3a2b08;color:#ffd27a}
-  .tag.ok{background:#09321b;color:#86f3b8}
-  .right{display:flex;gap:8px;justify-content:flex-end;align-items:center}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1321" />
+  <title>HSM v7 · Móvil</title>
+  <meta name="description" content="Carga móvil de ingresos HSM con cola offline y sincronización a Google Sheets." />
+  <style>
+    :root{
+      --bg:#0d1321; --panel:#141a2a; --panel2:#1a2236; --txt:#e9f1ff;
+      --mut:#bfd1ff; --mut2:#8fa6d9; --ok:#22d4bf; --warn:#ffab0b; --err:#ff5a5a;
+      --chip:#2b355e; --chipb:#39457a; --radius:14px; --gap:14px; --shadow:0 6px 18px rgba(0,0,0,.25)
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
+    a{color:inherit}
+    .wrap{min-height:100%;display:flex;flex-direction:column}
+    header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,var(--bg),rgba(13,19,33,.9));backdrop-filter:blur(6px);border-bottom:1px solid rgba(255,255,255,.05)}
+    .bar{display:flex;align-items:center;gap:10px;padding:10px 14px}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:var(--panel2);box-shadow:var(--shadow)}
+    .online{color:#0f0}
+    .tabs{display:flex;gap:8px;margin-left:10px}
+    .tab{padding:8px 12px;border-radius:999px;background:var(--panel2);cursor:pointer}
+    .tab[aria-selected="true"]{background:var(--chipb)}
+    .sp{flex:1}
+    .iconbtn{all:unset;display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--chipb);cursor:pointer;box-shadow:var(--shadow)}
+    .gear{position:relative}
+    main{flex:1;max-width:1200px;margin:12px auto;padding:0 12px;width:100%}
+    .card{background:var(--panel);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    .grid{display:grid;gap:12px}
+    @media(min-width:860px){ .grid.cols-3{grid-template-columns:repeat(3,1fr)} .grid.cols-2{grid-template-columns:repeat(2,1fr)} }
+    label{display:block;font-weight:600;margin:2px 0 6px}
+    .help{color:var(--mut);font-size:12px;margin-top:4px}
+    input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:var(--panel2);color:var(--txt);outline:none}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{all:unset;display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#2d4b9f;cursor:pointer;box-shadow:var(--shadow)}
+    .btn.secondary{background:var(--chip)}
+    .btn.warn{background:#8d5a00}
+    .btn.ok{background:#145a52}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .chip{padding:8px 12px;background:var(--chip);border-radius:999px;cursor:pointer}
+    .pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid rgba(255,255,255,.06)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+    th{position:sticky;top:0;background:var(--panel)}
+    .status{padding:2px 8px;border-radius:999px}
+    .s-pend{background:#3b2f00;color:#ffcc45}
+    .s-ok{background:#0d3b2f;color:#5bffda}
+    .inline-btn{margin-left:8px}
+    dialog{border:0;background:var(--panel);color:var(--txt);border-radius:16px;box-shadow:var(--shadow);max-width:680px;width:min(96vw,680px);padding:0}
+    dialog::backdrop{background:rgba(0,0,0,.6)}
+    .dlg-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .dlg-b{padding:16px}
+    .kbd{font:600 12px/1 ui-monospace, SFMono-Regular, Menlo;background:#111b34;padding:2px 6px;border-radius:6px}
+    .banner{margin:12px 0;padding:12px;border-radius:12px;background:#3c0e0e;color:#ffdede;border:1px solid #ff5a5a}
+    .sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
 </head>
 <body>
-<header>
-  <strong>📊 HSM v7 • Móvil</strong>
-  <span id="net" class="badge">Online</span>
-  <div class="right" style="margin-left:auto">
-    <button id="btnCfg" class="btn">⚙️</button>
-  </div>
-</header>
+<div class="wrap">
+  <header>
+    <div class="bar">
+      <span class="badge"><strong>HSM v7 · Móvil</strong><span id="netState" class="pill">Online</span></span>
+      <nav class="tabs" role="tablist" aria-label="Secciones">
+        <button class="tab" role="tab" id="t-ing" aria-controls="p-ing" aria-selected="true">Ingreso</button>
+        <button class="tab" role="tab" id="t-pend" aria-controls="p-pend" aria-selected="false">Pendientes <span id="pendCount" class="pill">0</span></button>
+        <button class="tab" role="tab" id="t-util" aria-controls="p-util" aria-selected="false">Útiles</button>
+      </nav>
+      <div class="sp"></div>
+      <button id="btnConfig" class="iconbtn gear" aria-label="Configuración"><span aria-hidden="true">⚙️</span></button>
+    </div>
+  </header>
 
-<main class="card">
-  <form id="frm" autocomplete="off">
-    <div class="row">
-      <div class="col-3">
-        <label for="dni">DNI</label>
-        <input id="dni" name="dni" inputmode="numeric" pattern="[0-9]{7,9}" placeholder="7–9 dígitos" required />
-        <div class="hint">Solo números (sin puntos)</div>
-      </div>
-
-      <div class="col-3">
-        <label for="sexo">Sexo</label>
-        <select id="sexo" name="sexo">
-          <option value="F">F</option><option value="M">M</option><option value="X">X</option>
-        </select>
-      </div>
-
-      <div class="col-3">
-        <label for="fec">Fecha ingreso</label>
-        <input id="fec" name="fec" type="date" />
-        <div class="hint">Formato enviado: yyyy-mm-dd</div>
-      </div>
-      <div class="col-3" style="display:flex;gap:8px;align-items:end">
-        <button class="btn" type="button" id="btnHoy">Hoy</button>
-        <div style="flex:1"></div>
-      </div>
-
-      <div class="col-3">
-        <label for="hora">Hora ingreso</label>
-        <input id="hora" name="hora" type="time" />
-      </div>
-      <div class="col-3" style="display:flex;gap:8px;align-items:end">
-        <button class="btn" type="button" id="btnAhora">Ahora</button>
-      </div>
-
-      <div class="col-3">
-        <label for="ide">Ideación / Intento</label>
-        <select id="ide"><option>Ideación</option><option selected>Intento</option></select>
-      </div>
-
-      <div class="col-3">
-        <label for="met">Método / Letalidad</label>
-        <select id="met">
-          <option>—</option>
-          <option>Intoxicación</option>
-          <option>Corte</option>
-          <option>Colgamiento</option>
-          <option>Arma de fuego</option>
-          <option>Arrojo</option>
-          <option>Otro</option>
-        </select>
-      </div>
-
-      <div class="col-3">
-        <label for="cons">Consumo</label>
-        <select id="cons">
-          <option>Niega</option><option>Alcohol</option><option>Drogas</option><option>Mixto</option>
-        </select>
-      </div>
-
-      <div class="col-3">
-        <label for="freq">Frecuencia</label>
-        <select id="freq">
-          <option>—</option><option>Diaria</option><option>Semanal</option><option>Ocasional</option>
-        </select>
-      </div>
-
-      <div class="col-6">
-        <label for="dx">Dx CIE-10 (código)</label>
-        <input id="dx" placeholder="Ej: F32.1" />
-      </div>
-
-      <div class="col-12">
-        <label for="obs">Observaciones</label>
-        <textarea id="obs" rows="4" placeholder="Notas…"></textarea>
-        <div class="chips">
-          <button class="btn chip" type="button" data-ins="Obs. SP">Obs. SP</button>
-          <button class="btn chip" type="button" data-ins="Red apoyo ✓">Red apoyo ✓</button>
-          <button class="btn chip" type="button" data-ins="Niega consumo">Niega consumo</button>
-          <button class="btn chip" type="button" data-ins="Acompañante">Acompañante</button>
+  <main>
+    <!-- Panel Ingreso -->
+    <section id="p-ing" role="tabpanel" aria-labelledby="t-ing">
+      <div class="card">
+        <div class="grid cols-3">
+          <div>
+            <label for="dni">DNI</label>
+            <input id="dni" inputmode="numeric" pattern="[0-9]*" placeholder="7–9 dígitos" autocomplete="off" />
+            <div class="help">Solo números (sin puntos)</div>
+          </div>
+          <div>
+            <label for="sexo">Sexo</label>
+            <select id="sexo">
+              <option value="F">F</option>
+              <option value="M">M</option>
+            </select>
+          </div>
+          <div>
+            <label for="fIngreso">Fecha ingreso</label>
+            <div class="row">
+              <input id="fIngreso" type="date" />
+              <button class="btn secondary inline-btn" id="btnHoy" type="button">Hoy</button>
+            </div>
+            <div class="help">Formato enviado: <span class="kbd">yyyy-mm-dd</span></div>
+          </div>
+          <div>
+            <label for="hIngreso">Hora ingreso</label>
+            <div class="row">
+              <input id="hIngreso" type="time" />
+              <button class="btn secondary inline-btn" id="btnAhora" type="button">Ahora</button>
+            </div>
+          </div>
+          <div>
+            <label for="tipoIngreso">Ideación / Intento</label>
+            <select id="tipoIngreso">
+              <option value="Ideación">Ideación</option>
+              <option value="Intento" selected>Intento</option>
+            </select>
+          </div>
+          <div>
+            <label for="metodo">Método / Letalidad</label>
+            <select id="metodo">
+              <option value="–">—</option>
+              <option>Intoxicación</option>
+              <option>Corte</option>
+              <option>Colgamiento</option>
+              <option>Arma de fuego</option>
+              <option>Arrojo</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div>
+            <label for="consumo">Consumo</label>
+            <select id="consumo">
+              <option>Niega</option>
+              <option>Sí</option>
+            </select>
+          </div>
+          <div>
+            <label for="frecuencia">Frecuencia</label>
+            <select id="frecuencia">
+              <option>—</option>
+              <option>Diaria</option>
+              <option>Semanal</option>
+              <option>Ocasional</option>
+            </select>
+          </div>
+          <div>
+            <label for="dx">Dx CIE-10 (código)</label>
+            <input id="dx" placeholder="Ej: F32.1" inputmode="latin" />
+          </div>
+          <div class="colspan-3" style="grid-column:1/-1">
+            <label for="obs">Observaciones</label>
+            <textarea id="obs" placeholder="Notas clínicas relevantes…"></textarea>
+            <div class="chips">
+              <button class="chip" data-add="Obs. SP">Obs. SP</button>
+              <button class="chip" data-add="Red apoyo ✓">Red apoyo ✓</button>
+              <button class="chip" data-add="Niega consumo">Niega consumo</button>
+              <button class="chip" data-add="Acompañante">Acompañante</button>
+            </div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px;align-items:center">
+          <button id="btnGuardar" class="btn">Guardar ingreso</button>
+          <span id="pendBadge" class="pill">Pend: 0</span>
+          <div id="saveMsg" class="help"></div>
         </div>
       </div>
+    </section>
 
-      <div class="col-12 right">
-        <button class="btn primary" id="btnSave" type="submit">Guardar ingreso</button>
-        <span id="pend" class="chip">Pend: 0</span>
+    <!-- Panel Pendientes -->
+    <section id="p-pend" role="tabpanel" aria-labelledby="t-pend" hidden>
+      <div class="card">
+        <div id="corsWarn" class="banner" hidden>
+          <strong>La WebApp no acepta tu origen (CORS)</strong>.  
+          Verificá que tu Apps Script responda a <span class="kbd">OPTIONS</span> y envíe
+          <span class="kbd">Access-Control-Allow-Origin: https://mingo76tsh-dev.github.io</span>.  
+          (Abajo te dejo el parche exacto para el servidor).
+        </div>
+        <div class="row" style="justify-content:flex-end;margin-bottom:10px">
+          <button id="btnRetryAll" class="btn ok">Reintentar todos</button>
+          <button id="btnVaciar" class="btn warn">Vaciar cola</button>
+        </div>
+        <div class="help">Se evita duplicar por <span class="kbd">DUPE_KEY = DNI | Fecha | Hora</span></div>
+        <div style="overflow:auto;margin-top:10px">
+          <table aria-label="Listado de envíos pendientes/offline">
+            <thead><tr>
+              <th>#</th><th>Tipo</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th><th>Acción</th>
+            </tr></thead>
+            <tbody id="tbodyPend"></tbody>
+          </table>
+        </div>
       </div>
+    </section>
+
+    <!-- Panel Útiles -->
+    <section id="p-util" role="tabpanel" aria-labelledby="t-util" hidden>
+      <div class="card grid cols-2">
+        <div>
+          <h3>Atajos</h3>
+          <p><span class="kbd">H</span> = Hoy · <span class="kbd">A</span> = Ahora</p>
+          <p>Guardá primero en **Pendientes** si estás sin señal; luego **Reintentar**.</p>
+        </div>
+        <div>
+          <h3>Diagnóstico</h3>
+          <div id="diagBox" class="help"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- Diálogo Configuración -->
+  <dialog id="dlgCfg" aria-labelledby="cfg-title">
+    <div class="dlg-h">
+      <strong id="cfg-title">Configuración</strong>
+      <button id="cfgClose" class="iconbtn" aria-label="Cerrar">✖</button>
     </div>
-  </form>
+    <div class="dlg-b grid cols-2">
+      <div style="grid-column:1/-1">
+        <label for="cfgUrl">WebApp URL (/exec)</label>
+        <input id="cfgUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+      <div>
+        <label for="cfgKey">API Key</label>
+        <input id="cfgKey" placeholder="HSM2025KEY" />
+      </div>
+      <div>
+        <label for="cfgCors">CORS Origin</label>
+        <input id="cfgCors" placeholder="https://mingo76tsh-dev.github.io" />
+      </div>
+      <div style="grid-column:1/-1" class="row">
+        <button id="cfgTest" class="btn secondary">Probar</button>
+        <button id="cfgSave" class="btn">Guardar</button>
+      </div>
+      <div id="cfgMsg" class="help" style="grid-column:1/-1"></div>
+    </div>
+  </dialog>
 
-  <hr style="border:0;border-top:1px solid #27314a;margin:18px 0">
-
-  <div class="right" style="margin-bottom:8px">
-    <span class="hint">Se evita duplicar por DUPE_KEY = DNI | Fecha | Hora</span>
-    <button id="btnRetry" class="btn">Reintentar todos</button>
-    <button id="btnEmpty" class="btn warn">Vaciar cola</button>
-  </div>
-
-  <table id="tbl">
-    <thead><tr><th>#</th><th>Tipo</th><th>DNI</th><th>Fecha</th><th>Hora</th><th>Estado</th></tr></thead>
-    <tbody></tbody>
-  </table>
-</main>
+</div><!-- wrap -->
 
 <script>
-/* ====== CONFIG ====== */
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbw8396BPSyjySmmV5efuei721ET6YJamCNDFW3X3R7EaBHLOCFn_l1-ik2eGQyOalq66g/exec';
-const API_KEY    = 'HSM2025KEY';
-const APP_VER    = 'v7-móvil';
-const STORE_KEY  = 'HSMv7_QUEUE';
+(() => {
+  /* =========================
+     CONFIG + ESTADO
+  ========================= */
+  const DEF_CFG = {
+    WEBAPP_URL: "https://script.google.com/macros/s/AKfycbw8396BPSyjySmmV5efuei721ET6YJamCNDFW3X3R7EaBHLOCFn_l1-ik2eGQyOalq66g/exec",
+    API_KEY: "HSM2025KEY",
+    CORS_ORIGIN: "https://mingo76tsh-dev.github.io"
+  };
+  const LS_KEY_CFG = "hsmv7_cfg";
+  const LS_KEY_Q   = "hsmv7_queue";
+  const $ = sel => document.querySelector(sel);
 
-const $ = s => document.querySelector(s);
-const fmt = n => String(n).padStart(2,'0');
+  const state = {
+    cfg: {...DEF_CFG, ...(JSON.parse(localStorage.getItem(LS_KEY_CFG) || "{}"))},
+    queue: JSON.parse(localStorage.getItem(LS_KEY_Q) || "[]"),
+  };
 
-function today(){ const d=new Date(); return `${d.getFullYear()}-${fmt(d.getMonth()+1)}-${fmt(d.getDate())}`; }
-function now(){ const d=new Date(); return `${fmt(d.getHours())}:${fmt(d.getMinutes())}`; }
+  function saveCfg(){ localStorage.setItem(LS_KEY_CFG, JSON.stringify(state.cfg)); }
+  function saveQ(){ localStorage.setItem(LS_KEY_Q, JSON.stringify(state.queue)); refreshPend(); }
 
-function loadQ(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'[]'); }catch(_){ return []; } }
-function saveQ(q){ localStorage.setItem(STORE_KEY, JSON.stringify(q)); paintQ(q); }
+  /* =========================
+     UTILIDADES
+  ========================= */
+  const pad = n => String(n).padStart(2,"0");
+  function nowISODate(){
+    const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+  function nowHHmm(){
+    const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fmtISO(d){ // acepta yyyy-mm-dd o dd/mm/yyyy
+    if(!d) return ""; if(d.includes("-")) return d;
+    const [dd,mm,yy] = d.split("/"); return `2025-`.startsWith(yy)? `${yy}-${mm}-${dd}` : `${yy}-${pad(mm)}-${pad(dd)}`;
+  }
+  function toast(msg, ok=false){
+    const el = $("#saveMsg"); el.textContent = msg; el.style.color = ok ? "var(--ok)" : "var(--mut)";
+    setTimeout(()=>{ el.textContent=""; }, 3000);
+  }
 
-function dupeKey(dni, f, h){ return [String(dni||'').trim(), f, h].join('|'); }
+  /* =========================
+     PESTAÑAS + HEADER
+  ========================= */
+  const panels = { "t-ing":"p-ing", "t-pend":"p-pend", "t-util":"p-util" };
+  for(const id of Object.keys(panels)){
+    $("#"+id).addEventListener("click", () => {
+      for(const k of Object.keys(panels)){
+        $("#"+k).setAttribute("aria-selected", k===id ? "true" : "false");
+        $("#"+panels[k]).hidden = k!==id;
+      }
+    });
+  }
+  function refreshPend(){
+    $("#pendCount").textContent = state.queue.length;
+    $("#pendBadge").textContent = `Pend: ${state.queue.length}`;
+    const tb = $("#tbodyPend"); tb.innerHTML = "";
+    state.queue.forEach((r,i)=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i+1}</td>
+        <td>${r.tipo || "ing"}</td>
+        <td>${r.dni||""}</td>
+        <td>${r.fecha||"—"}</td>
+        <td>${r.hora||"—"}</td>
+        <td><span class="status s-pend">pend</span></td>
+        <td><button class="btn secondary" data-idx="${i}">Enviar</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll("button[data-idx]").forEach(b=>{
+      b.addEventListener("click", async e=>{
+        const idx = +e.currentTarget.dataset.idx;
+        await trySendOne(idx);
+      });
+    });
+  }
 
-function paintQ(q){
-  $('#pend').textContent = 'Pend: ' + q.length;
-  const tb = $('#tbl tbody'); tb.innerHTML = '';
-  q.forEach((it,i)=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i+1}</td><td>${it.tipo}</td><td>${it.DNI}</td><td>${it.fecha}</td><td>${it.hora}</td>
-      <td><span class="tag pend">pend</span></td>`;
-    tb.appendChild(tr);
+  /* =========================
+     FORM + CHIPS
+  ========================= */
+  const f = {
+    dni:        $("#dni"),
+    sexo:       $("#sexo"),
+    fIngreso:   $("#fIngreso"),
+    hIngreso:   $("#hIngreso"),
+    tipo:       $("#tipoIngreso"),
+    metodo:     $("#metodo"),
+    consumo:    $("#consumo"),
+    freq:       $("#frecuencia"),
+    dx:         $("#dx"),
+    obs:        $("#obs")
+  };
+  $("#btnHoy").onclick  = ()=> f.fIngreso.value = nowISODate();
+  $("#btnAhora").onclick= ()=> f.hIngreso.value = nowHHmm();
+  document.addEventListener("keydown", (ev)=>{
+    if(ev.key.toLowerCase()==="h") { f.fIngreso.value = nowISODate(); }
+    if(ev.key.toLowerCase()==="a") { f.hIngreso.value = nowHHmm(); }
   });
-}
-
-function pushUnique(item){
-  const q = loadQ();
-  if (!q.find(x => x.DUPE_KEY === item.DUPE_KEY)) {
-    q.push(item); saveQ(q);
-  }
-}
-
-async function sendOne(item){
-  // Request SIMPLE: form-urlencoded (evita preflight/CORS)
-  const data = new URLSearchParams();
-  data.set('key', API_KEY);
-  data.set('data', JSON.stringify(item));   // servidor parsea e.parameter.data
-
-  const res = await fetch(WEBAPP_URL, {
-    method: 'POST',
-    headers: {'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body: data.toString(),
-    redirect: 'follow',
-    cache: 'no-cache'
-  }).catch(()=>null);
-
-  if (!res) throw new Error('sin_respuesta');
-  if (!res.ok) throw new Error('http_'+res.status);
-
-  // Apps Script devuelve JSON (TextOutput)
-  const txt = await res.text();
-  try { const j = JSON.parse(txt); if (!j.ok) throw new Error(j.error||'srv'); } catch(_){}
-  return true;
-}
-
-async function retryAll(){
-  let q = loadQ();
-  const left = [];
-  for (const it of q){
-    try { await sendOne(it); }
-    catch(e){ left.push(it); }
-  }
-  saveQ(left);
-}
-
-function setOnline(v){ $('#net').textContent = v ? 'Online' : 'Offline'; }
-
-/* ====== UI wiring ====== */
-document.addEventListener('DOMContentLoaded', ()=>{
-  // Defaults
-  $('#fec').value  = today();
-  $('#hora').value = now();
-  paintQ(loadQ());
-  setOnline(navigator.onLine);
-
-  $('#btnHoy').onclick = ()=> $('#fec').value = today();
-  $('#btnAhora').onclick = ()=> $('#hora').value = now();
-
-  // Chips → insertan texto
-  document.querySelectorAll('[data-ins]').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const t = $('#obs');
-      t.value = (t.value ? (t.value.trim() + ' • ') : '') + b.dataset.ins;
+  document.querySelectorAll(".chip[data-add]").forEach(ch=>{
+    ch.addEventListener("click",()=>{
+      const t = ch.getAttribute("data-add");
+      f.obs.value = (f.obs.value? f.obs.value+" · " : "") + t;
     });
   });
 
-  $('#btnRetry').onclick = ()=> retryAll();
-  $('#btnEmpty').onclick = ()=> saveQ([]);
+  // Inicial
+  if(!f.fIngreso.value) f.fIngreso.value = nowISODate();
+  if(!f.hIngreso.value) f.hIngreso.value = nowHHmm();
 
-  // Cola automática al recuperar conexión
-  window.addEventListener('online', ()=>{ setOnline(true); retryAll(); });
-  window.addEventListener('offline', ()=> setOnline(false) );
+  /* =========================
+     QUEUE + DEDUPE
+  ========================= */
+  const dupeKey = r => [r.dni, r.fecha, r.hora].join("|");
+  function pushQueue(rec){
+    // anti duplicados
+    const key = dupeKey(rec);
+    const exists = state.queue.some(x => dupeKey(x)===key);
+    if(!exists){ state.queue.push(rec); saveQ(); }
+  }
 
-  // Submit
-  $('#frm').addEventListener('submit', async (ev)=>{
-    ev.preventDefault();
-    const btn = $('#btnSave'); btn.disabled = true;
-
-    const dni   = $('#dni').value.trim();
-    const fecha = $('#fec').value;
-    const hora  = $('#hora').value;
-
-    const item = {
-      tipo:'ing',
-      DNI:dni,
-      Sexo:$('#sexo').value,
-      FechaIngresoManual:fecha,
-      HoraIngresoManual:hora,
-      IdeacionIntento:$('#ide').value,
-      MetodoLetalidad:$('#met').value,
-      Consumo:$('#cons').value,
-      Frecuencia:$('#freq').value,
-      DxCIE10:$('#dx').value.trim(),
-      Observaciones:$('#obs').value.trim(),
-      AppVersion:APP_VER,
-      DUPE_KEY: dupeKey(dni, fecha || today(), hora || now())
+  function readForm(){
+    const rec = {
+      tipo: "ing",
+      dni: (f.dni.value||"").trim(),
+      sexo: f.sexo.value,
+      fecha: f.fIngreso.value || nowISODate(),
+      hora:  f.hIngreso.value || nowHHmm(),
+      ideacionIntento: f.tipo.value,
+      metodoLetalidad: f.metodo.value,
+      consumo: f.consumo.value,
+      frecuencia: f.freq.value,
+      dxProvisorio: (f.dx.value||"").toUpperCase().replace(/\s+/g,""),
+      observaciones: f.obs.value?.trim() || "",
+      ts: Date.now()
     };
+    if(!/^\d{7,9}$/.test(rec.dni)) throw new Error("DNI inválido (7–9 dígitos, sin puntos)");
+    return rec;
+  }
 
-    // Evitar duplicado por error humano (multi-click)
-    pushUnique(item);
-
-    try {
-      await sendOne(item);
-      // si fue OK, sacar de cola
-      const q = loadQ().filter(x => x.DUPE_KEY !== item.DUPE_KEY);
-      saveQ(q);
-    } catch(_) {
-      // queda en pendientes; el banner informativo es la tabla
-    } finally {
-      btn.disabled = false;
-    }
+  $("#btnGuardar").addEventListener("click", async ()=>{
+    try{
+      const rec = readForm();
+      const ok = await sendToServer(rec, true);
+      if(ok){ toast("Enviado ✔", true); }
+      else{
+        pushQueue(rec);
+        toast("Sin conexión o CORS: quedó en pendientes");
+      }
+    }catch(err){ toast(err.message||String(err)); }
   });
-});
+
+  $("#btnRetryAll").onclick = async ()=>{
+    for(let i=0;i<state.queue.length;i++){
+      await trySendOne(i); // al enviar, se acorta
+    }
+  };
+  $("#btnVaciar").onclick = ()=>{ state.queue = []; saveQ(); };
+
+  async function trySendOne(idx){
+    const rec = state.queue[idx]; if(!rec) return;
+    const ok = await sendToServer(rec, false);
+    if(ok){
+      state.queue.splice(idx,1); saveQ();
+    }
+  }
+
+  /* =========================
+     FETCH + BACKOFF + CORS
+  ========================= */
+  async function sendToServer(rec, diagnose){
+    // Preflight de diagnóstico opcional (una sola vez por sesión)
+    if(diagnose){ await corsProbe(); }
+
+    const body = JSON.stringify(rec);
+    try{
+      const resp = await fetch(state.cfg.WEBAPP_URL, {
+        method:"POST",
+        mode:"cors",
+        headers:{
+          "Content-Type":"application/json",
+          "x-api-key": state.cfg.API_KEY,
+          "x-app-origin": state.cfg.CORS_ORIGIN
+        },
+        body,
+      });
+      if(!resp.ok) throw new Error("HTTP "+resp.status);
+      const data = await resp.json().catch(()=> ({}));
+      if(data?.ok){ return true; }
+      // Si la WebApp devuelve texto sin CORS, no llega acá; sería bloqueado antes
+      return false;
+    }catch(e){
+      // Red/ CORS / errores
+      return false;
+    }
+  }
+
+  let probed=false;
+  async function corsProbe(){
+    if(probed) return; probed=true;
+    try{
+      const url = state.cfg.WEBAPP_URL;
+      const resp = await fetch(url, {
+        method:"OPTIONS",
+        mode:"cors",
+        headers:{ "Origin": state.cfg.CORS_ORIGIN, "Access-Control-Request-Method":"POST" }
+      });
+      const allow = resp.headers.get("Access-Control-Allow-Origin") || "";
+      if(!(allow==="*" || allow.includes(state.cfg.CORS_ORIGIN))){ $("#corsWarn").hidden=false; }
+      $("#diagBox").textContent = `Preflight: ${resp.status} · ACAO=${allow||"—"}`;
+    }catch(err){
+      $("#corsWarn").hidden=false;
+      $("#diagBox").textContent = "Preflight: bloqueado (CORS/RED)";
+    }
+  }
+
+  /* =========================
+     CONFIG DIALOG
+  ========================= */
+  const dlg = $("#dlgCfg");
+  $("#btnConfig").onclick = ()=>{ fillCfg(); dlg.showModal(); };
+  $("#cfgClose").onclick   = ()=> dlg.close();
+  $("#cfgSave").onclick    = ()=>{ state.cfg.WEBAPP_URL=$("#cfgUrl").value.trim();
+                                   state.cfg.API_KEY   =$("#cfgKey").value.trim();
+                                   state.cfg.CORS_ORIGIN=$("#cfgCors").value.trim();
+                                   saveCfg(); $("#cfgMsg").textContent="Guardado"; };
+  $("#cfgTest").onclick    = async ()=>{
+    $("#cfgMsg").textContent="Probando…";
+    await corsProbe();
+    $("#cfgMsg").textContent="Listo. Revisá el banner y Diagnóstico.";
+  };
+  function fillCfg(){ $("#cfgUrl").value=state.cfg.WEBAPP_URL; $("#cfgKey").value=state.cfg.API_KEY; $("#cfgCors").value=state.cfg.CORS_ORIGIN; }
+
+  /* =========================
+     NET STATE + INIT
+  ========================= */
+  function netUpdate(){ $("#netState").textContent = navigator.onLine ? "Online" : "Offline"; }
+  window.addEventListener("online", netUpdate); window.addEventListener("offline", netUpdate); netUpdate();
+  refreshPend(); fillCfg();
+
+})();
 </script>
 </body>
 </html>
