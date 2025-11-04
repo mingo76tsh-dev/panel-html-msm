@@ -7,7 +7,7 @@
   <title>HSM v7 · Móvil</title>
   <meta name="description" content="Carga móvil de ingresos HSM con cola offline y sincronización a Google Sheets." />
 
-  <!-- PWA / cache-busting (build.mjs actualiza ?v=…) -->
+  <!-- PWA -->
   <link rel="manifest" href="./manifest.json?v=1" />
   <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png?v=1">
   <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png?v=1">
@@ -224,9 +224,8 @@
     <section id="p-pend" role="tabpanel" aria-labelledby="t-pend" hidden>
       <div class="card">
         <div id="corsWarn" class="banner" hidden>
-          <strong>La WebApp no acepta tu origen (CORS)</strong>.  
-          Verificá que tu Apps Script responda a <span class="kbd">OPTIONS</span> y envíe
-          <span class="kbd">Access-Control-Allow-Origin: https://mingo76tsh-dev.github.io</span>.
+          <strong>Chequeo de conexión</strong>.  
+          Si falla el ping a tu WebApp, revisá que la URL esté bien y que el despliegue esté “cualquiera con el enlace”.
         </div>
         <div class="row" style="justify-content:flex-end;margin-bottom:10px">
           <button id="btnRetryAll" class="btn ok">Reintentar todos</button>
@@ -276,8 +275,8 @@
         <input id="cfgKey" placeholder="HSM2025KEY" />
       </div>
       <div>
-        <label for="cfgCors">CORS Origin</label>
-        <input id="cfgCors" placeholder="https://mingo76tsh-dev.github.io" />
+        <label for="cfgCors">Logo (opcional)</label>
+        <input id="cfgLogo" placeholder="https://…/logo.png" />
       </div>
       <div style="grid-column:1/-1" class="row">
         <button id="cfgTest" class="btn secondary">Probar</button>
@@ -289,7 +288,6 @@
 
 </div><!-- wrap -->
 
-<!-- App + API -->
 <script>
 (() => {
   /* =========================
@@ -298,7 +296,7 @@
   const DEF_CFG = {
     WEBAPP_URL: "https://script.google.com/macros/s/AKfycbw8396BPSyjySmmV5efuei721ET6YJamCNDFW3X3R7EaBHLOCFn_l1-ik2eGQyOalq66g/exec",
     API_KEY: "HSM2025KEY",
-    CORS_ORIGIN: "https://mingo76tsh-dev.github.io"
+    LOGO_URL: ""
   };
   const LS_KEY_CFG = "hsmv7_cfg";
   const LS_KEY_Q   = "hsmv7_queue";
@@ -316,6 +314,7 @@
      UTILIDADES
   ========================= */
   const pad = n => String(n).padStart(2,"0");
+  const onlyDigits = s => String(s||"").replace(/\D/g,"");
   function nowISODate(){ const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
   function nowHHmm(){ const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
   function toast(msg, ok=false){ const el = $("#saveMsg"); el.textContent = msg; el.style.color = ok ? "var(--ok)" : "var(--mut)"; setTimeout(()=>{ el.textContent=""; }, 3000); }
@@ -417,9 +416,10 @@
   }
 
   function readIngresoForm(){
+    const dni = onlyDigits(f.dni.value);
     const rec = {
       tipo: "ing",
-      dni: (f.dni.value||"").trim(),
+      dni,
       sexo: f.sexo.value,
       fecha: f.fIngreso.value || nowISODate(),
       hora:  f.hIngreso.value || nowHHmm(),
@@ -431,14 +431,15 @@
       observaciones: f.obs.value?.trim() || "",
       ts: Date.now()
     };
-    if(!/^\d{7,9}$/.test(rec.dni)) throw new Error("DNI inválido (7–9 dígitos, sin puntos)");
+    if(!/^\d{7,9}$/.test(dni)) throw new Error("DNI inválido (7–9 dígitos, sin puntos)");
     return rec;
   }
 
   function readAltaForm(){
+    const dni = onlyDigits(a.dni.value);
     const rec = {
       tipo: "alta",
-      dni:   (a.dni.value||"").trim(),
+      dni,
       sexo:  a.sexo.value,
       fechaAlta: a.fecha.value || nowISODate(),
       horaAlta:  a.hora.value  || nowHHmm(),
@@ -446,7 +447,7 @@
       observaciones: a.obs.value?.trim() || "",
       ts: Date.now()
     };
-    if(!/^\d{7,9}$/.test(rec.dni)) throw new Error("DNI inválido (7–9 dígitos, sin puntos)");
+    if(!/^\d{7,9}$/.test(dni)) throw new Error("DNI inválido (7–9 dígitos, sin puntos)");
     return rec;
   }
 
@@ -455,7 +456,7 @@
       const rec = readIngresoForm();
       const ok = await sendToServer(rec, true);
       if(ok){ toast("Enviado ✔", true); }
-      else { pushQueue(rec); toast("Sin conexión o CORS: quedó en pendientes"); }
+      else { pushQueue(rec); toast("Sin conexión: quedó en pendientes"); }
     }catch(err){ toast(err.message||String(err)); }
   });
 
@@ -464,7 +465,7 @@
       const rec = readAltaForm();
       const ok = await sendToServer(rec, true);
       if(ok){ toast("Alta enviada ✔", true); }
-      else { pushQueue(rec); toast("Sin conexión o CORS: quedó en pendientes"); }
+      else { pushQueue(rec); toast("Sin conexión: quedó en pendientes"); }
     }catch(err){ toast(err.message||String(err)); }
   });
 
@@ -482,12 +483,11 @@
   }
 
   /* =========================
-     FETCH + BACKOFF + CORS
+     FETCH + DIAGNÓSTICO (usa apiKey en BODY)
   ========================= */
   async function sendToServer(rec, diagnose){
-    if(diagnose){ await corsProbe(); }
+    if(diagnose){ await pingHealth(); }
 
-    // Mapear a payload PowerShell-compatible
     let action, payload;
     if(rec.tipo === "alta"){
       action = "alta";
@@ -504,8 +504,8 @@
       payload = {
         DNI: rec.dni,
         Sexo: rec.sexo,
-        Fecha: rec.fecha,
-        Hora:  rec.hora,
+        FechaIngresoManual: rec.fecha,
+        HoraIngresoManual:  rec.hora,
         IdeacionIntento:    rec.ideacionIntento,
         MetodoLetalidad:    rec.metodoLetalidad,
         Consumo:            rec.consumo,
@@ -521,12 +521,9 @@
       const resp = await fetch(state.cfg.WEBAPP_URL, {
         method:"POST",
         mode:"cors",
-        headers:{
-          "Content-Type":"application/json",
-          "x-api-key": state.cfg.API_KEY,
-          "x-app-origin": state.cfg.CORS_ORIGIN
-        },
-        body: JSON.stringify({ action, payload })
+        headers:{ "Content-Type":"application/json" },
+        // >>> Apps Script espera apiKey EN EL BODY (H8.doPost)
+        body: JSON.stringify({ action, apiKey: state.cfg.API_KEY, payload })
       });
       if(!resp.ok) throw new Error("HTTP "+resp.status);
       const data = await resp.json().catch(()=> ({}));
@@ -536,25 +533,18 @@
     }
   }
 
-  let probed=false;
-  async function corsProbe(){
-    if(probed) return; probed=true;
+  // “Ping” sin preflight: GET ?health=1
+  async function pingHealth(){
     try{
-      const url = state.cfg.WEBAPP_URL;
-      const resp = await fetch(url, {
-        method:"OPTIONS",
-        mode:"cors",
-        headers:{
-          "Origin": state.cfg.CORS_ORIGIN,
-          "Access-Control-Request-Method":"POST"
-        }
-      });
+      const u = new URL(state.cfg.WEBAPP_URL);
+      u.searchParams.set("health","1");
+      const resp = await fetch(u.toString(), { method:"GET", mode:"cors" });
       const allow = resp.headers.get("Access-Control-Allow-Origin") || "";
-      if(!(allow==="*" || allow.includes(state.cfg.CORS_ORIGIN))){ $("#corsWarn").hidden=false; }
-      $("#diagBox").textContent = `Preflight: ${resp.status} · ACAO=${allow||"—"}`;
-    }catch(err){
-      $("#corsWarn").hidden=false;
-      $("#diagBox").textContent = "Preflight: bloqueado (CORS/RED)";
+      $("#diagBox").textContent = `Ping: ${resp.status} · ACAO=${allow||"—"}`;
+      $("#corsWarn").hidden = resp.ok;
+    }catch(_){
+      $("#diagBox").textContent = "Ping: error de red/CORS";
+      $("#corsWarn").hidden = false;
     }
   }
 
@@ -566,10 +556,10 @@
   $("#cfgClose").onclick   = ()=> dlg.close();
   $("#cfgSave").onclick    = ()=>{ state.cfg.WEBAPP_URL=$("#cfgUrl").value.trim();
                                    state.cfg.API_KEY   =$("#cfgKey").value.trim();
-                                   state.cfg.CORS_ORIGIN=$("#cfgCors").value.trim();
+                                   state.cfg.LOGO_URL  =$("#cfgLogo").value.trim();
                                    saveCfg(); $("#cfgMsg").textContent="Guardado"; };
-  $("#cfgTest").onclick    = async ()=>{ $("#cfgMsg").textContent="Probando…"; await corsProbe(); $("#cfgMsg").textContent="Listo. Revisá el banner y Diagnóstico."; };
-  function fillCfg(){ $("#cfgUrl").value=state.cfg.WEBAPP_URL; $("#cfgKey").value=state.cfg.API_KEY; $("#cfgCors").value=state.cfg.CORS_ORIGIN; }
+  $("#cfgTest").onclick    = async ()=>{ $("#cfgMsg").textContent="Probando…"; await pingHealth(); $("#cfgMsg").textContent="Listo."; };
+  function fillCfg(){ $("#cfgUrl").value=state.cfg.WEBAPP_URL; $("#cfgKey").value=state.cfg.API_KEY; $("#cfgLogo").value=state.cfg.LOGO_URL||""; }
 
   /* =========================
      NET STATE + INIT
@@ -581,7 +571,7 @@
 })();
 </script>
 
-<!-- Service Worker (cache-busting; build.mjs sustituye ?v=…) -->
+<!-- Service Worker -->
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
@@ -591,4 +581,3 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
-
