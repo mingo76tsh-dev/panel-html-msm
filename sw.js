@@ -27,14 +27,15 @@ self.addEventListener('activate', e=>{
 
 self.addEventListener('fetch', e=>{
   const req=e.request, url=new URL(req.url);
-  // Cache first para recursos del mismo origen y dentro del scope
+
+  // Cache-first para recursos del sitio (scope pages)
   if(req.method==='GET' && url.origin===location.origin && url.pathname.startsWith('/panel-html-msm/')){
     e.respondWith((async()=>{
       const cache=await caches.open(CACHE_VER);
       const hit=await cache.match(req);
       if(hit){
-        // update silencioso en segundo plano
-        fetch(req).then(res=>{ if(res.ok) cache.put(req,res.clone()); }).catch(()=>{});
+        // refresh silencioso
+        fetch(req).then(r=>{ if(r.ok) cache.put(req,r.clone()); }).catch(()=>{});
         return hit;
       }
       try{
@@ -48,7 +49,8 @@ self.addEventListener('fetch', e=>{
     })());
     return;
   }
-  // Otros GET: red primero, fallback cache si existiera
+
+  // Otros GET: red primero
   if(req.method==='GET'){
     e.respondWith((async()=>{
       try{ return await fetch(req); }
@@ -56,3 +58,4 @@ self.addEventListener('fetch', e=>{
     })());
   }
 });
+
