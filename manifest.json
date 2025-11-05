@@ -7,10 +7,10 @@
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
   "icons": [
-    { "src": "/panel-html-msm/icons/icon-192.png",      "sizes": "192x192", "type": "image/png" },
-    { "src": "/panel-html-msm/icons/icon-512.png",      "sizes": "512x512", "type": "image/png" },
-    { "src": "/panel-html-msm/icons/maskable-192.png",  "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/panel-html-msm/icons/maskable-512.png",  "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/panel-html-msm/icons/icon-192.png",     "sizes": "192x192", "type": "image/png" },
+    { "src": "/panel-html-msm/icons/icon-512.png",     "sizes": "512x512", "type": "image/png" },
+    { "src": "/panel-html-msm/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/panel-html-msm/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "screenshots": [
     { "src": "/panel-html-msm/icons/screen-1080x1920.webp", "type": "image/webp", "sizes": "1080x1920" },
