@@ -1,26 +1,31 @@
-// build.mjs — estampa versión (cache-busting) y publica
-import { readFileSync, writeFileSync } from 'node:fs';
+import { minify } from 'html-minifier-terser';
+import { promises as fs } from 'fs';
+import path from 'path';
 
-const stamp = new Date().toISOString().replace(/[:.]/g,'-');
-const base  = '/panel-html-msm/';
+const SRC = 'panel-html-msm';
+const DST = 'dist/panel-html-msm';
 
-function bust(s){
-  return s
-    .replace(/sw\.js\?v=[^'"]*/g, `sw.js?v=${stamp}`)
-    .replace(/manifest\.json\?v=\d+/g, `manifest.json?v=${stamp}`)
-    .replace(/icon-(?:192|512)\.png\?v=\d+/g, m=>{
-      const n = m.split('?')[0];
-      return `${n}?v=${stamp}`;
-    });
+async function copyDir(src, dst){
+  await fs.mkdir(dst, { recursive:true });
+  const entries = await fs.readdir(src, { withFileTypes:true });
+  for(const e of entries){
+    const s = path.join(src, e.name);
+    const d = path.join(dst, e.name);
+    if(e.isDirectory()){ await copyDir(s,d); }
+    else{
+      if(e.name.endsWith('.html')){
+        const html = await fs.readFile(s,'utf8');
+        const out = await minify(html, {
+          collapseWhitespace:true, removeComments:true, minifyCSS:true, minifyJS:true
+        });
+        await fs.writeFile(d, out);
+      }else{
+        await fs.copyFile(s,d);
+      }
+    }
+  }
 }
 
-const path = 'panel-html-msm/index.html';
-const html = readFileSync(path,'utf8');
-writeFileSync(path, bust(html), 'utf8');
-
-const swp  = 'panel-html-msm/sw.js';
-const sw   = readFileSync(swp,'utf8').replace(/CACHE_VER\s*=\s*'[^']*'/, `CACHE_VER='hsmv7-${stamp}'`);
-writeFileSync(swp, sw, 'utf8');
-
-console.log('Build OK:', stamp);
-
+await fs.rm('dist', { recursive:true, force:true });
+await copyDir(SRC, DST);
+console.log('OK build →', DST);
