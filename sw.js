@@ -1,5 +1,5 @@
-/* sw.js — HSM v7 móvil (cache básico + offline seguro, PROD) */
-const CACHE_VER = 'hsmv7-prod-2025-10-31';
+/* sw.js — HSM v7 móvil (cache básico + offline) */
+const CACHE_VER = 'hsmv7-prod-2025-11-01';
 const CORE = [
   '/panel-html-msm/',
   '/panel-html-msm/index.html',
@@ -27,13 +27,16 @@ self.addEventListener('activate', e=>{
 
 self.addEventListener('fetch', e=>{
   const req=e.request, url=new URL(req.url);
-
-  // Cacheamos GET del mismo origen
-  if(req.method==='GET' && url.origin===location.origin){
+  // Cache first para recursos del mismo origen y dentro del scope
+  if(req.method==='GET' && url.origin===location.origin && url.pathname.startsWith('/panel-html-msm/')){
     e.respondWith((async()=>{
       const cache=await caches.open(CACHE_VER);
       const hit=await cache.match(req);
-      if(hit) return hit;
+      if(hit){
+        // update silencioso en segundo plano
+        fetch(req).then(res=>{ if(res.ok) cache.put(req,res.clone()); }).catch(()=>{});
+        return hit;
+      }
       try{
         const net=await fetch(req);
         if(net.ok) cache.put(req, net.clone());
@@ -45,8 +48,7 @@ self.addEventListener('fetch', e=>{
     })());
     return;
   }
-
-  // Para GET externos: red primero, fallback cache
+  // Otros GET: red primero, fallback cache si existiera
   if(req.method==='GET'){
     e.respondWith((async()=>{
       try{ return await fetch(req); }
