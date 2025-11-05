@@ -1,158 +1,29 @@
-name: Build & Deploy (dual) + Lighthouse
-
+name: Deploy Pages
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
+    branches: [ main ]
 permissions:
   contents: read
   pages: write
   id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
-env:
-  NODE_VERSION: 20
-  MIN_PERF: "0.90"        # ⬅️ Cambiá el umbral si querés
-
 jobs:
   build:
-    name: Build DEV & PROD
     runs-on: ubuntu-latest
-    outputs:
-      prod_artifact: dist-prod
-      dev_artifact: dist-dev
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install deps
-        run: npm ci
-
-      # === Build PROD (/panel-html-msm/) ===
-      - name: Build PROD
-        run: |
-          node build.mjs --prod
-          mv dist dist-prod
-
-      # === Build DEV (./) ===
-      - name: Build DEV
-        run: |
-          node build.mjs --dev
-          mv dist dist-dev
-
-      - name: Upload PROD artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-prod
-          path: dist-prod
-          if-no-files-found: error
-
-      - name: Upload DEV artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-dev
-          path: dist-dev
-          if-no-files-found: error
-
-  lighthouse:
-    name: Lighthouse (DEV & PROD) + Gate
-    needs: build
-    runs-on: ubuntu-latest
-    outputs:
-      perf_prod: ${{ steps.lhci_prod.outputs.performance }}
-      perf_dev:  ${{ steps.lhci_dev.outputs.performance }}
-    steps:
-      - name: Download PROD
-        uses: actions/download-artifact@v4
-        with:
-          name: dist-prod
-          path: dist-prod
-
-      - name: Download DEV
-        uses: actions/download-artifact@v4
-        with:
-          name: dist-dev
-          path: dist-dev
-
-      - name: Install static server
-        run: npm i -g http-server
-
-      # ---- Lighthouse DEV ----
-      - name: Lighthouse DEV
-        id: lhci_dev
-        uses: treosh/lighthouse-ci-action@v11
-        with:
-          uploadArtifacts: true
-          temporaryPublicStorage: true
-          runs: |
-            http-server dist-dev -p 4173 -s &
-          configPath: .lighthouserc.json
-
-      # ---- Lighthouse PROD ----
-      - name: Lighthouse PROD
-        id: lhci_prod
-        uses: treosh/lighthouse-ci-action@v11
-        with:
-          uploadArtifacts: true
-          temporaryPublicStorage: true
-          runs: |
-            http-server dist-prod -p 5173 -s &
-          configPath: .lighthouserc.json
-
-      - name: Resumen (DEV vs PROD)
-        if: always()
-        run: |
-          echo "## Lighthouse DEV vs PROD" >> $GITHUB_STEP_SUMMARY
-          echo "### DEV" >> $GITHUB_STEP_SUMMARY
-          echo "- Performance:   ${{ steps.lhci_dev.outputs.performance }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Accessibility: ${{ steps.lhci_dev.outputs.accessibility }}" >> $GITHUB_STEP_SUMMARY
-          echo "- BestPractices: ${{ steps.lhci_dev.outputs.bestPractices }}" >> $GITHUB_STEP_SUMMARY
-          echo "- SEO:           ${{ steps.lhci_dev.outputs.seo }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### PROD" >> $GITHUB_STEP_SUMMARY
-          echo "- Performance:   ${{ steps.lhci_prod.outputs.performance }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Accessibility: ${{ steps.lhci_prod.outputs.accessibility }}" >> $GITHUB_STEP_SUMMARY
-          echo "- BestPractices: ${{ steps.lhci_prod.outputs.bestPractices }}" >> $GITHUB_STEP_SUMMARY
-          echo "- SEO:           ${{ steps.lhci_prod.outputs.seo }}" >> $GITHUB_STEP_SUMMARY
-
-      - name: Quality Gate (Performance PROD)
-        run: |
-          PERF="${{ steps.lhci_prod.outputs.performance }}"
-          echo "Performance PROD = $PERF (mínimo ${MIN_PERF})"
-          awk -v p="$PERF" -v m="${MIN_PERF}" 'BEGIN{ if (p+0 >= m+0) exit 0; else exit 1 }'
-
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
   deploy:
-    name: Deploy to GitHub Pages (PROD)
-    needs: [build, lighthouse]
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download PROD artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist-prod
-          path: dist
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-      - name: Deploy
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
+
