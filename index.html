@@ -1,196 +1,216 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HSM v7 • Ingreso / Alta</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="./manifest.json">
-  <meta name="theme-color" content="#0b1220" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
+  <meta name="description" content="Carga rápida de Ingresos y Altas (HSM v7) con envío directo a Google Sheets.">
+  <link rel="manifest" href="manifest.json">
   <style>
-    :root { --bg:#0b1220; --fg:#e5e7eb; --bd:#1f2937; --ac:#0f172a; --ok:#10b981; --err:#ef4444; }
-    html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
-    .wrap{max-width:960px;margin:0 auto;padding:16px}
-    .title{font-size:20px;font-weight:700;letter-spacing:.2px;margin:8px 0 16px}
-    .card{background:var(--ac);border:1px solid var(--bd);border-radius:16px;padding:16px}
-    .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
-    .row{display:flex;flex-direction:column;gap:6px}
-    label{font-size:13px;opacity:.9}
-    input,select,textarea{background:#0d1426;color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;outline:none}
-    textarea{min-height:90px;resize:vertical}
-    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    button{background:#1f2937;border:1px solid var(--bd);color:#e5e7eb;border-radius:12px;padding:10px 14px;cursor:pointer}
-    button.primary{background:#2563eb;border-color:#1d4ed8}
-    .note{font-size:12px;opacity:.7;margin-top:8px}
-    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#e5e7eb;border:1px solid #374151;border-radius:14px;padding:10px 14px;display:none}
-    .toast.ok{border-color:#059669}
-    .toast.err{border-color:#b91c1c}
-    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
+    :root {
+      --bg:#0b1220; --card:#111a2b; --text:#e5e7eb; --muted:#9aa4b2; --acc:#4da3ff;
+      --ok:#16a34a; --bad:#ef4444; --focus:#93c5fd;
+      font-synthesis-weight:none; text-rendering:optimizeLegibility;
+    }
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,'Helvetica Neue',Arial}
+    .wrap{max-width:980px;margin:auto;padding:24px}
+    .title{font-size:22px;font-weight:700;margin:6px 0 18px}
+    .tabs{display:flex;gap:8px;margin-bottom:14px}
+    .tab{padding:10px 14px;border-radius:10px;background:#0f172a;color:#cbd5e1;cursor:pointer;border:1px solid #1e293b}
+    .tab.active{background:#1e293b;color:#fff}
+    form{background:var(--card);border:1px solid #1f2a40;border-radius:16px;padding:18px}
+    .grid{display:grid;grid-template-columns:1fr 1fr; gap:14px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input,select,textarea{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #263248;background:#0b1220;color:#e5e7eb;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(147,197,253,.15)}
+    .row{display:flex;gap:10px}
+    .row .grow{flex:1}
+    .actions{display:flex;gap:10px;margin-top:14px}
+    .btn{border:0;padding:12px 16px;border-radius:12px;cursor:pointer}
+    .btn.primary{background:var(--acc);color:#08111f}
+    .btn.secondary{background:#0f172a;color:#cbd5e1;border:1px solid #1e293b}
+    .hint{font-size:12px;color:#7e8aa0;margin-top:12px}
+    .toast{position:fixed;inset:auto 16px 16px auto;background:#0f172a;color:#e5e7eb;border:1px solid #1e293b;
+           padding:12px 14px;border-radius:12px;opacity:0;transform:translateY(6px);transition:.25s}
+    .toast.show{opacity:1;transform:none}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="title">HSM v7 • Ingreso / Alta</div>
 
-    <div class="card">
-      <form id="frm">
-        <div class="grid">
-          <div class="row">
-            <label for="dni">DNI</label>
-            <input id="dni" name="dni" inputmode="numeric" maxlength="10" placeholder="7–9 dígitos" required />
-          </div>
-
-          <div class="row">
-            <label for="sexo">Sexo</label>
-            <select id="sexo" name="sexo" required>
-              <option value="">—</option>
-              <option>M</option><option>F</option><option>X</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <label for="fing">Fecha ingreso</label>
-            <input id="fing" name="fing" type="date" required />
-          </div>
-
-          <div class="row">
-            <label for="hing">Hora ingreso</label>
-            <input id="hing" name="hing" type="time" required />
-          </div>
-
-          <div class="row">
-            <label for="ideacion">Ideación / Intento</label>
-            <select id="ideacion" name="ideacion">
-              <option value="">—</option>
-              <option>Ideación</option>
-              <option>Intento</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <label for="metodo">Método / Letalidad</label>
-            <select id="metodo" name="metodo">
-              <option value="">—</option>
-              <option>Baja</option>
-              <option>Media</option>
-              <option>Alta</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <label for="consumo">Consumo</label>
-            <select id="consumo" name="consumo">
-              <option value="">—</option>
-              <option>Ninguno</option><option>Alcohol</option><option>Sustancias</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <label for="sustancia">Tipo Sustancia</label>
-            <input id="sustancia" name="sustancia" placeholder="(si aplica)" />
-          </div>
-
-          <div class="row">
-            <label for="cie">Dx CIE-10 (código)</label>
-            <input id="cie" name="cie" placeholder="Ej.: F32.1" />
-          </div>
-
-          <div class="row" style="grid-column:1/-1">
-            <label for="obs">Observaciones</label>
-            <textarea id="obs" name="obs" placeholder="Notas breves (opcional)"></textarea>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button type="button" id="btn-guardar" class="primary">Guardar ingreso</button>
-          <button type="reset">Limpiar</button>
-        </div>
-        <div class="note">Sugerencia: añadí este sitio a la pantalla de inicio para modo “app”.</div>
-      </form>
+    <div class="tabs" role="tablist" aria-label="Tipo de registro">
+      <button id="tab-ingreso" class="tab active" role="tab" aria-selected="true">Ingreso</button>
+      <button id="tab-alta" class="tab" role="tab" aria-selected="false">Alta / Egreso</button>
     </div>
+
+    <form id="f" autocomplete="off" novalidate>
+      <input type="hidden" id="tipo" name="tipo" value="ingreso" />
+
+      <div class="grid">
+        <div>
+          <label for="dni">DNI</label>
+          <input id="dni" name="dni" inputmode="numeric" pattern="[0-9]{7,9}" placeholder="7–9 dígitos" required />
+        </div>
+        <div>
+          <label for="sexo">Sexo</label>
+          <select id="sexo" name="sexo">
+            <option value="">—</option>
+            <option>F</option><option>M</option><option>X</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="fecha">Fecha ingreso</label>
+          <input id="fecha" name="fecha" type="date" />
+        </div>
+        <div>
+          <label for="hora">Hora ingreso</label>
+          <input id="hora" name="hora" type="time" />
+        </div>
+
+        <div>
+          <label for="ideacion">Ideación / Intento</label>
+          <select id="ideacion" name="ideacion">
+            <option value="">—</option>
+            <option>Ideación</option><option>Intento</option>
+            <option>Intento reciente</option>
+          </select>
+        </div>
+        <div>
+          <label for="metodo">Método / Letalidad</label>
+          <select id="metodo" name="metodo">
+            <option value="">—</option>
+            <option>Baja</option><option>Media</option><option>Alta</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="consumo">Consumo</label>
+          <select id="consumo" name="consumo">
+            <option value="">—</option>
+            <option>Alcohol</option><option>Psicoactivos</option><option>No</option>
+          </select>
+        </div>
+        <div>
+          <label for="sustancia">Tipo Sustancia</label>
+          <input id="sustancia" name="sustancia" placeholder="(si aplica)" />
+        </div>
+
+        <div class="row" style="grid-column:1 / -1;">
+          <div class="grow">
+            <label for="cie10">Dx CIE-10 (código)</label>
+            <input id="cie10" name="cie10" placeholder="Ej.: F32.1" />
+          </div>
+        </div>
+
+        <div style="grid-column:1 / -1;">
+          <label for="obs">Observaciones</label>
+          <textarea id="obs" name="obs" rows="4" placeholder="Notas breves (opcional)"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn primary">Guardar registro</button>
+        <button type="button" id="limpiar" class="btn secondary">Limpiar</button>
+      </div>
+
+      <div class="hint">Sugerencia: añade este sitio a la pantalla de inicio para modo “app”.</div>
+    </form>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    // ========= CONFIG =========
-    const BASE_PATH = '/panel-html-msm/'; // ruta de GitHub Pages
-    // Pega aquí la URL /exec de tu Apps Script:
-    const GS_ENDPOINT = 'https://script.google.com/macros/s/REEMPLAZA_AQUI/exec';
+    // ← Pega aquí TU URL de Apps Script (termina en /exec)
+    const API_URL = 'PEGAR_AQUI_LA_URL_DEL_WEB_APP';
 
-    // ========= HELPERS UI =========
-    const $ = (s, ro=document) => ro.querySelector(s);
-    function toast(msg, ok=true){
-      const el = $('#toast');
-      el.textContent = msg;
-      el.className = 'toast ' + (ok ? 'ok' : 'err');
-      el.style.display = 'block';
-      clearTimeout(el._t);
-      el._t = setTimeout(()=> el.style.display = 'none', 3000);
-    }
-    function formDataAsObject(form){
-      const data = Object.fromEntries(new FormData(form).entries());
-      // normalizamos fecha + hora a ISO local
-      if (data.fing && data.hing) data.timestamp = `${data.fing}T${data.hing}`;
-      return data;
-    }
+    // Tabs Ingreso / Alta
+    const tipo = document.querySelector('#tipo');
+    const tIngreso = document.querySelector('#tab-ingreso');
+    const tAlta = document.querySelector('#tab-alta');
+    const setTab = (t) => {
+      tipo.value = t;
+      tIngreso.classList.toggle('active', t === 'ingreso');
+      tAlta.classList.toggle('active', t === 'alta');
+      tIngreso.setAttribute('aria-selected', t === 'ingreso');
+      tAlta.setAttribute('aria-selected', t === 'alta');
+    };
+    tIngreso.addEventListener('click', () => setTab('ingreso'));
+    tAlta.addEventListener('click', () => setTab('alta'));
 
-    // ========= API: SIN PREFLIGHT (NO CORS 405) =========
-    async function apiGuardarIngreso(payload){
-      // NOTA: sin headers personalizados y sin Content-Type -> simple request (sin preflight)
-      const resp = await fetch(GS_ENDPOINT, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
+    // Helpers
+    const $ = sel => document.querySelector(sel);
+    const toast = (msg, ok=true) => {
+      const t = $('#toast'); t.textContent = msg;
+      t.style.borderColor = ok ? '#1e3a8a' : '#7f1d1d';
+      t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2500);
+    };
 
-      // Apps Script suele responder texto; hacemos fallback seguro
-      const txt = await resp.text();
-      try { return { ok: resp.ok, data: JSON.parse(txt) }; }
-      catch { return { ok: resp.ok, data: txt }; }
-    }
+    // Prefill fecha/hora
+    const pad = n => String(n).padStart(2,'0');
+    const now = new Date();
+    $('#fecha').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    $('#hora').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-    // ========= EVENTOS =========
-    $('#btn-guardar').addEventListener('click', async () => {
-      const frm = $('#frm');
-      if (!frm.reportValidity()) return;
+    // Submit → Google Sheets
+    $('#f').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const body = {
+        tipo: $('#tipo').value,
+        dni: $('#dni').value.trim(),
+        sexo: $('#sexo').value,
+        fecha: $('#fecha').value,
+        hora: $('#hora').value,
+        ideacion: $('#ideacion').value,
+        metodo: $('#metodo').value,
+        consumo: $('#consumo').value,
+        sustancia: $('#sustancia').value,
+        cie10: $('#cie10').value.trim(),
+        obs: $('#obs').value.trim()
+      };
 
-      const datos = formDataAsObject(frm);
-      // puede ser útil agregar marca de cliente
-      datos.client_ts = Date.now();
+      if (!body.dni) { toast('Ingresá un DNI válido', false); return; }
+      if (!API_URL || !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_URL)) {
+        toast('Configurá la URL de API (Apps Script)', false); return;
+      }
 
-      try{
-        const r = await apiGuardarIngreso(datos);
-        if (r.ok) {
-          toast('Ingreso guardado');
-          // opcional: frm.reset();
-        } else {
-          console.error('Respuesta API', r);
-          toast('Error al guardar (API)', false);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(body),
+          // OJO: no usamos 'no-cors'; dejamos que el Web App responda con CORS correcto
+          mode: 'cors',
+          cache: 'no-cache',
+          credentials: 'omit'
+        });
+
+        const json = await res.json().catch(()=> ({}));
+        if (!res.ok || !json.ok) {
+          throw new Error(json.error || `Error HTTP ${res.status}`);
         }
-      }catch(err){
+        toast('Registro guardado ✔');
+        $('#f').reset();
+        setTab(body.tipo); // mantiene la pestaña
+        // repone fecha/hora actuales
+        const d=new Date();
+        $('#fecha').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+        $('#hora').value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      } catch (err) {
         console.error(err);
-        toast('Error de red', false);
+        toast('No se pudo guardar. Revisá conexión / permisos.', false);
       }
     });
 
-    // ========= SW REGISTRATION =========
-    (async function registerSW(){
-      if (!('serviceWorker' in navigator)) return;
-      try{
-        const reg = await navigator.serviceWorker.register(`${BASE_PATH}sw.js`, { scope: BASE_PATH });
-        // auto-actualización
-        navigator.serviceWorker.addEventListener('controllerchange', ()=>{ /* podría avisar */ });
-        // escucha mensajes del SW
-        navigator.serviceWorker.addEventListener('message', (e)=>{
-          if (e.data === 'sw:updated') toast('App actualizada');
-        });
-      }catch(e){ console.warn('SW no registrado', e); }
-    })();
+    $('#limpiar').addEventListener('click',()=>{ $('#f').reset(); setTab('ingreso'); });
+
+    // Service worker sin interferir POST ni cross-origin
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', ()=> {
+        navigator.serviceWorker.register('./sw.js').catch(console.warn);
+      });
+    }
   </script>
 </body>
 </html>
