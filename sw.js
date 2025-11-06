@@ -1,55 +1,39 @@
-// sw.js — cache básico y BYPASS para Apps Script
-
-const CACHE = 'hsm-v1';
+// sw.js — solo cachea assets SAME-ORIGIN y solo GET.
+// NO intercepta POST ni solicitudes a dominios externos (evita CORS/405).
+const CACHE = 'hsm-v7-static-v1';
 const ASSETS = [
-  // Precache mínimo; el resto se cachea on-demand
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
-const BYPASS = (url) =>
-  url.startsWith('https://script.google.com/') ||
-  url.startsWith('https://script.googleapis.com/');
+self.addEventListener('install', (evt) => {
+  evt.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
+});
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(()=> self.skipWaiting())
+self.addEventListener('activate', (evt) => {
+  evt.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (evt) => {
+  const req = evt.request;
+
+  // Solo GET y mismo origen:
+  const sameOrigin = new URL(req.url).origin === self.location.origin;
+  if (req.method !== 'GET' || !sameOrigin) return; // ← ¡clave!
+
+  // Cache-first para assets estáticos:
+  evt.respondWith(
+    caches.match(req).then(cached => cached || fetch(req).then(resp => {
+      const copy = resp.clone();
+      caches.open(CACHE).then(c => c.put(req, copy));
+      return resp;
+    }).catch(()=> cached || new Response('Offline', {status: 503})))
   );
 });
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
-    await self.clients.claim();
-    // Notificar actualización
-    const all = await self.clients.matchAll({ includeUncontrolled: true });
-    all.forEach(c => c.postMessage('sw:updated'));
-  })());
-});
-
-self.addEventListener('fetch', (event) => {
-  const url = event.request.url;
-
-  // >>> No interceptar Apps Script (evita CORS raros y respuestas vacías)
-  if (BYPASS(url)) return;
-
-  // Cache-first para GET del mismo origen
-  if (event.request.method === 'GET') {
-    event.respondWith((async () => {
-      const cache = await caches.open(CACHE);
-      const cached = await cache.match(event.request);
-      if (cached) return cached;
-
-      const resp = await fetch(event.request);
-      try {
-        const sameOrigin = new URL(url).origin === location.origin;
-        if (sameOrigin && resp.ok) cache.put(event.request, resp.clone());
-      } catch {}
-      return resp;
-    })());
-  }
-  // Para POST/otros métodos: dejar pasar a la red (no respondWith)
-});
-
