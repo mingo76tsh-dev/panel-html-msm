@@ -4,24 +4,20 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HSM v7 • Ingreso / Alta</title>
-  <meta name="description" content="Carga rápida de Ingresos y Altas (HSM v7) con envío directo a Google Sheets.">
+  <meta name="description" content="HSM v7: carga de Ingresos y Altas con envío directo a Google Sheets.">
   <link rel="manifest" href="manifest.json">
   <style>
-    :root {
-      --bg:#0b1220; --card:#111a2b; --text:#e5e7eb; --muted:#9aa4b2; --acc:#4da3ff;
-      --ok:#16a34a; --bad:#ef4444; --focus:#93c5fd;
-      font-synthesis-weight:none; text-rendering:optimizeLegibility;
-    }
-    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,'Helvetica Neue',Arial}
+    :root { --bg:#0b1220; --card:#101a2b; --text:#e5e7eb; --muted:#9aa4b2; --acc:#4da3ff; --focus:#93c5fd; }
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Inter}
     .wrap{max-width:980px;margin:auto;padding:24px}
-    .title{font-size:22px;font-weight:700;margin:6px 0 18px}
+    .title{font-weight:700;font-size:22px;margin:6px 0 18px}
     .tabs{display:flex;gap:8px;margin-bottom:14px}
-    .tab{padding:10px 14px;border-radius:10px;background:#0f172a;color:#cbd5e1;cursor:pointer;border:1px solid #1e293b}
+    .tab{padding:10px 14px;border-radius:10px;background:#0f172a;color:#cbd5e1;border:1px solid #1e293b;cursor:pointer}
     .tab.active{background:#1e293b;color:#fff}
-    form{background:var(--card);border:1px solid #1f2a40;border-radius:16px;padding:18px}
-    .grid{display:grid;grid-template-columns:1fr 1fr; gap:14px}
-    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-    input,select,textarea{width:100%;padding:12px 12px;border-radius:10px;border:1px solid #263248;background:#0b1220;color:#e5e7eb;outline:none}
+    form{background:var(--card);border:1px solid #1e2940;border-radius:16px;padding:18px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #263248;background:#0b1220;color:#e5e7eb;outline:none}
     input:focus,select:focus,textarea:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(147,197,253,.15)}
     .row{display:flex;gap:10px}
     .row .grow{flex:1}
@@ -30,9 +26,11 @@
     .btn.primary{background:var(--acc);color:#08111f}
     .btn.secondary{background:#0f172a;color:#cbd5e1;border:1px solid #1e293b}
     .hint{font-size:12px;color:#7e8aa0;margin-top:12px}
-    .toast{position:fixed;inset:auto 16px 16px auto;background:#0f172a;color:#e5e7eb;border:1px solid #1e293b;
+    .toast{position:fixed;right:16px;bottom:16px;background:#0f172a;color:#e5e7eb;border:1px solid #1e293b;
            padding:12px 14px;border-radius:12px;opacity:0;transform:translateY(6px);transition:.25s}
     .toast.show{opacity:1;transform:none}
+    .only-alta{display:none}
+    .only-ingreso{display:block}
   </style>
 </head>
 <body>
@@ -45,68 +43,84 @@
     </div>
 
     <form id="f" autocomplete="off" novalidate>
-      <input type="hidden" id="tipo" name="tipo" value="ingreso" />
+      <input type="hidden" id="tipo" value="ingreso" />
 
       <div class="grid">
         <div>
           <label for="dni">DNI</label>
-          <input id="dni" name="dni" inputmode="numeric" pattern="[0-9]{7,9}" placeholder="7–9 dígitos" required />
+          <input id="dni" inputmode="numeric" pattern="[0-9]{7,9}" placeholder="7–9 dígitos" required />
         </div>
         <div>
           <label for="sexo">Sexo</label>
-          <select id="sexo" name="sexo">
-            <option value="">—</option>
-            <option>F</option><option>M</option><option>X</option>
+          <select id="sexo">
+            <option value="">—</option><option>F</option><option>M</option><option>X</option>
           </select>
         </div>
 
-        <div>
-          <label for="fecha">Fecha ingreso</label>
-          <input id="fecha" name="fecha" type="date" />
+        <!-- Ingreso -->
+        <div class="only-ingreso">
+          <label for="fechaIng">Fecha ingreso</label>
+          <input id="fechaIng" type="date" />
         </div>
-        <div>
-          <label for="hora">Hora ingreso</label>
-          <input id="hora" name="hora" type="time" />
+        <div class="only-ingreso">
+          <label for="horaIng">Hora ingreso</label>
+          <input id="horaIng" type="time" />
         </div>
 
-        <div>
+        <div class="only-ingreso">
           <label for="ideacion">Ideación / Intento</label>
-          <select id="ideacion" name="ideacion">
-            <option value="">—</option>
-            <option>Ideación</option><option>Intento</option>
-            <option>Intento reciente</option>
+          <select id="ideacion">
+            <option value="">—</option><option>Ideación</option><option>Intento</option><option>Intento reciente</option>
           </select>
         </div>
-        <div>
+        <div class="only-ingreso">
           <label for="metodo">Método / Letalidad</label>
-          <select id="metodo" name="metodo">
-            <option value="">—</option>
-            <option>Baja</option><option>Media</option><option>Alta</option>
+          <select id="metodo">
+            <option value="">—</option><option>Baja</option><option>Media</option><option>Alta</option>
           </select>
         </div>
 
-        <div>
+        <div class="only-ingreso">
           <label for="consumo">Consumo</label>
-          <select id="consumo" name="consumo">
-            <option value="">—</option>
-            <option>Alcohol</option><option>Psicoactivos</option><option>No</option>
+          <select id="consumo">
+            <option value="">—</option><option>Alcohol</option><option>Psicoactivos</option><option>No</option>
           </select>
         </div>
-        <div>
+        <div class="only-ingreso">
           <label for="sustancia">Tipo Sustancia</label>
-          <input id="sustancia" name="sustancia" placeholder="(si aplica)" />
+          <input id="sustancia" placeholder="(si aplica)" />
         </div>
 
-        <div class="row" style="grid-column:1 / -1;">
+        <div class="row only-ingreso" style="grid-column:1 / -1;">
           <div class="grow">
             <label for="cie10">Dx CIE-10 (código)</label>
-            <input id="cie10" name="cie10" placeholder="Ej.: F32.1" />
+            <input id="cie10" placeholder="Ej.: F32.1" />
           </div>
         </div>
 
+        <!-- Alta -->
+        <div class="only-alta">
+          <label for="fechaAlta">Fecha alta</label>
+          <input id="fechaAlta" type="date" />
+        </div>
+        <div class="only-alta">
+          <label for="horaAlta">Hora alta</label>
+          <input id="horaAlta" type="time" />
+        </div>
+        <div class="only-alta">
+          <label for="estadoEgreso">Estado egreso</label>
+          <select id="estadoEgreso">
+            <option>Alta</option>
+            <option>Traslado</option>
+            <option>Fuga</option>
+            <option>Óbito</option>
+          </select>
+        </div>
+
+        <!-- Observaciones (común) -->
         <div style="grid-column:1 / -1;">
           <label for="obs">Observaciones</label>
-          <textarea id="obs" name="obs" rows="4" placeholder="Notas breves (opcional)"></textarea>
+          <textarea id="obs" rows="4" placeholder="Notas breves (opcional)"></textarea>
         </div>
       </div>
 
@@ -115,101 +129,125 @@
         <button type="button" id="limpiar" class="btn secondary">Limpiar</button>
       </div>
 
-      <div class="hint">Sugerencia: añade este sitio a la pantalla de inicio para modo “app”.</div>
+      <div class="hint">Sugerencia: añadí este sitio a inicio para modo “app”.</div>
     </form>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    // ← Pega aquí TU URL de Apps Script (termina en /exec)
-    const API_URL = 'PEGAR_AQUI_LA_URL_DEL_WEB_APP';
+    // === CONFIGURAR ESTAS 2 COSAS:
+    const WEBAPP_URL = 'PEGÁ_AQUÍ_TU_URL_/exec';        // ej.: https://script.google.com/macros/s/AKfycb.../exec
+    const API_KEY    = 'HSM2025KEY';                    // igual a HSM_API_KEY en Apps Script
 
-    // Tabs Ingreso / Alta
+    // Tabs
     const tipo = document.querySelector('#tipo');
-    const tIngreso = document.querySelector('#tab-ingreso');
-    const tAlta = document.querySelector('#tab-alta');
-    const setTab = (t) => {
-      tipo.value = t;
-      tIngreso.classList.toggle('active', t === 'ingreso');
-      tAlta.classList.toggle('active', t === 'alta');
-      tIngreso.setAttribute('aria-selected', t === 'ingreso');
-      tAlta.setAttribute('aria-selected', t === 'alta');
+    const tIng = document.querySelector('#tab-ingreso');
+    const tAlt = document.querySelector('#tab-alta');
+
+    const sel = s => document.querySelector(s);
+    const toggleView = (isAlta) => {
+      tipo.value = isAlta ? 'alta' : 'ingreso';
+      tIng.classList.toggle('active', !isAlta);
+      tAlt.classList.toggle('active', isAlta);
+      tIng.setAttribute('aria-selected', String(!isAlta));
+      tAlt.setAttribute('aria-selected', String(isAlta));
+      document.querySelectorAll('.only-ingreso').forEach(n => n.style.display = isAlta ? 'none' : 'block');
+      document.querySelectorAll('.only-alta').forEach(n => n.style.display = isAlta ? 'block' : 'none');
     };
-    tIngreso.addEventListener('click', () => setTab('ingreso'));
-    tAlta.addEventListener('click', () => setTab('alta'));
+    tIng.addEventListener('click', ()=>toggleView(false));
+    tAlt.addEventListener('click', ()=>toggleView(true));
 
     // Helpers
-    const $ = sel => document.querySelector(sel);
-    const toast = (msg, ok=true) => {
-      const t = $('#toast'); t.textContent = msg;
-      t.style.borderColor = ok ? '#1e3a8a' : '#7f1d1d';
-      t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2500);
-    };
-
-    // Prefill fecha/hora
     const pad = n => String(n).padStart(2,'0');
     const now = new Date();
-    $('#fecha').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-    $('#hora').value = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const setNow = () => {
+      const d = new Date();
+      const dstr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      const tstr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      sel('#fechaIng').value  = dstr; sel('#horaIng').value  = tstr;
+      sel('#fechaAlta').value = dstr; sel('#horaAlta').value = tstr;
+    };
+    setNow();
 
-    // Submit → Google Sheets
-    $('#f').addEventListener('submit', async (ev) => {
+    const toast = (msg, ok=true) => {
+      const t = sel('#toast'); t.textContent = msg;
+      t.style.borderColor = ok ? '#1e3a8a' : '#7f1d1d';
+      t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2400);
+    };
+
+    // Validación de config
+    const validWebApp = /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/;
+    if(!validWebApp.test(WEBAPP_URL)) {
+      console.warn('Config: WEBAPP_URL inválida. Pegá la URL /exec de tu WebApp.');
+    }
+
+    // Submit
+    sel('#f').addEventListener('submit', async (ev)=>{
       ev.preventDefault();
-      const body = {
-        tipo: $('#tipo').value,
-        dni: $('#dni').value.trim(),
-        sexo: $('#sexo').value,
-        fecha: $('#fecha').value,
-        hora: $('#hora').value,
-        ideacion: $('#ideacion').value,
-        metodo: $('#metodo').value,
-        consumo: $('#consumo').value,
-        sustancia: $('#sustancia').value,
-        cie10: $('#cie10').value.trim(),
-        obs: $('#obs').value.trim()
-      };
 
-      if (!body.dni) { toast('Ingresá un DNI válido', false); return; }
-      if (!API_URL || !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_URL)) {
-        toast('Configurá la URL de API (Apps Script)', false); return;
+      const isAlta = (tipo.value === 'alta');
+      const dni = sel('#dni').value.trim().replace(/\D/g,'');
+      if (!dni) { toast('Ingresá un DNI válido', false); return; }
+      if (!validWebApp.test(WEBAPP_URL)) { toast('Configurá la URL /exec del WebApp', false); return; }
+
+      // payload para tu CORE v8
+      let payload;
+      let action;
+
+      if (!isAlta) {
+        action = 'save';
+        payload = {
+          DNI: dni,
+          Sexo: sel('#sexo').value.toUpperCase(),
+          FechaIngresoManual: sel('#fechaIng').value,   // yyyy-mm-dd
+          HoraIngresoManual: sel('#horaIng').value,     // HH:mm
+          IdeacionIntento: sel('#ideacion').value,
+          MetodoLetalidad: sel('#metodo').value,
+          Consumo: sel('#consumo').value,
+          TipoSustancia: sel('#sustancia').value,
+          DxProvisorio_CIE10: sel('#cie10').value.trim().toUpperCase(),
+          Observaciones: sel('#obs').value.trim()
+        };
+      } else {
+        action = 'alta';
+        payload = {
+          DNI: dni,
+          Sexo: sel('#sexo').value.toUpperCase(),
+          FechaAltaManual: sel('#fechaAlta').value,     // yyyy-mm-dd
+          HoraAltaManual: sel('#horaAlta').value,       // HH:mm
+          EstadoEgreso: sel('#estadoEgreso').value || 'Alta',
+          Observaciones: sel('#obs').value.trim()
+        };
       }
 
-      try {
-        const res = await fetch(API_URL, {
+      const body = { action, apiKey: API_KEY, payload };
+
+      try{
+        const res = await fetch(WEBAPP_URL, {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
-          // OJO: no usamos 'no-cors'; dejamos que el Web App responda con CORS correcto
           mode: 'cors',
           cache: 'no-cache',
           credentials: 'omit'
         });
 
         const json = await res.json().catch(()=> ({}));
-        if (!res.ok || !json.ok) {
-          throw new Error(json.error || `Error HTTP ${res.status}`);
-        }
-        toast('Registro guardado ✔');
-        $('#f').reset();
-        setTab(body.tipo); // mantiene la pestaña
-        // repone fecha/hora actuales
-        const d=new Date();
-        $('#fecha').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-        $('#hora').value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      } catch (err) {
+        if (!res.ok || !json.ok) throw new Error(json.message || `HTTP ${res.status}`);
+        toast(isAlta ? 'Alta registrada ✔' : 'Ingreso guardado ✔');
+        sel('#f').reset(); setNow(); if(isAlta) toggleView(true);
+      }catch(err){
         console.error(err);
-        toast('No se pudo guardar. Revisá conexión / permisos.', false);
+        toast('No se pudo guardar. Revisá conexión/API Key/CORS.', false);
       }
     });
 
-    $('#limpiar').addEventListener('click',()=>{ $('#f').reset(); setTab('ingreso'); });
+    sel('#limpiar').addEventListener('click', ()=>{ sel('#f').reset(); toggleView(false); setNow(); });
 
-    // Service worker sin interferir POST ni cross-origin
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', ()=> {
-        navigator.serviceWorker.register('./sw.js').catch(console.warn);
-      });
+    // SW: no intercepta POST ni cross-origin
+    if('serviceWorker' in navigator){
+      addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(console.warn));
     }
   </script>
 </body>
