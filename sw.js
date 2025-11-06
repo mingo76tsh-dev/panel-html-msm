@@ -1,52 +1,55 @@
-// sw.js
-const CACHE_VERSION = 'v7.0.6';                            // ⇦ súbelo cuando hagas cambios
-const PREFIX = (self.registration && self.registration.scope.includes('/panel-html-msm/'))
-  ? '/panel-html-msm/' : '/';
+// sw.js — cache básico y BYPASS para Apps Script
 
-const CACHE_NAME = `hsm-cache-${CACHE_VERSION}`;
-const APP_SHELL = [
-  `${PREFIX}`,
-  `${PREFIX}index.html`,
-  `${PREFIX}manifest.json`,
-  `${PREFIX}icons/icon-192.png`,
-  `${PREFIX}icons/icon-512.png`,
+const CACHE = 'hsm-v1';
+const ASSETS = [
+  // Precache mínimo; el resto se cachea on-demand
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
+const BYPASS = (url) =>
+  url.startsWith('https://script.google.com/') ||
+  url.startsWith('https://script.googleapis.com/');
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(()=> self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(k => k.startsWith('hsm-cache-') && k !== CACHE_NAME)
-          .map(k => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
-  );
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    await self.clients.claim();
+    // Notificar actualización
+    const all = await self.clients.matchAll({ includeUncontrolled: true });
+    all.forEach(c => c.postMessage('sw:updated'));
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  if (request.method !== 'GET') return;
+  const url = event.request.url;
 
-  event.respondWith(
-    caches.match(request).then(cached => {
-      const network = fetch(request)
-        .then(resp => {
-          // Evita cachear respuestas no válidas
-          if (!resp || resp.status !== 200 || resp.type === 'opaque') return resp;
-          caches.open(CACHE_NAME).then(c => c.put(request, resp.clone()));
-          return resp;
-        })
-        .catch(() => cached || Response.error());
-      return cached || network;
-    })
-  );
+  // >>> No interceptar Apps Script (evita CORS raros y respuestas vacías)
+  if (BYPASS(url)) return;
+
+  // Cache-first para GET del mismo origen
+  if (event.request.method === 'GET') {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(event.request);
+      if (cached) return cached;
+
+      const resp = await fetch(event.request);
+      try {
+        const sameOrigin = new URL(url).origin === location.origin;
+        if (sameOrigin && resp.ok) cache.put(event.request, resp.clone());
+      } catch {}
+      return resp;
+    })());
+  }
+  // Para POST/otros métodos: dejar pasar a la red (no respondWith)
 });
+
