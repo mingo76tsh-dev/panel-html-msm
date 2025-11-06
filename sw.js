@@ -1,39 +1,22 @@
-// sw.js — solo cachea assets SAME-ORIGIN y solo GET.
-// NO intercepta POST ni solicitudes a dominios externos (evita CORS/405).
-const CACHE = 'hsm-v7-static-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
-];
+// Cachea solo GET del mismo origen. No toca POST ni cross-origin.
+const CACHE = 'hsm-v7-v1';
+const ASSETS = ['./','./index.html','./manifest.json','./icons/icon-192.png','./icons/icon-512.png'];
 
-self.addEventListener('install', (evt) => {
-  evt.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+self.addEventListener('install', e=>{
+  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)));
   self.skipWaiting();
 });
-
-self.addEventListener('activate', (evt) => {
-  evt.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-  );
+self.addEventListener('activate', e=>{
+  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
   self.clients.claim();
 });
-
-self.addEventListener('fetch', (evt) => {
-  const req = evt.request;
-
-  // Solo GET y mismo origen:
-  const sameOrigin = new URL(req.url).origin === self.location.origin;
-  if (req.method !== 'GET' || !sameOrigin) return; // ← ¡clave!
-
-  // Cache-first para assets estáticos:
-  evt.respondWith(
-    caches.match(req).then(cached => cached || fetch(req).then(resp => {
-      const copy = resp.clone();
-      caches.open(CACHE).then(c => c.put(req, copy));
-      return resp;
-    }).catch(()=> cached || new Response('Offline', {status: 503})))
+self.addEventListener('fetch', e=>{
+  const req=e.request;
+  const same = new URL(req.url).origin===self.location.origin;
+  if(req.method!=='GET' || !same) return;               // ← evita romper CORS/preflight
+  e.respondWith(
+    caches.match(req).then(c=>c || fetch(req).then(r=>{
+      const copy=r.clone(); caches.open(CACHE).then(ch=>ch.put(req,copy)); return r;
+    }).catch(()=> c || new Response('Offline',{status:503})))
   );
 });
