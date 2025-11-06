@@ -1,8 +1,7 @@
 name: Deploy Pages
-
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -21,21 +20,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node 20 (sin cache)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Instalar dependencias
-        run: npm install --no-audit --no-fund
-
-      - name: Build PROD
-        run: npm run build
-
-      - name: Subir artifact a Pages
+      - name: Upload static site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist   # tu build.mjs deja todo en dist
+          path: "."   # Publica el repo tal cual (index.html, sw.js, manifest, icons, etc.)
 
   deploy:
     needs: build
@@ -44,5 +32,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
