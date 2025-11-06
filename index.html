@@ -1,401 +1,197 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>HSM v7 • Ingreso / Alta</title>
-  <meta name="description" content="Panel HSM v7 para ingreso y alta con PWA, cola offline y envío a Google Sheets (Apps Script)."/>
-  <meta name="theme-color" content="#0b1220"/>
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="icon" href="icons/icon-192.png" sizes="192x192"/>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <style>
-    :root{--bg:#0b1220;--card:#0f172a;--ink:#e5e7eb;--mut:#9aa7c1;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--acc:#60a5fa;--field:#0b1329;--bd:#1f2a44}
-    *{box-sizing:border-box} html,body{height:100%} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    .wrap{max-width:860px;margin:0 auto;padding:16px}
-    .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25)}
-    .head{display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--bd)}
-    .title{font-weight:800;font-size:18px;letter-spacing:.4px}
-    .logo{height:40px;width:auto;border-radius:8px;background:#fff0;object-fit:contain}
-    .right{margin-left:auto}
-    .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px}
-    .badge.ok{background:rgba(34,197,94,.15);color:var(--ok)}
-    .badge.err{background:rgba(239,68,68,.15);color:var(--err)}
-    .badge.mut{background:rgba(148,163,184,.15);color:var(--mut)}
-    .toolbar{display:flex;gap:8px;align-items:center}
-    .btn-icon{background:#1f2937;color:#d1d5db;border:1px solid var(--bd);border-radius:10px;padding:8px 10px;cursor:pointer}
-    .body{padding:14px}
-    .tabs{display:flex;gap:6px;margin-bottom:12px}
-    .tab{flex:1;text-align:center;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;background:#0c152b;color:#c7d2fe;cursor:pointer;font-weight:700}
-    .tab.active{background:linear-gradient(180deg,#152545,#0c162c);box-shadow:0 6px 20px rgba(0,0,0,.25)}
-    .screen{display:none}.screen.active{display:block}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    @media (max-width:700px){ .row{grid-template-columns:1fr} }
-    label{display:block;color:var(--mut);font-size:12px;margin:10px 0 6px}
-    input,select,textarea{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;outline:none;transition:border-color .15s ease}
-    input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.25)}
-    textarea{min-height:84px;resize:vertical}
-    .kv{display:flex;gap:8px;align-items:center}.kv input{flex:1}
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-    button{cursor:pointer;border:none;border-radius:12px;font-weight:800;padding:12px 16px}
-    .btn{background:var(--acc);color:#031532}.btn-sec{background:#1f2937;color:#d1d5db;border:1px solid var(--bd)} .btn-ghost{background:transparent;border:1px dashed var(--bd);color:#aab3c7}
-    button[disabled]{opacity:.6;cursor:not-allowed}
-    .msg{margin-top:10px;font-size:13px}.small{font-size:12px;color:var(--mut)} .pill{display:inline-block;padding:2px 8px;border:1px solid var(--bd);border-radius:999px;background:#0c152b;color:#c7d2fe;font-size:12px}
-    canvas{background:#fff;border-radius:10px;border:1px solid #e5e7eb;touch-action:none}
-    .item{border:1px solid var(--bd);border-radius:12px;padding:10px;background:#0c152b}
-    .callout{border:1px solid var(--bd);border-left:4px solid var(--acc);padding:10px;border-radius:10px;background:#0d1a33;margin:12px 0}
-    footer{opacity:.65;margin-top:24px}
+    :root { --bg:#0b1220; --fg:#e5e7eb; --bd:#1f2937; --ac:#0f172a; --ok:#10b981; --err:#ef4444; }
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .wrap{max-width:960px;margin:0 auto;padding:16px}
+    .title{font-size:20px;font-weight:700;letter-spacing:.2px;margin:8px 0 16px}
+    .card{background:var(--ac);border:1px solid var(--bd);border-radius:16px;padding:16px}
+    .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .row{display:flex;flex-direction:column;gap:6px}
+    label{font-size:13px;opacity:.9}
+    input,select,textarea{background:#0d1426;color:var(--fg);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;outline:none}
+    textarea{min-height:90px;resize:vertical}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{background:#1f2937;border:1px solid var(--bd);color:#e5e7eb;border-radius:12px;padding:10px 14px;cursor:pointer}
+    button.primary{background:#2563eb;border-color:#1d4ed8}
+    .note{font-size:12px;opacity:.7;margin-top:8px}
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#e5e7eb;border:1px solid #374151;border-radius:14px;padding:10px 14px;display:none}
+    .toast.ok{border-color:#059669}
+    .toast.err{border-color:#b91c1c}
+    @media (max-width:720px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card" role="application">
-    <div class="head">
-      <img class="logo" id="logo" alt="Logo" referrerpolicy="no-referrer">
-      <div class="title">HSM v7 • Ingreso / Alta</div>
-      <span id="status" class="badge mut right" aria-live="polite">Conectando…</span>
-      <div class="toolbar">
-        <button id="cfgBtn" class="btn-icon" title="Config" aria-label="Abrir configuración">⚙️</button>
-      </div>
-    </div>
+  <div class="wrap">
+    <div class="title">HSM v7 • Ingreso / Alta</div>
 
-    <div class="body">
-      <!-- Tabs -->
-      <div class="tabs" role="tablist" aria-label="Vistas">
-        <div class="tab active" data-tab="ing" id="tab-ingreso" role="tab" aria-selected="true" aria-controls="ing">Ingreso</div>
-        <div class="tab" data-tab="alta" id="tab-alta" role="tab" aria-selected="false" aria-controls="alta">Alta / Egreso</div>
-      </div>
+    <div class="card">
+      <form id="frm">
+        <div class="grid">
+          <div class="row">
+            <label for="dni">DNI</label>
+            <input id="dni" name="dni" inputmode="numeric" maxlength="10" placeholder="7–9 dígitos" required />
+          </div>
 
-      <!-- ===== INGRESO ===== -->
-      <section id="ing" class="screen active" role="tabpanel" aria-labelledby="tab-ingreso">
-        <div class="row">
-          <div><label for="dni">DNI</label><input id="dni" type="tel" inputmode="numeric" placeholder="7–9 dígitos" autocomplete="off" maxlength="9"/></div>
-          <div><label for="sexo">Sexo</label><select id="sexo"><option value="">—</option><option>M</option><option>F</option><option>X</option></select></div>
-        </div>
-        <div class="row">
-          <div>
-            <label for="fi">Fecha ingreso</label>
-            <div class="kv"><input id="fi" type="date"/><button class="btn-sec" id="fiNow" type="button">Ahora</button></div>
-          </div>
-          <div>
-            <label for="hi">Hora ingreso</label>
-            <div class="kv"><input id="hi" type="time" step="60" placeholder="--:--"/><button class="btn-sec" id="hiNow" type="button">Ahora</button></div>
-          </div>
-        </div>
-        <div class="row">
-          <div><label for="ii">Ideación / Intento</label><select id="ii"><option value="">—</option><option>Ideación</option><option>Intento</option></select></div>
-          <div><label for="met">Método / Letalidad</label>
-            <select id="met">
-              <option value="">—</option><option>Intoxicación</option><option>Corte</option><option>Colgamiento</option>
-              <option>Arma de fuego</option><option>Arrojo</option><option>Otro</option>
+          <div class="row">
+            <label for="sexo">Sexo</label>
+            <select id="sexo" name="sexo" required>
+              <option value="">—</option>
+              <option>M</option><option>F</option><option>X</option>
             </select>
           </div>
-        </div>
-        <div class="row">
-          <div><label for="cons">Consumo</label><select id="cons"><option value="">—</option><option>Sí</option><option>No</option></select></div>
-          <div><label for="sust">Tipo Sustancia</label>
-            <select id="sust">
-              <option value="">—</option><option>Alcohol</option><option>BZD</option><option>Opioides</option>
-              <option>Cocaína</option><option>THC</option><option>Mixto</option>
-            </select></div>
-        </div>
-        <label for="cie">Dx CIE-10 (código)</label>
-        <input id="cie" list="cie-list" placeholder="Ej: F32.1" autocomplete="off"/><datalist id="cie-list"></datalist>
-        <label for="obs">Observaciones</label><textarea id="obs" placeholder="Notas breves (opcional)"></textarea>
 
-        <div class="row">
-          <div>
-            <label>Firma</label>
-            <canvas id="sig" width="720" height="160" aria-label="Área de firma"></canvas>
-            <div class="btns">
-              <button class="btn-sec" id="clearSig" type="button">Limpiar firma</button>
-              <button class="btn-ghost" id="geoBtn" type="button" title="Agregar ubicación (opcional)">📍 Ubicación</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="btns">
-          <button class="btn" id="submitIng">Guardar ingreso</button>
-          <button class="btn-sec" id="limpiarIng" type="button">Limpiar</button>
-        </div>
-        <div class="msg" id="msgIng" aria-live="polite"></div>
-      </section>
-
-      <!-- ===== ALTA ===== -->
-      <section id="alta" class="screen" role="tabpanel" aria-labelledby="tab-alta">
-        <div class="callout">Ingresá <b>DNI + Fecha de Nac. + Sexo</b> y buscaremos el <i>episodio abierto</i> (últimos 120 días).</div>
-
-        <div class="row">
-          <div><label for="dni2">DNI</label><input id="dni2" type="tel" inputmode="numeric" placeholder="7–9 dígitos" maxlength="9"/></div>
-          <div><label for="fnac2">Fecha de nacimiento</label><input id="fnac2" type="date"/></div>
-        </div>
-        <div class="row">
-          <div><label for="sexo2">Sexo</label><select id="sexo2"><option value="">—</option><option>M</option><option>F</option><option>X</option></select></div>
-          <div class="kv" style="align-items:center"><button class="btn-sec" id="buscarEpisodio" style="margin-top:22px" type="button">🔎 Buscar episodio abierto</button></div>
-        </div>
-
-        <div id="epiBox" class="item" style="display:none">
-          <div><span class="k">Paciente:</span> <span id="epiPac"></span></div>
-          <div><span class="k">Ingreso:</span> <span id="epiIn"></span></div>
-          <div><span class="k">Estado:</span> <span id="epiEstado" class="pill">Abierto</span></div>
-        </div>
-
-        <div id="altaBox" style="display:none">
           <div class="row">
-            <div><label for="fa">Fecha alta</label><div class="kv"><input id="fa" type="date"/><button class="btn-sec" id="faNow" type="button">Ahora</button></div></div>
-            <div><label for="ha">Hora alta</label><div class="kv"><input id="ha" type="time" step="60" placeholder="--:--"/><button class="btn-sec" id="haNow" type="button">Ahora</button></div></div>
+            <label for="fing">Fecha ingreso</label>
+            <input id="fing" name="fing" type="date" required />
           </div>
-          <label for="estado">Condición de egreso</label>
-          <select id="estado">
-            <option>Alta</option><option>Derivación</option><option>Fuga</option><option>Óbito</option><option>Traslado</option><option>Pasa a otro servicio</option>
-          </select>
 
-          <label for="obs2">Observaciones</label><textarea id="obs2" placeholder="Breve detalle (opcional)"></textarea>
-
-          <div class="btns">
-            <button class="btn" id="submitAlta">Guardar alta</button>
-            <button class="btn-sec" id="limpiarAlta" type="button">Limpiar</button>
+          <div class="row">
+            <label for="hing">Hora ingreso</label>
+            <input id="hing" name="hing" type="time" required />
           </div>
-          <div class="msg" id="msgAlta" aria-live="polite"></div>
+
+          <div class="row">
+            <label for="ideacion">Ideación / Intento</label>
+            <select id="ideacion" name="ideacion">
+              <option value="">—</option>
+              <option>Ideación</option>
+              <option>Intento</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <label for="metodo">Método / Letalidad</label>
+            <select id="metodo" name="metodo">
+              <option value="">—</option>
+              <option>Baja</option>
+              <option>Media</option>
+              <option>Alta</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <label for="consumo">Consumo</label>
+            <select id="consumo" name="consumo">
+              <option value="">—</option>
+              <option>Ninguno</option><option>Alcohol</option><option>Sustancias</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <label for="sustancia">Tipo Sustancia</label>
+            <input id="sustancia" name="sustancia" placeholder="(si aplica)" />
+          </div>
+
+          <div class="row">
+            <label for="cie">Dx CIE-10 (código)</label>
+            <input id="cie" name="cie" placeholder="Ej.: F32.1" />
+          </div>
+
+          <div class="row" style="grid-column:1/-1">
+            <label for="obs">Observaciones</label>
+            <textarea id="obs" name="obs" placeholder="Notas breves (opcional)"></textarea>
+          </div>
         </div>
 
-        <div id="noEpi" class="callout" style="border-left-color:var(--warn);display:none">
-          No se encontró episodio abierto (últimos 120 días). Revisá los datos o creá un ingreso nuevo.
+        <div class="actions">
+          <button type="button" id="btn-guardar" class="primary">Guardar ingreso</button>
+          <button type="reset">Limpiar</button>
         </div>
-      </section>
-
-      <footer class="small">Sugerencia: añadí este sitio a pantalla de inicio (PWA) para modo “app”.</footer>
+        <div class="note">Sugerencia: añadí este sitio a la pantalla de inicio para modo “app”.</div>
+      </form>
     </div>
   </div>
-</div>
 
-<!-- ===== Modal Config ===== -->
-<dialog id="cfg" style="border:1px solid var(--bd);border-radius:16px;background:#0f172a;color:#e5e7eb;max-width:560px;width:92%">
-  <form method="dialog" style="padding:16px">
-    <h3 style="margin:0 0 12px">Configuración</h3>
-    <label for="cfg_logo">Logo URL (PNG/JPG/SVG)</label><input id="cfg_logo" placeholder="https://.../logo.png"/>
-    <label for="cfg_url">WebApp URL (/exec)</label><input id="cfg_url" placeholder="https://script.google.com/macros/s/.../exec"/>
-    <label for="cfg_key">API Key (si aplica)</label><input id="cfg_key" placeholder="********"/>
-    <div class="btns"><button class="btn-sec" id="cfgTest" type="button">Probar conexión</button><button class="btn">Guardar</button></div>
-    <div id="cfgMsg" class="small" style="margin-top:8px" aria-live="polite"></div>
-  </form>
-</dialog>
+  <div id="toast" class="toast"></div>
 
-<script>
-/* ================= Base y helpers ================= */
-const BASE = (location.pathname.includes('/panel-html-msm/')) ? '/panel-html-msm/' : '/';
-const $  = (s)=>document.querySelector(s);
-const $$ = (s)=>document.querySelectorAll(s);
+  <script>
+    // ========= CONFIG =========
+    const BASE_PATH = '/panel-html-msm/'; // ruta de GitHub Pages
+    // Pega aquí la URL /exec de tu Apps Script:
+    const GS_ENDPOINT = 'https://script.google.com/macros/s/REEMPLAZA_AQUI/exec';
 
-/* ===== Estado de red ===== */
-const statusEl = $('#status');
-const setStatus = (t,cls='mut') => { statusEl.textContent=t; statusEl.className = 'badge '+cls; };
-window.addEventListener('online', ()=>setStatus('Online','ok'));
-window.addEventListener('offline',()=>setStatus('Offline','mut'));
-
-/* ===== LocalStorage simple ===== */
-const LS = {
-  get(k,d=null){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(_){ return localStorage.getItem(k)||d; } },
-  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){ localStorage.setItem(k, v); } },
-  del(k){ localStorage.removeItem(k); }
-};
-
-/* ===== API (Apps Script) ===== */
-const API = {
-  url(){ return LS.get('HSM_WEBAPP_URL','') },
-  key(){ return LS.get('HSM_API_KEY','') },
-  async call(action, payload={}){
-    const url = API.url();
-    if(!url) throw new Error('Sin URL configurada');
-    const body = { action, apiKey: API.key(), ...payload };
-    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return r.json();
-  }
-};
-
-/* ===== Util UI ===== */
-const setMsg = (el, t, ok=true)=>{ el.style.color = ok?'#22c55e':'#ef4444'; el.textContent=t; if('vibrate' in navigator) navigator.vibrate(ok?[12]:[60]); };
-const nowDate = ()=> new Date().toISOString().slice(0,10);
-const nowTime = ()=> new Date().toTimeString().slice(0,5);
-const dniMask = (el)=>{ el.value = (el.value||'').replace(/\D/g,'').slice(0,9); };
-const dniValido = (v)=> /^\d{7,9}$/.test((v||'').trim());
-const busy = (btn,on=true)=>{ btn.disabled = on; };
-
-/* ===== Tabs ===== */
-$$('.tab').forEach(tb=>{
-  tb.addEventListener('click',()=>{
-    $$('.tab').forEach(x=>x.classList.remove('active'));
-    $$('.screen').forEach(x=>x.classList.remove('active'));
-    tb.classList.add('active'); $('#'+tb.dataset.tab).classList.add('active');
-  });
-});
-
-/* ===== Firma en canvas ===== */
-(function(){
-  const c=$('#sig'), ctx=c.getContext('2d',{willReadFrequently:false});
-  function resize(){ const ratio=Math.max(1, Math.min(3, window.devicePixelRatio||1));
-    const w=c.clientWidth||720, h=c.clientHeight||160; c.width=Math.floor(w*ratio); c.height=Math.floor(h*ratio);
-    ctx.setTransform(ratio,0,0,ratio,0,0); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#111'; ctx.lineWidth=2; }
-  resize(); addEventListener('resize', resize, {passive:true});
-  let d=false,x=0,y=0; const pos=e=>{const r=c.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:(t.clientX-r.left), y:(t.clientY-r.top)};};
-  c.addEventListener('pointerdown',e=>{ d=true; ({x,y}=pos(e)); e.preventDefault(); });
-  c.addEventListener('pointermove',e=>{ if(!d) return; const p=pos(e); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(p.x,p.y); ctx.stroke(); x=p.x; y=p.y; e.preventDefault(); });
-  addEventListener('pointerup',()=>d=false,{passive:true}); addEventListener('pointercancel',()=>d=false,{passive:true});
-  $('#clearSig').onclick=()=>{ ctx.clearRect(0,0,c.width,c.height); resize(); }
-})();
-const canvasToJPEG64=(c,q=0.82)=> c.toDataURL('image/jpeg', q);
-
-/* ===== CIE10 incremental (usa core v8 alias cie10_list) ===== */
-async function loadCIE(){
-  try{
-    const CK='CIE_CACHE', TS='CIE_TS', now=Date.now(); let list=LS.get(CK,null), t=LS.get(TS,0);
-    if(!list || (now-t)>600000){ const j=await API.call('cie10_list'); list=(j&&j.ok&&j.list)||[]; LS.set(CK,list); LS.set(TS,now); }
-    const input=$('#cie'), dl=$('#cie-list');
-    function render(term){ const q=(term||'').toLowerCase(); const src=LS.get(CK,[]);
-      const top=src.filter(x=> x.code.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q) ).slice(0,60);
-      dl.innerHTML=''; top.forEach(x=>{ const o=document.createElement('option'); o.value=x.code; o.label=x.desc; dl.appendChild(o); }); }
-    render(''); input.addEventListener('input', e=>render(e.target.value));
-  }catch(_){/* ignore */}
-}
-
-/* ===== Geolocalización opcional ===== */
-let GEO={};
-$('#geoBtn').onclick=()=>{
-  if(!navigator.geolocation){ setMsg($('#msgIng'),'GPS no soportado',false); return; }
-  navigator.geolocation.getCurrentPosition(p=>{
-    GEO={ Geo_Lat:p.coords.latitude, Geo_Lon:p.coords.longitude, Geo_Acc:p.coords.accuracy, Geo_Ts:Date.now() };
-    setMsg($('#msgIng'),'Ubicación agregada ✔',true);
-  }, _=> setMsg($('#msgIng'),'No se pudo obtener ubicación',false), {enableHighAccuracy:false,timeout:4500});
-};
-
-/* ===== Ingreso ===== */
-$('#dni').addEventListener('input', e=>dniMask(e.target));
-$('#fiNow').onclick=()=>$('#fi').value=nowDate();
-$('#hiNow').onclick=()=>$('#hi').value=nowTime();
-$('#limpiarIng').onclick=()=>{ ['dni','sexo','fi','hi','ii','met','cons','sust','cie','obs'].forEach(id=>{ const el=$('#'+id); el.value=''; el.style.borderColor='';}); $('#msgIng').textContent=''; GEO={}; $('#clearSig').click(); };
-
-$('#submitIng').onclick=async (ev)=>{
-  ev.preventDefault();
-  const m=$('#msgIng'), btn=$('#submitIng');
-  const dni=$('#dni'), sexo=$('#sexo'), fi=$('#fi'), hi=$('#hi'), ii=$('#ii');
-  if(!dniValido(dni.value)) {dni.focus(); setMsg(m,'DNI inválido (7–9 dígitos)',false); return;}
-  if(!sexo.value){ sexo.focus(); setMsg(m,'Seleccioná sexo',false); return; }
-  if(!fi.value){ fi.focus(); setMsg(m,'Ingresá fecha',false); return; }
-  if(!hi.value){ hi.focus(); setMsg(m,'Ingresá hora',false); return; }
-  if(!ii.value){ ii.focus(); setMsg(m,'Seleccioná Ideación/Intento',false); return; }
-
-  const payload={
-    DNI: dni.value.trim(), Sexo: sexo.value,
-    FechaIngresoManual: fi.value, HoraIngresoManual: hi.value,
-    IdeacionIntento: ii.value, MetodoLetalidad: $('#met').value,
-    Consumo: $('#cons').value, TipoSustancia: $('#sust').value,
-    DxProvisorio_CIE10: $('#cie').value, Observaciones: $('#obs').value,
-    FirmaJPEG: canvasToJPEG64($('#sig'), .82), ClientGUID: (crypto.randomUUID?.() || String(Date.now())),
-    UserAgent: navigator.userAgent, ...GEO
-  };
-
-  try{
-    busy(btn,true); setMsg(m,'Guardando…',true);
-    const j=await API.call('save',{payload});
-    if(j&&j.ok){ setMsg(m,'Guardado ✔ (fila '+(j.row||'?')+')',true); }
-    else if(j&&j.deduped){ setMsg(m,'Duplicado reciente evitado ✔',true); }
-    else{ setMsg(m,'Error: '+(j&&j.message||'desconocido'),false); }
-  }catch(e){
-    const box=LS.get('HSM_OUTBOX_ING',[]); box.push({payload,retries:0,retryAt:0}); LS.set('HSM_OUTBOX_ING',box);
-    setMsg(m,'Sin red. Guardado en cola ('+box.length+')',false);
-  }finally{ busy(btn,false); }
-};
-
-/* ===== Alta ===== */
-$('#dni2').addEventListener('input', e=>dniMask(e.target));
-$('#faNow').onclick=()=>$('#fa').value=nowDate();
-$('#haNow').onclick=()=>$('#ha').value=nowTime();
-$('#limpiarAlta').onclick=()=>{ ['dni2','fnac2','sexo2','fa','ha','estado','obs2'].forEach(id=>$('#'+id).value=''); $('#epiBox').style.display='none'; $('#altaBox').style.display='none'; $('#noEpi').style.display='none'; $('#msgAlta').textContent=''; };
-
-$('#buscarEpisodio').onclick=async ()=>{
-  const dni=$('#dni2').value.trim(), fn=$('#fnac2').value, sx=$('#sexo2').value, m=$('#msgAlta');
-  if(!dniValido(dni)){ setMsg(m,'DNI inválido',false); return; }
-  if(!fn){ setMsg(m,'Falta fecha de nacimiento',false); return; }
-  if(!sx){ setMsg(m,'Seleccioná sexo',false); return; }
-  setMsg(m,'Buscando…',true);
-  try{
-    const j=await API.call('find', { dni, days:120 });
-    if(j&&j.ok&&j.found){
-      $('#epiPac').textContent=`DNI ${dni} • ${sx}`;
-      $('#epiIn').textContent=`En tabla (fila ${j.row})`;
-      $('#epiBox').style.display='block'; $('#altaBox').style.display='block'; $('#noEpi').style.display='none';
-      if(!$('#fa').value) $('#fa').value=nowDate(); if(!$('#ha').value) $('#ha').value=nowTime();
-      setMsg(m,'Episodio abierto encontrado ✔',true);
-    }else{
-      $('#epiBox').style.display='none'; $('#altaBox').style.display='none'; $('#noEpi').style.display='block'; setMsg(m,'',true);
+    // ========= HELPERS UI =========
+    const $ = (s, ro=document) => ro.querySelector(s);
+    function toast(msg, ok=true){
+      const el = $('#toast');
+      el.textContent = msg;
+      el.className = 'toast ' + (ok ? 'ok' : 'err');
+      el.style.display = 'block';
+      clearTimeout(el._t);
+      el._t = setTimeout(()=> el.style.display = 'none', 3000);
     }
-  }catch(e){ setMsg(m,'Error buscando episodio',false); }
-};
+    function formDataAsObject(form){
+      const data = Object.fromEntries(new FormData(form).entries());
+      // normalizamos fecha + hora a ISO local
+      if (data.fing && data.hing) data.timestamp = `${data.fing}T${data.hing}`;
+      return data;
+    }
 
-$('#submitAlta').onclick=async (ev)=>{
-  ev.preventDefault();
-  const m=$('#msgAlta'), btn=$('#submitAlta'); const dni=$('#dni2').value.trim();
-  if(!dniValido(dni)){ setMsg(m,'DNI inválido',false); return; }
-  if(!$('#fa').value || !$('#ha').value){ setMsg(m,'Completá fecha/hora de alta',false); return; }
-  const payload = {
-    DNI: dni, Sexo: $('#sexo2').value, FechaAltaManual: $('#fa').value, HoraAltaManual: $('#ha').value,
-    EstadoEgreso: $('#estado').value, Observaciones: $('#obs2').value,
-    ClientGUID: (crypto.randomUUID?.() || String(Date.now())), UserAgent: navigator.userAgent
-  };
-  try{
-    busy(btn,true); setMsg(m,'Guardando alta…',true);
-    const j=await API.call('alta',{payload});
-    if(j&&j.ok){ setMsg(m,'Alta guardada ✔ (fila '+(j.row||'?')+')',true); }
-    else{ setMsg(m,'Error: '+(j&&j.message||'desconocido'),false); }
-  }catch(e){
-    const box=LS.get('HSM_OUTBOX_ALTA',[]); box.push({payload,retries:0,retryAt:0}); LS.set('HSM_OUTBOX_ALTA',box);
-    setMsg(m,'Sin red. Guardado en cola ('+box.length+')',false);
-  }finally{ busy(btn,false); }
-};
+    // ========= API: SIN PREFLIGHT (NO CORS 405) =========
+    async function apiGuardarIngreso(payload){
+      // NOTA: sin headers personalizados y sin Content-Type -> simple request (sin preflight)
+      const resp = await fetch(GS_ENDPOINT, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
 
-/* ===== Outbox con backoff ===== */
-async function flushOutbox(key, action){
-  const box = LS.get(key, []); if(!box.length) return;
-  const remain=[]; for(const it of box){ const now=Date.now();
-    if(it.retryAt && now < it.retryAt){ remain.push(it); continue; }
-    try{ await API.call(action,{payload:it.payload}); }
-    catch(_){ it.retries=(it.retries||0)+1; it.retryAt = now + Math.min(60000, 2000*Math.pow(2,it.retries)); remain.push(it); }
-  } LS.set(key, remain);
-}
-setInterval(()=>{ flushOutbox('HSM_OUTBOX_ING','save'); flushOutbox('HSM_OUTBOX_ALTA','alta'); }, 15000);
+      // Apps Script suele responder texto; hacemos fallback seguro
+      const txt = await resp.text();
+      try { return { ok: resp.ok, data: JSON.parse(txt) }; }
+      catch { return { ok: resp.ok, data: txt }; }
+    }
 
-/* ===== Config modal ===== */
-$('#cfgBtn').onclick=()=>{ $('#cfg_logo').value = LS.get('HSM_LOGO_URL','') || ''; $('#cfg_url').value  = API.url() || ''; $('#cfg_key').value  = API.key() || ''; $('#cfg').showModal(); };
-$('#cfg').addEventListener('close',()=>{ const L=$('#cfg_logo').value.trim(); if(L) LS.set('HSM_LOGO_URL',L); else LS.del('HSM_LOGO_URL');
-  const u=$('#cfg_url').value.trim(); if(u) LS.set('HSM_WEBAPP_URL',u); else LS.del('HSM_WEBAPP_URL');
-  const k=$('#cfg_key').value.trim(); if(k) LS.set('HSM_API_KEY',k); else LS.del('HSM_API_KEY'); setLogo(); });
-$('#cfgTest').onclick=async ()=>{ $('#cfgMsg').textContent='Probando…'; try{ const j=await API.call('ping'); $('#cfgMsg').textContent='OK '+(j.version||''); } catch(e){ $('#cfgMsg').textContent='Error: '+(e.message||e); } };
+    // ========= EVENTOS =========
+    $('#btn-guardar').addEventListener('click', async () => {
+      const frm = $('#frm');
+      if (!frm.reportValidity()) return;
 
-/* ===== Logo + Ping + Prefill + SW ===== */
-function setLogo(){ const url = LS.get('HSM_LOGO_URL','') || ''; const img = $('#logo'); if(url){ img.src=url; img.style.display='block'; } else { img.style.display='none'; } }
-(async function init(){
-  setLogo();
-  try{ const j=await API.call('ping'); setStatus('Online','ok'); if(j&&j.version) statusEl.title='Core '+j.version; }
-  catch(_){ setStatus('Offline','mut'); }
+      const datos = formDataAsObject(frm);
+      // puede ser útil agregar marca de cliente
+      datos.client_ts = Date.now();
 
-  if(!$('#fi').value) $('#fi').value=nowDate();
-  if(!$('#hi').value) $('#hi').value=nowTime();
+      try{
+        const r = await apiGuardarIngreso(datos);
+        if (r.ok) {
+          toast('Ingreso guardado');
+          // opcional: frm.reset();
+        } else {
+          console.error('Respuesta API', r);
+          toast('Error al guardar (API)', false);
+        }
+      }catch(err){
+        console.error(err);
+        toast('Error de red', false);
+      }
+    });
 
-  await loadCIE();
-
-  // Primer flush
-  flushOutbox('HSM_OUTBOX_ING','save'); flushOutbox('HSM_OUTBOX_ALTA','alta');
-
-  // Registro SW
-  if('serviceWorker' in navigator){
-    try{
-      const reg = await navigator.serviceWorker.register(`${BASE}sw.js`, { scope: BASE });
-      // fuerza actualización en cada reload cuando hay SW nuevo
-      navigator.serviceWorker.ready.then(r => r.update && r.update());
-    }catch(_){}
-  }
-})();
-</script>
+    // ========= SW REGISTRATION =========
+    (async function registerSW(){
+      if (!('serviceWorker' in navigator)) return;
+      try{
+        const reg = await navigator.serviceWorker.register(`${BASE_PATH}sw.js`, { scope: BASE_PATH });
+        // auto-actualización
+        navigator.serviceWorker.addEventListener('controllerchange', ()=>{ /* podría avisar */ });
+        // escucha mensajes del SW
+        navigator.serviceWorker.addEventListener('message', (e)=>{
+          if (e.data === 'sw:updated') toast('App actualizada');
+        });
+      }catch(e){ console.warn('SW no registrado', e); }
+    })();
+  </script>
 </body>
 </html>
 
