@@ -1,61 +1,52 @@
-/* sw.js — HSM v7 móvil (cache básico + offline) */
-const CACHE_VER = 'hsmv7-prod-2025-11-01';
-const CORE = [
-  '/panel-html-msm/',
-  '/panel-html-msm/index.html',
-  '/panel-html-msm/manifest.json',
-  '/panel-html-msm/icons/icon-192.png',
-  '/panel-html-msm/icons/icon-512.png',
-  '/panel-html-msm/icons/maskable-192.png',
-  '/panel-html-msm/icons/maskable-512.png',
-  '/panel-html-msm/icons/favicon-16.png',
-  '/panel-html-msm/icons/favicon-32.png',
-  '/panel-html-msm/icons/apple-touch-icon.png'
+// sw.js
+const CACHE_VERSION = 'v7.0.6';                            // ⇦ súbelo cuando hagas cambios
+const PREFIX = (self.registration && self.registration.scope.includes('/panel-html-msm/'))
+  ? '/panel-html-msm/' : '/';
+
+const CACHE_NAME = `hsm-cache-${CACHE_VERSION}`;
+const APP_SHELL = [
+  `${PREFIX}`,
+  `${PREFIX}index.html`,
+  `${PREFIX}manifest.json`,
+  `${PREFIX}icons/icon-192.png`,
+  `${PREFIX}icons/icon-512.png`,
 ];
 
-self.addEventListener('install', e=>{
-  e.waitUntil(caches.open(CACHE_VER).then(c=>c.addAll(CORE)));
-  self.skipWaiting();
-});
-self.addEventListener('activate', e=>{
-  e.waitUntil((async()=>{
-    const keys=await caches.keys();
-    await Promise.all(keys.filter(k=>k!==CACHE_VER).map(k=>caches.delete(k)));
-    await self.clients.claim();
-  })());
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener('fetch', e=>{
-  const req=e.request, url=new URL(req.url);
-
-  // Cache-first para recursos del sitio (scope pages)
-  if(req.method==='GET' && url.origin===location.origin && url.pathname.startsWith('/panel-html-msm/')){
-    e.respondWith((async()=>{
-      const cache=await caches.open(CACHE_VER);
-      const hit=await cache.match(req);
-      if(hit){
-        // refresh silencioso
-        fetch(req).then(r=>{ if(r.ok) cache.put(req,r.clone()); }).catch(()=>{});
-        return hit;
-      }
-      try{
-        const net=await fetch(req);
-        if(net.ok) cache.put(req, net.clone());
-        return net;
-      }catch(_){
-        if(req.headers.get('accept')?.includes('text/html')) return cache.match('/panel-html-msm/index.html');
-        return new Response('',{status:504,statusText:'offline'});
-      }
-    })());
-    return;
-  }
-
-  // Otros GET: red primero
-  if(req.method==='GET'){
-    e.respondWith((async()=>{
-      try{ return await fetch(req); }
-      catch(_){ const c=await caches.open(CACHE_VER); return await c.match(req) || new Response('',{status:504}); }
-    })());
-  }
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(k => k.startsWith('hsm-cache-') && k !== CACHE_NAME)
+          .map(k => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
+  );
 });
 
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  event.respondWith(
+    caches.match(request).then(cached => {
+      const network = fetch(request)
+        .then(resp => {
+          // Evita cachear respuestas no válidas
+          if (!resp || resp.status !== 200 || resp.type === 'opaque') return resp;
+          caches.open(CACHE_NAME).then(c => c.put(request, resp.clone()));
+          return resp;
+        })
+        .catch(() => cached || Response.error());
+      return cached || network;
+    })
+  );
+});
