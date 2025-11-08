@@ -1,0 +1,41 @@
+:root{
+  --bg:#0e1420; --panel:#161e2e; --ink:#e9eefc; --mut:#9bb0d0;
+  --ok:#2bd67b; --err:#ff7066; --brand:#7aa2ff; --line:#22304a;
+  --btn:#2b3a59; --btnh:#334769;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);background:#0c1220;position:sticky;top:0;z-index:10}
+.brand{font-weight:700;color:var(--brand);letter-spacing:.3px}
+.badge{padding:4px 10px;border-radius:999px;background:#23314d}
+.badge.ok{background:#153a2a;color:#a7f3c6}
+.badge.mut{background:#2a344a;color:#c9d6f5}
+.container{display:grid;grid-template-columns:260px 1fr;gap:18px;max-width:1200px;margin:20px auto;padding:0 16px}
+.sidebar{position:sticky;top:64px;height:fit-content}
+.tabs{display:flex;flex-direction:column;gap:8px}
+.tab{background:var(--btn);border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:12px;text-align:left;cursor:pointer}
+.tab.active,.tab:hover{background:var(--btnh)}
+.help{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:12px;color:var(--mut)}
+.content{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.panel{display:none}
+.panel.show{display:block}
+h2{margin:0 0 12px 0;font-size:18px;color:#dfe8ff}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:#cdddff}
+label.full{grid-column:1/-1}
+input,select,textarea{
+  background:#0f1726;border:1px solid #26324c;border-radius:10px;color:var(--ink);
+  padding:10px 12px;outline:none
+}
+input:focus,select:focus,textarea:focus{border-color:#3f5ea8;box-shadow:0 0 0 3px rgba(122,162,255,.15)}
+.actions{display:flex;align-items:center;gap:12px;margin-top:10px}
+.btn{background:var(--btn);border:1px solid var(--line);color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer}
+.btn:hover{background:var(--btnh)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.msg{min-height:1.2rem;color:var(--mut)}
+.footer{max-width:1200px;margin:16px auto;padding:0 16px;color:var(--mut)}
+@media (max-width:900px){
+  .container{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr}
+}
