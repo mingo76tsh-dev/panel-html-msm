@@ -1,38 +1,21 @@
-# HSM v7 • Móvil
+1) Apps Script (backend):
+   - Pegar CORE_v7_lite.gs y menus_y_mirror.gs.
+   - Propiedades del script:
+       HSM_API_KEY = HSM2025KEY
+       HSM_CORS_ORIGIN = https://mingo76tsh-dev.github.io
+   - Desplegar como WebApp (Acceso: Cualquiera con el enlace) y copiar la URL /exec.
 
-[![Build & Pages](https://github.com/mingo76tsh-dev/panel-html-msm/actions/workflows/pages.yml/badge.svg)](../../actions/workflows/pages.yml)
-[![GitHub Pages](https://img.shields.io/badge/Pages-Online-2ea44f?logo=github)](https://mingo76tsh-dev.github.io/panel-html-msm/)
-[![PWA](https://img.shields.io/badge/PWA-Ready-5a0fc8?logo=pwa)](#)
+2) Frontend (GitHub Pages):
+   - En app.js setear WEBAPP_URL a la URL /exec y confirmar API_KEY = HSM2025KEY.
+   - Subir los 3 archivos a /panel-html-msm/ (o al root si preferís).
+   - Abrir: https://mingo76tsh-dev.github.io/panel-html-msm/
 
-App móvil (PWA) para ingreso y alta rápida con soporte offline y cola de pendientes.
+3) Planilla:
+   - Abrir la planilla una vez para que aparezca el menú "HSM • Utilidades".
+   - Usar "Mirror RAW → RAW_EXT" (manual o programar cada 15 min).
 
-- **Abrir la app**: https://mingo76tsh-dev.github.io/panel-html-msm/
-- **Atajos**: `#/ing`, `#/alta`, `#/pend`, `#/util`
+Notas:
+- El cliente usa application/x-www-form-urlencoded (sin headers custom) → sin preflight.
+- Cola offline: si no hay red, guarda en localStorage y reintenta con backoff.
+- Normalización de fecha/hora a TZ AR en el servidor.
 
-# panel-html-msm
-
-## Configuración inicial
-- La app trae defaults embebidos (EXEC_URL + API_KEY).
-- Podés cambiarlos en ⚙️ (se guardan en `localStorage`).
-
-## Atajos
-- `#/ing`, `#/alta`, `#/pend`, `#/util`
-
-## Desarrollo local
-```bash
-npm ci
-node build.mjs --dev
-npx http-server dist -p 4173 -s
-# abrir http://localhost:4173/
-node build.mjs --prod
-# genera dist/ listo para GitHub Pages
-
----
-
-# 🧪 Cómo probar rápido
-
-1) **Local**  
-```bash
-npm ci
-node build.mjs --dev
-npx http-server dist -p 4173 -s
