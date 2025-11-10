@@ -2,388 +2,503 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>HSM v7 • Ingreso / Alta</title>
-  <meta name="color-scheme" content="dark light" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HSM v7 – Ingreso / Alta</title>
   <style>
     :root{
-      --bg:#0e1420; --panel:#161e2e; --ink:#e9eefc; --mut:#9bb0d0;
-      --ok:#2bd67b; --err:#ff7066; --brand:#7aa2ff; --line:#22304a;
-      --btn:#2b3a59; --btnh:#334769; --kbd:#2a3350;
+      --bg:#0c111b; --card:#151b27; --ink:#dbe2ff; --muted:#97a3c3;
+      --edge:rgba(93,112,255,.25); --brand:#8b5cf6; --ok:#16c784; --warn:#f59e0b; --err:#ef4444;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,Segoe UI,Roboto,Arial}
-    .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);background:#0c1220;position:sticky;top:0;z-index:10}
-    .brand{font-weight:700;color:var(--brand);letter-spacing:.3px}
-    .badge{padding:4px 10px;border-radius:999px;background:#23314d}
-    .badge.ok{background:#153a2a;color:#a7f3c6}
-    .badge.err{background:#4a2323;color:#ffd9d6}
-    .badge.mut{background:#2a344a;color:#c9d6f5}
-    .container{display:grid;grid-template-columns:280px 1fr;gap:18px;max-width:1200px;margin:20px auto;padding:0 16px}
-    .sidebar{position:sticky;top:64px;height:fit-content}
-    .tabs{display:flex;flex-direction:column;gap:8px}
-    .tab{background:var(--btn);border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:12px;text-align:left;cursor:pointer}
-    .tab[aria-selected="true"],.tab:hover{background:var(--btnh)}
-    .help{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:12px;color:var(--mut)}
-    .content{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
-    .panel{display:none}
-    .panel.show{display:block}
-    h2{margin:0 0 12px 0;font-size:18px;color:#dfe8ff}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-    label{display:flex;flex-direction:column;gap:6px;font-size:14px;color:#cdddff}
-    label.full{grid-column:1/-1}
-    input,select,textarea{
-      background:#0f1726;border:1px solid #26324c;border-radius:10px;color:var(--ink);
-      padding:10px 12px;outline:none
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font:16px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
-    input:focus,select:focus,textarea:focus{border-color:#3f5ea8;box-shadow:0 0 0 3px rgba(122,162,255,.15)}
-    .row{display:flex;gap:8px;align-items:center}
-    .grow{flex:1}
-    .actions{display:flex;align-items:center;gap:12px;margin-top:10px}
-    .btn{background:var(--btn);border:1px solid var(--line);color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer}
-    .btn:hover{background:var(--btnh)}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    .msg{min-height:1.2rem;color:var(--mut)}
-    .note{font-size:.9rem;color:var(--mut)}
-    .kbd{background:var(--kbd);padding:2px 6px;border-radius:6px;border:1px solid var(--line);font-family:ui-monospace,monospace}
-    .pill{padding:2px 8px;border-radius:999px;border:1px solid var(--line);font-size:.85rem}
-    .pill.ok{border-color:#195a3d;color:#a7f3c6;background:#10261f}
-    .pill.err{border-color:#5a1919;color:#ffd9d6;background:#261010}
-    .footer{max-width:1200px;margin:16px auto;padding:0 16px;color:var(--mut)}
-    .inline{display:inline-flex;gap:6px;align-items:center}
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    @media (max-width:900px){
-      .container{grid-template-columns:1fr}
-      .grid{grid-template-columns:1fr}
+    .wrap{max-width:1100px; margin:32px auto; padding:0 20px}
+    h1{font-size:18px; font-weight:600; margin:0 0 18px}
+    .tabs{display:flex; gap:10px; margin:0 0 18px}
+    .tab{appearance:none; border:1px solid var(--edge); background:var(--card); color:var(--ink);
+      padding:10px 14px; border-radius:10px; cursor:pointer}
+    .tab.active{outline:2px solid rgba(139,92,246,.35)}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+    .panel{background:var(--card); border:1px solid var(--edge); border-radius:16px; padding:18px}
+    label{display:block; font-size:12px; color:var(--muted); margin:4px 0 6px}
+    input,select,textarea,button{
+      width:100%; background:#0f1420; color:var(--ink);
+      border:1px solid rgba(148,163,255,.2); border-radius:12px; padding:10px 12px;
     }
+    input:focus,select:focus,textarea:focus{
+      outline:none; border-color:rgba(139,92,246,.55);
+      box-shadow: 0 0 0 2px rgba(139,92,246,.45), 0 0 0 6px rgba(139,92,246,.1);
+    }
+    textarea{min-height:110px; resize:vertical}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    .right{display:flex; gap:10px; align-items:end}
+    .btn{cursor:pointer; background:linear-gradient(180deg,#7c6df0,#6a58d9); border:0; color:#fff}
+    .btn.secondary{background:#0f1420; border:1px solid rgba(148,163,255,.25)}
+    .btn.warn{background:linear-gradient(180deg,#f6b36d,#e68a23)}
+    .hint{color:var(--muted); font-size:13px}
+    .kbadge{display:inline-block; background:#253054; color:#bcd0ff; border-radius:999px; padding:2px 8px; font-size:12px}
+    .footer{color:#8090b6; font-size:12px; margin-top:22px}
+    .err{border-color:rgba(239,68,68,.7)!important; box-shadow:0 0 0 2px rgba(239,68,68,.25)}
+
+    /* Estado conexión */
+    .online{position:fixed; right:14px; top:10px; background:#0d1a12; color:#8ef4bf; border:1px solid rgba(22,199,132,.35);
+      padding:5px 10px; border-radius:999px; font-size:12px}
+    .online.off{background:#1b1515; color:#ffb4b4; border-color:rgba(239,68,68,.35)}
+    .online .mini{opacity:.8; margin-left:6px; font-variant-numeric:tabular-nums}
+
+    /* Off-canvas episodios */
+    #episodios-panel{
+      position: fixed; right: 24px; bottom: 24px; width: 380px; max-height: 70vh;
+      background: rgba(15,18,28,.96); color: #dbe2ff; border: 1px solid rgba(93,112,255,.25);
+      border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); backdrop-filter: blur(6px);
+      z-index: 9999; display: flex; flex-direction: column; overflow: hidden;
+    }
+    #episodios-panel[hidden]{display:none}
+    #episodios-panel .epi-head{display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px; background: linear-gradient(180deg, rgba(125,145,255,.14), rgba(125,145,255,.04));
+      border-bottom: 1px solid rgba(93,112,255,.25);}
+    #episodios-panel .epi-body{ padding: 10px 12px; overflow:auto; }
+    #epi-cerrar{ all:unset; cursor:pointer; padding:0 8px; font-size:20px; line-height:1; color:#91a0ff; }
+    .epi-item{ padding:10px 8px; border:1px solid rgba(93,112,255,.18); border-radius:12px; margin-bottom:8px;
+      background: rgba(32,36,54,.6); }
+    .epi-tags{ margin-top:6px; display:flex; gap:6px; flex-wrap:wrap; }
+    .tag{ padding:2px 8px; border-radius:999px; font-size:12px; letter-spacing:.2px; background:#253054; color:#bcd0ff; }
+    .tag-dx{ background:#2a3c4a; color:#a7f3d0; }
   </style>
 </head>
 <body>
-<header class="topbar" role="banner">
-  <div class="brand" aria-label="Nombre de la aplicación">HSM v7</div>
-  <div class="inline" aria-live="polite" aria-atomic="true">
-    <span id="epiState" class="pill" title="Estado de episodio" hidden></span>
-    <span id="status" class="badge mut" title="Estado de conexión">Comprobando…</span>
-  </div>
-</header>
+  <div class="online" id="online-badge">Online <span class="mini" id="queue-size"></span></div>
 
-<main class="container" role="main">
-  <aside class="sidebar" aria-label="Navegación">
-    <nav class="tabs" role="tablist" aria-label="Secciones">
-      <button class="tab" role="tab" id="tab-ing" aria-controls="panel-ing" aria-selected="true">Ingreso</button>
-      <button class="tab" role="tab" id="tab-alt" aria-controls="panel-alt" aria-selected="false">Alta / Egreso</button>
-    </nav>
-    <section class="help" aria-live="polite">
-      <p class="muted">Datos mínimos: <b>DNI</b> (7–9), <b>Sexo</b>, <b>Fecha</b> y <b>Hora</b>. Si omitís fecha/hora se toma la actual.</p>
-      <p class="note">Atajos: <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span> guarda.</p>
-    </section>
-  </aside>
+  <div class="wrap">
+    <h1>HSM v7 • Ingreso / Alta</h1>
 
-  <section class="content">
-    <!-- ===== Ingreso ===== -->
-    <form id="panel-ing" class="panel show" role="tabpanel" aria-labelledby="tab-ing" autocomplete="off">
-      <h2>Ingreso</h2>
+    <div class="tabs">
+      <button class="tab active" id="tab-ing">Ingreso</button>
+      <button class="tab" id="tab-alta">Alta / Egreso</button>
+      <button class="tab warn" id="tab-ayuda" title="Reglas y atajos">?</button>
+    </div>
+
+    <div class="panel" id="panel-ayuda" style="margin-bottom:16px; display:none">
+      <div class="hint">
+        <strong>Reglas:</strong> <b>DNI</b> (7–9), <b>Sexo</b>, <b>Fecha</b> y <b>Hora</b>. Si omitís fecha/hora se toma la actual.
+        <br/>Formatos: fecha <code>dd/mm/aaaa</code> o <code>aaaa-mm-dd</code> • hora <code>hh:mm</code> (24h).
+        <br/><span class="kbadge">Atajo: Ctrl + Enter guarda.</span> — Funciona <b>offline</b> con cola y reintentos.
+      </div>
+    </div>
+
+    <!-- Ingreso -->
+    <div class="panel" id="card-ingreso">
       <div class="grid">
-        <label>DNI
-          <div class="row">
-            <input id="dni" class="grow" inputmode="numeric" pattern="\d{7,9}" placeholder="7–9 dígitos" aria-describedby="dHelp" />
-            <button id="btn-find" type="button" class="btn" title="Buscar episodio por DNI">Buscar</button>
+        <div>
+          <label>DNI</label>
+          <div class="right">
+            <input id="dni" placeholder="7–9 dígitos" inputmode="numeric" />
+            <button class="btn secondary" id="btn-buscar" style="width:130px">Buscar</button>
           </div>
-          <small id="dHelp" class="note">Ej.: 32123456</small>
-        </label>
-        <label>Sexo
-          <select id="sexo" aria-label="Sexo">
-            <option value="">—</option><option>F</option><option>M</option><option>X</option>
+        </div>
+        <div>
+          <label>Sexo</label>
+          <select id="sexo">
+            <option value="">—</option><option>F</option><option>M</option><option>Otro</option>
           </select>
-        </label>
-        <label>Fecha ingreso
-          <input id="fi" type="date" />
-        </label>
-        <label>Hora ingreso
-          <input id="hi" type="time" />
-        </label>
-        <label>Ideación / Intento
-          <select id="ii">
+        </div>
+
+        <div>
+          <label>Fecha ingreso</label>
+          <input id="fecha-ing" placeholder="dd/mm/aaaa" />
+        </div>
+        <div>
+          <label>Hora ingreso</label>
+          <input id="hora-ing" placeholder="hh:mm" />
+        </div>
+
+        <div>
+          <label>Ideación / Intento</label>
+          <select id="ideacion">
             <option value="">—</option><option>Ideación</option><option>Intento</option>
           </select>
-        </label>
-        <label>Método / Letalidad
-          <input id="met" placeholder="Método" />
-        </label>
-        <label>Consumo
-          <select id="cons">
-            <option value="">—</option>
-            <option>Alcohol</option><option>Psicoactivos</option><option>Mixto</option><option>Sin datos</option>
-          </select>
-        </label>
-        <label>Tipo Sustancia
-          <input id="sust" placeholder="Ej: Cocaína, BZD..." />
-        </label>
-        <label>Dx CIE-10 (provisorio)
-          <input id="cie" list="cie10" placeholder="Ej: F10.1 Trastornos mentales..." autocomplete="off" />
-          <datalist id="cie10"><option value="Cargando…"></option></datalist>
-          <small class="note">Escribí código o descripción; se autocompleta desde la hoja <b>CIE10_MAP</b>.</small>
-        </label>
-        <label class="full">Observaciones
-          <textarea id="obs" rows="3" placeholder="Notas breves…"></textarea>
-        </label>
-      </div>
-      <div class="actions">
-        <button id="submitIng" type="button" class="btn">Guardar ingreso</button>
-        <span id="msgIng" class="msg" role="status" aria-live="polite"></span>
-      </div>
-    </form>
+        </div>
+        <div>
+          <label>Método / Letalidad</label>
+          <input id="metodo" placeholder="Método" />
+        </div>
 
-    <!-- ===== Alta / Egreso ===== -->
-    <form id="panel-alt" class="panel" role="tabpanel" aria-labelledby="tab-alt" autocomplete="off">
-      <h2>Alta / Egreso</h2>
-      <div class="grid">
-        <label>DNI
-          <div class="row">
-            <input id="dni2" class="grow" inputmode="numeric" pattern="\d{7,9}" placeholder="7–9 dígitos" />
-            <button id="btn-find2" type="button" class="btn" title="Buscar episodio por DNI">Buscar</button>
+        <div>
+          <label>Consumo</label>
+          <select id="consumo">
+            <option value="">—</option><option>Sí</option><option>No</option><option>NS</option>
+          </select>
+        </div>
+        <div>
+          <label>Tipo Sustancia</label>
+          <input id="tipo-sust" placeholder="Ej: Cocaína, BZD..." />
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Dx CIE-10 (provisorio)</label>
+            <input id="dx" placeholder="Ej: F10.1 Trastornos..." list="cie10-list" />
+            <datalist id="cie10-list"></datalist>
+            <div class="hint">Escribí código o descripción; se autocompleta desde CIE10_MAP.</div>
           </div>
-        </label>
-        <label>Sexo
-          <select id="sexo2">
-            <option value="">—</option><option>F</option><option>M</option><option>X</option>
-          </select>
-        </label>
-        <label>Fecha alta
-          <input id="fa" type="date" />
-        </label>
-        <label>Hora alta
-          <input id="ha" type="time" />
-        </label>
-        <label>Estado egreso
-          <select id="estado">
-            <option>Alta</option><option>Derivación</option><option>Fuga</option><option>Otro</option>
-          </select>
-        </label>
-        <label class="full">Observaciones
-          <textarea id="obs2" rows="3" placeholder="Notas…"></textarea>
-        </label>
-      </div>
-      <div class="actions">
-        <button id="submitAlta" type="button" class="btn">Guardar alta</button>
-        <span id="msgAlta" class="msg" role="status" aria-live="polite"></span>
-      </div>
-    </form>
-  </section>
-</main>
+          <div class="right">
+            <button class="btn secondary" id="btn-cargar-ultimo" style="width:220px" title="Cargar último Dx / II / Método del mismo DNI">
+              Cargar último Dx de este DNI
+            </button>
+          </div>
+        </div>
 
-<footer class="footer">
-  <small>v7 • Panel HTML • GitHub Pages • <span id="coreVer">core?</span></small>
-</footer>
+        <div style="grid-column:1 / -1">
+          <label>Observaciones</label>
+          <textarea id="obs" placeholder="Notas breves…"></textarea>
+        </div>
 
-<script>
-/* ====== CONFIG ====== */
+        <div style="grid-column:1 / -1">
+          <button class="btn" id="btn-save-ing" style="width:180px">Guardar ingreso</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alta / Egreso -->
+    <div class="panel" id="card-alta" style="display:none">
+      <div class="grid">
+        <div>
+          <label>DNI</label>
+          <div class="right">
+            <input id="dni-alt" placeholder="7–9 dígitos" inputmode="numeric" />
+            <button class="btn secondary" id="btn-buscar-alt" style="width:130px">Buscar</button>
+          </div>
+        </div>
+        <div>
+          <label>Sexo</label>
+          <select id="sexo-alt">
+            <option value="">—</option><option>F</option><option>M</option><option>Otro</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Fecha alta</label>
+          <input id="fecha-alt" placeholder="dd/mm/aaaa" />
+        </div>
+        <div>
+          <label>Hora alta</label>
+          <input id="hora-alt" placeholder="hh:mm" />
+        </div>
+
+        <div>
+          <label>Estado egreso</label>
+          <select id="estado-egreso">
+            <option>Alta</option>
+            <option>Derivación</option>
+            <option>Fuga</option>
+            <option>Contraindicación médica</option>
+            <option>NS</option>
+          </select>
+        </div>
+
+        <div style="grid-column:1 / -1">
+          <label>Observaciones</label>
+          <textarea id="obs-alt" placeholder="Notas…"></textarea>
+        </div>
+
+        <div class="row">
+          <div>
+            <button class="btn secondary" id="btn-prellenar-desde-episodio">Prellenar desde episodio…</button>
+          </div>
+          <div class="right">
+            <button class="btn" id="btn-save-alt" style="width:160px">Guardar alta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">v7 • Panel HTML • GitHub Pages</div>
+  </div>
+
+  <!-- Off-canvas -->
+  <div id="episodios-panel" hidden>
+    <div class="epi-head">
+      <strong>Episodios previos</strong>
+      <button type="button" id="epi-cerrar" aria-label="Cerrar">×</button>
+    </div>
+    <div id="epi-contenido" class="epi-body"></div>
+  </div>
+
+  <script>
+/* ================= CONFIG ================= */
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyqvAkFP2tf_lT6BXNcMNJ0esY0MajUTsI91wXRItW6RGhJguR4VwdG9wUkLWf1EC7u/exec';
 const API_KEY    = 'HSM2025KEY';
 
-/* ====== HELPERS ====== */
-const $ = s => document.querySelector(s);
-const LS={get:(k,d=null)=>{try{return JSON.parse(localStorage.getItem(k))??d;}catch(_){return localStorage.getItem(k)??d;}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(_){localStorage.setItem(k,v);}},del:(k)=>localStorage.removeItem(k)};
-const nowDate=()=>new Date().toISOString().slice(0,10);
-const nowTime=()=>new Date().toTimeString().slice(0,5);
-const dniClean=v=>String(v||'').replace(/\D/g,'').slice(0,9);
-const dniOK=v=>/^\d{7,9}$/.test(String(v||'').trim());
-function setStatus(t,c){ const st=$('#status'); if(st){ st.textContent=t; st.className='badge '+(c||'mut'); } }
-function setEpiState(open,row){
-  const el=$('#epiState'); if(!el) return;
-  if(open===undefined){ el.hidden=true; return; }
-  el.hidden=false;
-  if(open){ el.textContent='Episodio ABIERTO'; el.className='pill ok'; el.title='Hay un ingreso sin alta (fila '+(row||'?')+')'; }
-  else { el.textContent='Sin episodio abierto'; el.className='pill'; el.title='Último episodio cerrado'+(row?(' (fila '+row+')'):''); }
-}
-function setMsg(el,t,ok=true){ if(el){ el.style.color=ok?'var(--ok)':'var(--err)'; el.textContent=t; } }
+/* ================= Fetch helpers ================= */
 function postForm(url, params){
-  const qs=new URLSearchParams(params);
-  return fetch(url+(url.includes('?')?'&':'?')+'apiKey='+encodeURIComponent(API_KEY),{
-    method:'POST',mode:'cors',credentials:'omit',cache:'no-cache',body:qs
-  }).then(r=>r.json());
+  const body = new URLSearchParams(params);
+  return fetch(url + '?apiKey=' + encodeURIComponent(API_KEY), {
+    method: 'POST', mode: 'cors', cache: 'no-cache', credentials: 'omit', body
+  }).then(r => r.json());
 }
+const getJSON = async (url) => (await fetch(url, {mode:'cors'}).then(r=>r.json()).catch(_=>null)) || {ok:false};
 
-/* ====== API ====== */
-const API={
-  ping: async()=> (await fetch(WEBAPP_URL)).json(),
-  saveIngreso: p => postForm(WEBAPP_URL,{
-    tipo:'ing', DNI:p.DNI, Sexo:p.Sexo,
-    FechaIngresoManual:p.FechaIngresoManual, HoraIngresoManual:p.HoraIngresoManual,
-    IdeacionIntento:p.IdeacionIntento||'', MetodoLetalidad:p.MetodoLetalidad||'',
-    Consumo:p.Consumo||'', TipoSustancia:p.TipoSustancia||'', Frecuencia:p.Frecuencia||'',
-    DxProvisorio_CIE10:(p.DxProvisorio_CIE10||p.DxCIE10||'').toUpperCase(),
-    Observaciones:p.Observaciones||'', AppVersion:'v7-panel-html'
-  }),
-  saveAlta: p => postForm(WEBAPP_URL,{
-    tipo:'alta', DNI:p.DNI, Sexo:p.Sexo||'',
-    EstadoEgreso:p.EstadoEgreso||'Alta', FechaAltaManual:p.FechaAltaManual||'', HoraAltaManual:p.HoraAltaManual||'',
-    FechaIngresoManual:p.FechaIngresoManual||'', HoraIngresoManual:p.HoraIngresoManual||'',
-    Observaciones:p.Observaciones||'', AppVersion:'v7-panel-html'
-  }),
-  find: (dni, days=180) => postForm(WEBAPP_URL,{ action:'find', dni:String(dni||'').replace(/\D/g,''), days }),
-  cie10List: async()=>{
-    const cache=LS.get('CIE10_CACHE'); const ttl=LS.get('CIE10_TTL');
-    const now=Date.now();
-    if(cache && ttl && now<ttl) return cache; // cache 24h
-    const out=await postForm(WEBAPP_URL,{ action:'cie10_list' });
-    const list=(out && out.list)? out.list : [];
-    LS.set('CIE10_CACHE', list); LS.set('CIE10_TTL', now+24*60*60*1000);
-    return list;
-  }
+/* ================= API ================= */
+const API = {
+  ping(){ return fetch(WEBAPP_URL).then(r=>r.json()); },
+  saveIngreso(p){
+    const data = {
+      tipo:'ing', DNI:p.DNI, Sexo:p.Sexo,
+      FechaIngresoManual:p.FechaIngresoManual, HoraIngresoManual:p.HoraIngresoManual,
+      IdeacionIntento:p.IdeacionIntento||'', MetodoLetalidad:p.MetodoLetalidad||'',
+      Consumo:p.Consumo||'', Frecuencia:p.Frecuencia||'', TipoSustancia:p.TipoSustancia||'',
+      DxCIE10:(p.DxCIE10||'').toUpperCase(), Observaciones:p.Observaciones||'',
+      AppVersion:'v7-panel-html'
+    };
+    return postForm(WEBAPP_URL, data);
+  },
+  saveAlta(p){
+    const data = {
+      tipo:'alta', DNI:p.DNI, Sexo:p.Sexo||'', EstadoEgreso:p.EstadoEgreso||'Alta',
+      FechaAltaManual:p.FechaAltaManual||'', HoraAltaManual:p.HoraAltaManual||'',
+      FechaIngresoManual:p.FechaIngresoManual||'', HoraIngresoManual:p.HoraIngresoManual||'',
+      Observaciones:p.Observaciones||'', AppVersion:'v7-panel-html'
+    };
+    return postForm(WEBAPP_URL, data);
+  },
+  cie10(term){ return getJSON(`${WEBAPP_URL}/cie10?q=${encodeURIComponent(term||'')}`); },
+  episodios({dni,desde,hasta}) {
+    const p=new URLSearchParams(); if(dni)p.set('dni',dni); if(desde)p.set('desde',desde||''); if(hasta)p.set('hasta',hasta||'');
+    return getJSON(`${WEBAPP_URL}/episodios?${p.toString()}`);
+  },
+  ultimo({dni}){ return getJSON(`${WEBAPP_URL}/ultimo?dni=${encodeURIComponent(dni||'')}`); }
 };
-window.API=API;
 
-/* ====== COLA OFFLINE ====== */
-async function flushOutbox(key, kind){
-  const box=LS.get(key,[]); if(!box.length) return;
-  const remain=[]; for(const it of box){
-    const now=Date.now(); if(it.retryAt && now<it.retryAt){ remain.push(it); continue; }
-    try{ const out=(kind==='ing')? await API.saveIngreso(it.payload) : await API.saveAlta(it.payload);
-         if(!(out&&out.ok)) throw new Error(out&&out.message||'ERR'); }
-    catch(e){ it.retries=(it.retries||0)+1; it.retryAt=now+Math.min(60000,2000*Math.pow(2,it.retries)); remain.push(it); }
+/* ================= Utils UI / Validación ================= */
+const q = (s)=>document.querySelector(s);
+const v = (s)=>{ const el=q(s); return el ? (el.value||'').trim() : ''; };
+const setBusy = (btn, busy, label='Guardar')=>{
+  if(!btn) return; btn.disabled=!!busy;
+  if(!btn.dataset.label) btn.dataset.label = btn.innerText;
+  btn.innerText = busy ? 'Guardando…' : (btn.dataset.label || label);
+};
+const debounce = (fn, ms=200)=>{let t; return (...a)=>{clearTimeout(t); t=setTimeout(()=>fn(...a),ms)}};
+
+const isDNI = (s)=>/^\d{7,9}$/.test(String(s||'').replace(/\D/g,''));
+const isTime = (s)=>/^([01]?\d|2[0-3]):[0-5]\d$/.test(String(s||'').trim());
+const isDate = (s)=>{
+  const x=String(s||'').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(x)) { const d=new Date(x); return !isNaN(d); }
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(x)) {
+    const [dd,mm,yy]=x.split('/').map(Number); const d=new Date(yy,mm-1,dd);
+    return d.getFullYear()===yy && (d.getMonth()+1)===mm && d.getDate()===dd;
   }
-  LS.set(key,remain);
-}
-setInterval(()=>{ flushOutbox('HSM_OUT_ING','ing'); flushOutbox('HSM_OUT_ALT','alt'); },15000);
-addEventListener('online', ()=>setStatus('Online','ok'));
-addEventListener('offline',()=>setStatus('Offline','mut'));
+  return false;
+};
+function markInvalid(input, bad){ if(!input) return; input.classList.toggle('err', !!bad); }
+function ensureMins(a){ return a<10 ? '0'+a : String(a); }
+function todayStr(){ const d=new Date(); return ensureMins(d.getDate())+'/'+ensureMins(d.getMonth()+1)+'/'+d.getFullYear(); }
+function nowHM(){ const d=new Date(); return ensureMins(d.getHours())+':'+ensureMins(d.getMinutes()); }
 
-/* ====== UI BINDINGS ====== */
-function activateTab(tabId){
-  document.querySelectorAll('[role="tab"]').forEach(t=>{
-    const sel=(t.id===('tab-'+tabId)); t.setAttribute('aria-selected', sel?'true':'false');
-  });
-  document.querySelectorAll('[role="tabpanel"]').forEach(p=>{
-    p.classList.toggle('show', p.id===('panel-'+tabId));
-  });
-}
-document.addEventListener('click', (e)=>{
-  const b=e.target.closest('[role="tab"]'); if(!b) return;
-  const id=b.id.replace('tab-',''); activateTab(id);
-});
-document.addEventListener('keydown', (e)=>{
-  if((e.ctrlKey||e.metaKey) && e.key==='Enter'){
-    if($('#panel-ing').classList.contains('show')) $('#submitIng').click();
-    else $('#submitAlta').click();
-  }
-});
-
-/* ====== AUTOCOMPLETE CIE10 ====== */
-async function setupCIE10(){
-  try{
-    const list=await API.cie10List();
-    const dl=$('#cie10'); if(!dl) return;
-    dl.innerHTML='';
-    // Sólo cargamos primeros 300 a datalist y dejamos filtro incremental
-    (list||[]).slice(0,300).forEach(x=>{
-      const v=(x.code?(x.code+' '):'')+(x.desc||'');
-      const opt=document.createElement('option'); opt.value=v; dl.appendChild(opt);
-    });
-    // Filtro on-the-fly (no todos los navegadores muestran >300)
-    const input=$('#cie');
-    let lastQ='';
-    input?.addEventListener('input', ()=>{
-      const q=(input.value||'').toLowerCase();
-      if(q===lastQ) return; lastQ=q;
-      const best=(list||[]).filter(x=>{
-        const s=((x.code||'')+' '+(x.desc||'')).toLowerCase();
-        return q.length>=2 && s.includes(q);
-      }).slice(0,100);
-      dl.innerHTML='';
-      best.forEach(x=>{
-        const opt=document.createElement('option');
-        opt.value=((x.code||'').toUpperCase()+' '+(x.desc||''));
-        dl.appendChild(opt);
-      });
-    });
-  }catch(_){}
-}
-
-/* ====== BUSCAR EPISODIO ====== */
-async function doFind(dni, target='ing'){
-  const clean=dniClean(dni);
-  if(!dniOK(clean)){ setEpiState(); return {ok:false}; }
-  try{
-    const r=await API.find(clean, 240);
-    if(r && r.ok){
-      if(r.found){ setEpiState(r.abierto, r.row); }
-      else{ setEpiState(false, null); }
-      if(target==='alt' && !r.abierto){
-        // Sugerimos pasar a Ingreso si no hay abierto
-        const m=$('#msgAlta'); setMsg(m,'No hay episodio abierto para ese DNI',false);
-      }
-      return r;
+/* ================= Cola Offline ================= */
+const Queue = (()=> {
+  const KEY='hsm_queue_v1';
+  const load = ()=>{ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(_){ return []; } };
+  const save = (arr)=>localStorage.setItem(KEY, JSON.stringify(arr||[]));
+  const size = ()=>load().length;
+  const badge = ()=>{ const s=size(); q('#queue-size').textContent = s? `• cola ${s}`:''; };
+  async function flush(){
+    let arr=load(); if(!arr.length) { badge(); return; }
+    for(let i=0;i<arr.length;i++){
+      const item=arr[i]; try{
+        let r=null;
+        if(item.kind==='ing') r=await API.saveIngreso(item.payload);
+        else if(item.kind==='alta') r=await API.saveAlta(item.payload);
+        if(r && r.ok){ arr.splice(i,1); i--; save(arr); }
+      }catch(_){ /* sigue en cola */ }
     }
-  }catch(_){}
-  setEpiState(); return {ok:false};
-}
-
-/* ====== FORM INGRESO ====== */
-function bindIngreso(){
-  const btn=$('#submitIng'); if(!btn) return;
-  $('#dni')?.addEventListener('input', e=> e.target.value=dniClean(e.target.value));
-  $('#btn-find')?.addEventListener('click',()=> doFind($('#dni').value,'ing'));
-  btn.addEventListener('click', async(ev)=>{
-    ev.preventDefault(); const m=$('#msgIng');
-    const p={
-      DNI:dniClean($('#dni')?.value), Sexo:$('#sexo')?.value||'',
-      FechaIngresoManual:$('#fi')?.value||'', HoraIngresoManual:$('#hi')?.value||'',
-      IdeacionIntento:$('#ii')?.value||'', MetodoLetalidad:$('#met')?.value||'',
-      Consumo:$('#cons')?.value||'', TipoSustancia:$('#sust')?.value||'',
-      DxProvisorio_CIE10:($('#cie')?.value||'').toUpperCase(), Observaciones:$('#obs')?.value||''
-    };
-    if(!dniOK(p.DNI)){ setMsg(m,'DNI inválido (7–9 dígitos)',false); return; }
-    if(!p.Sexo){ setMsg(m,'Seleccioná sexo',false); return; }
-    if(!p.FechaIngresoManual){ $('#fi').value=nowDate(); p.FechaIngresoManual=$('#fi').value; }
-    if(!p.HoraIngresoManual){  $('#hi').value=nowTime(); p.HoraIngresoManual=$('#hi').value; }
-    btn.disabled=true; setMsg(m,'Guardando…',true);
-    try{ const out=await API.saveIngreso(p);
-         if(out&&out.ok){ setMsg(m,'Guardado ✔ (fila '+(out.row||'?')+')',true); doFind(p.DNI,'ing'); }
-         else throw new Error(out&&out.message||'Error'); }
-    catch(e){ const box=LS.get('HSM_OUT_ING',[]); box.push({payload:p,retries:0}); LS.set('HSM_OUT_ING',box);
-              setMsg(m,'Sin red. En cola ('+box.length+')',false); }
-    finally{ btn.disabled=false; }
-  });
-}
-
-/* ====== FORM ALTA ====== */
-function bindAlta(){
-  const btn=$('#submitAlta'); if(!btn) return;
-  $('#dni2')?.addEventListener('input', e=> e.target.value=dniClean(e.target.value));
-  $('#btn-find2')?.addEventListener('click',()=> doFind($('#dni2').value,'alt'));
-  btn.addEventListener('click', async(ev)=>{
-    ev.preventDefault(); const m=$('#msgAlta');
-    const p={
-      DNI:dniClean($('#dni2')?.value), Sexo:$('#sexo2')?.value||'',
-      FechaAltaManual:$('#fa')?.value||'', HoraAltaManual:$('#ha')?.value||'',
-      EstadoEgreso:$('#estado')?.value||'Alta', Observaciones:$('#obs2')?.value||''
-    };
-    if(!dniOK(p.DNI)){ setMsg(m,'DNI inválido',false); return; }
-    if(!p.FechaAltaManual){ $('#fa').value=nowDate(); p.FechaAltaManual=$('#fa').value; }
-    if(!p.HoraAltaManual){  $('#ha').value=nowTime(); p.HoraAltaManual=$('#ha').value; }
-    btn.disabled=true; setMsg(m,'Guardando alta…',true);
-    try{ const out=await API.saveAlta(p);
-         if(out&&out.ok){ setMsg(m,'Alta guardada ✔ (fila '+(out.row||'?')+')',true); doFind(p.DNI,'alt'); }
-         else throw new Error(out&&out.message||'Error'); }
-    catch(e){ const box=LS.get('HSM_OUT_ALT',[]); box.push({payload:p,retries:0}); LS.set('HSM_OUT_ALT',box);
-              setMsg(m,'Sin red. En cola ('+box.length+')',false); }
-    finally{ btn.disabled=false; }
-  });
-}
-
-/* ====== INIT ====== */
-(async function init(){
-  try{
-    const j=await API.ping(); setStatus('Online','ok');
-    if(j&&j.version) { $('#coreVer').textContent = j.version; }
-  }catch(_){ setStatus('Offline','mut'); }
-  if($('#fi') && !$('#fi').value) $('#fi').value=nowDate();
-  if($('#hi') && !$('#hi').value) $('#hi').value=nowTime();
-  bindIngreso(); bindAlta(); setupCIE10();
-  flushOutbox('HSM_OUT_ING','ing'); flushOutbox('HSM_OUT_ALT','alt');
+    badge();
+  }
+  function push(kind,payload){
+    const arr=load(); arr.push({kind,payload,ts:Date.now()}); save(arr); badge();
+  }
+  window.addEventListener('online', flush);
+  return {push, flush, size, badge};
 })();
-</script>
+
+/* ================= Tabs & Estado Red ================= */
+(function tabs(){
+  const ing=q('#tab-ing'), alt=q('#tab-alta'), ayuda=q('#tab-ayuda');
+  const cIng=q('#card-ingreso'), cAlt=q('#card-alta'), pAyuda=q('#panel-ayuda');
+  ing.onclick=()=>{ing.classList.add('active'); alt.classList.remove('active'); cIng.style.display='block'; cAlt.style.display='none'; pAyuda.style.display='none';};
+  alt.onclick=()=>{alt.classList.add('active'); ing.classList.remove('active'); cAlt.style.display='block'; cIng.style.display='none'; pAyuda.style.display='none';};
+  ayuda.onclick=()=>{pAyuda.style.display = pAyuda.style.display==='none'?'block':'none';};
+})();
+async function refreshOnlineBadge(){
+  let online = navigator.onLine;
+  try{ const j=await API.ping(); online = online && j && j.ok; }catch(_){}
+  const b=q('#online-badge'); b.classList.toggle('off', !online);
+  b.childNodes[0].nodeValue = online ? 'Online ' : 'Offline ';
+  Queue.badge();
+}
+window.addEventListener('load', refreshOnlineBadge);
+window.addEventListener('online', refreshOnlineBadge);
+window.addEventListener('offline', refreshOnlineBadge);
+
+/* ================= Autocomplete CIE10 ================= */
+function attachCIE10(){
+  const input = q('#dx'), list=q('#cie10-list'); if(!input||!list) return;
+  async function run(){
+    const term=(input.value||'').trim(); if(!term){ list.innerHTML=''; return; }
+    const j = await API.cie10(term);
+    const items = (j && j.ok && Array.isArray(j.items)) ? j.items : [];
+    list.innerHTML='';
+    items.forEach(it=>{
+      const o=document.createElement('option');
+      o.value=it.code; o.label=`${it.code} — ${it.etiqueta || it.desc || ''}`;
+      list.appendChild(o);
+    });
+  }
+  input.addEventListener('input', debounce(run, 150));
+  input.addEventListener('change', ()=>{
+    const m=(input.value||'').toUpperCase().match(/[A-Z]\d{2}[A-Z0-9]?(\.[A-Z0-9]{1,4})?/);
+    if(m) input.value=m[0];
+  });
+}
+
+/* ================= Episodios (panel) ================= */
+function renderEpisodios(items){
+  const cont=q('#epi-contenido');
+  if(!items.length){ cont.innerHTML='<div class="epi-empty">Sin episodios previos.</div>'; return; }
+  cont.innerHTML=items.map(it=>{
+    const f=it.fecha||'', h=it.hora||'', ii=it.II||'', dx=it.dx||'';
+    return `<div class="epi-item">
+      <div><b>${f}</b> <small>${h}</small></div>
+      <div class="epi-tags">${ii?`<span class="tag">${ii}</span>`:''}${dx?`<span class="tag tag-dx">${dx}</span>`:''}</div>
+    </div>`;
+  }).join('');
+}
+function openEpisodios(items){ renderEpisodios(items); q('#episodios-panel').hidden=false; }
+function closeEpisodios(){ q('#episodios-panel').hidden=true; }
+async function buscarEpisodiosPorDNI(dni){
+  const j=await API.episodios({dni:dni.replace(/\D/g,'')});
+  return (j && j.ok && Array.isArray(j.items)) ? j.items : [];
+}
+async function cargarUltimoDx(){
+  const dni=(v('#dni')||'').replace(/\D/g,''); if(!dni) return alert('Ingresá un DNI primero.');
+  const j=await API.ultimo({dni}); if(!(j&&j.ok&&j.item)) return alert('Sin episodios previos.');
+  const it=j.item;
+  if(it.dx) q('#dx').value=it.dx; if(it.II) q('#ideacion').value=it.II;
+  if(it.metodo) q('#metodo').value=it.metodo; if(it.sexo && !v('#sexo')) q('#sexo').value=it.sexo;
+  alert('Se precargaron datos del último episodio.');
+}
+async function prellenarAltaDesdeSelector(){
+  const dni=(v('#dni-alt')||'').replace(/\D/g,''); if(!dni) return alert('Ingresá un DNI primero.');
+  const items=await buscarEpisodiosPorDNI(dni); if(!items.length) return alert('Sin episodios previos.');
+  openEpisodios(items.map(x=>({fecha:x.fecha,hora:x.hora,II:x.II,dx:x.dx})));
+  q('#epi-contenido').onclick=(ev)=>{
+    const item=ev.target.closest('.epi-item'); if(!item) return;
+    const fecha=item.querySelector('b')?.textContent||''; const hora=item.querySelector('small')?.textContent||'';
+    q('#obs-alt').value=(v('#obs-alt')?v('#obs-alt')+'\n':'')+`Alta referida a episodio del ${fecha} ${hora}`;
+    closeEpisodios();
+  };
+}
+
+/* ========= Validación ========= */
+function validarIngreso(){
+  const dni = (v('#dni')||'').replace(/\D/g,'');
+  const sexo= v('#sexo'); const f=v('#fecha-ing'); const h=v('#hora-ing');
+  markInvalid(q('#dni'), !isDNI(dni));
+  markInvalid(q('#sexo'), !sexo);
+  markInvalid(q('#fecha-ing'), f && !isDate(f));
+  markInvalid(q('#hora-ing'), h && !isTime(h));
+  const fechaOK = isDate(f) || !f, horaOK = isTime(h) || !h;
+  const faltaMin = !isDNI(dni) || !sexo;
+  return {ok: !faltaMin && fechaOK && horaOK, dni, sexo,
+          fecha: f || todayStr(), hora: h || nowHM()};
+}
+function validarAlta(){
+  const dni=(v('#dni-alt')||'').replace(/\D/g,''); const sexo=v('#sexo-alt');
+  const f=v('#fecha-alt'); const h=v('#hora-alt');
+  markInvalid(q('#dni-alt'), !isDNI(dni));
+  markInvalid(q('#sexo-alt'), !sexo);
+  markInvalid(q('#fecha-alt'), f && !isDate(f));
+  markInvalid(q('#hora-alt'), h && !isTime(h));
+  const faltaMin = !isDNI(dni) || !sexo;
+  return {ok: !faltaMin && (isDate(f)||!f) && (isTime(h)||!h), dni, sexo,
+          fecha: f || todayStr(), hora: h || nowHM()};
+}
+
+/* ========= Guardado ========= */
+async function onSaveIngreso(){
+  const chk=validarIngreso();
+  if(!chk.ok) return alert('Completá DNI (7–9), Sexo y verificá fecha/hora.');
+  const btn=q('#btn-save-ing'); setBusy(btn,true);
+  const payload={
+    DNI:chk.dni, Sexo:chk.sexo, FechaIngresoManual:chk.fecha, HoraIngresoManual:chk.hora,
+    IdeacionIntento:v('#ideacion'), MetodoLetalidad:v('#metodo'),
+    Consumo:v('#consumo'), Frecuencia:'', TipoSustancia:v('#tipo-sust'),
+    DxCIE10:v('#dx'), Observaciones:v('#obs')
+  };
+  try{
+    const out=await API.saveIngreso(payload);
+    if(out && out.ok){ alert('Ingreso guardado (fila '+out.row+')'); }
+    else{ Queue.push('ing', payload); alert('Sin red o error. Se guardó en cola.'); }
+  }catch(_){ Queue.push('ing', payload); alert('Sin red. En cola para reintentar.'); }
+  finally{ setBusy(btn,false); refreshOnlineBadge(); }
+}
+async function onSaveAlta(){
+  const chk=validarAlta();
+  if(!chk.ok) return alert('Completá DNI (7–9), Sexo y verificá fecha/hora.');
+  const btn=q('#btn-save-alt'); setBusy(btn,true);
+  const payload={
+    DNI:chk.dni, Sexo:chk.sexo, EstadoEgreso:v('#estado-egreso')||'Alta',
+    FechaAltaManual:chk.fecha, HoraAltaManual:chk.hora,
+    FechaIngresoManual:v('#fecha-ing'), HoraIngresoManual:v('#hora-ing'),
+    Observaciones:v('#obs-alt') || v('#obs')
+  };
+  try{
+    const out=await API.saveAlta(payload);
+    if(out && out.ok){ alert('Alta guardada (fila '+out.row+')'); }
+    else{ Queue.push('alta', payload); alert('Sin red o error. Se guardó en cola.'); }
+  }catch(_){ Queue.push('alta', payload); alert('Sin red. En cola para reintentar.'); }
+  finally{ setBusy(btn,false); refreshOnlineBadge(); }
+}
+
+/* ========= Wiring ========= */
+window.addEventListener('DOMContentLoaded', ()=>{
+  attachCIE10();
+  q('#dni')?.addEventListener('input', (e)=>{ e.target.value=e.target.value.replace(/\D/g,'').slice(0,9); });
+  q('#dni-alt')?.addEventListener('input', (e)=>{ e.target.value=e.target.value.replace(/\D/g,'').slice(0,9); });
+
+  q('#btn-buscar')?.addEventListener('click', async (ev)=>{
+    ev.preventDefault();
+    const dni=(v('#dni')||'').replace(/\D/g,''); if(!isDNI(dni)) return alert('Ingresá un DNI válido.');
+    const items = await buscarEpisodiosPorDNI(dni); openEpisodios(items);
+  });
+  q('#btn-buscar-alt')?.addEventListener('click', async (ev)=>{
+    ev.preventDefault();
+    const dni=(v('#dni-alt')||'').replace(/\D/g,''); if(!isDNI(dni)) return alert('Ingresá un DNI válido.');
+    const items = await buscarEpisodiosPorDNI(dni); openEpisodios(items);
+  });
+  q('#epi-cerrar')?.addEventListener('click', closeEpisodios);
+
+  q('#btn-cargar-ultimo')?.addEventListener('click', (e)=>{e.preventDefault(); cargarUltimoDx();});
+  q('#btn-prellenar-desde-episodio')?.addEventListener('click', (e)=>{e.preventDefault(); prellenarAltaDesdeSelector();});
+
+  q('#btn-save-ing')?.addEventListener('click', onSaveIngreso);
+  q('#btn-save-alt')?.addEventListener('click', onSaveAlta);
+
+  if(!v('#fecha-ing')) q('#fecha-ing').value=todayStr();
+  if(!v('#hora-ing'))  q('#hora-ing').value=nowHM();
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.ctrlKey && e.key==='Enter'){
+      if(q('#card-ingreso').style.display!=='none') onSaveIngreso();
+      else onSaveAlta();
+    }
+  });
+
+  Queue.flush();
+});
+  </script>
 </body>
 </html>
